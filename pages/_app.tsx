@@ -1,8 +1,36 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+// styling:
+import { css, jsx, Theme, useTheme } from "@emotion/react";
+import styled from "@emotion/styled";
 
-function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
-}
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import { ThemeStateProvider } from "../contexts/ThemeContext";
+import { UIStateProvider } from "../contexts/UIContext";
+import { useRouter } from "next/router";
+import { NextPage } from "next/types";
+import { ReactElement, ReactNode } from "react";
+import DefaultLayout from "../components/DefaultLayout";
+import MinimalLayout from "../components/MinimalLayout";
 
-export default MyApp
+type NextPageWithLayout = NextPage & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+const App = ({ Component, pageProps }: AppPropsWithLayout) => {
+  const getLayout =
+    Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
+
+  return (
+    <ThemeStateProvider>
+      <UIStateProvider>
+        {getLayout(<Component {...pageProps} />)}
+      </UIStateProvider>
+    </ThemeStateProvider>
+  );
+};
+
+export default App;

@@ -1,0 +1,3 @@
+const setBackground = () => {};
+
+export { setBackground };
