@@ -4,7 +4,6 @@ import styled from "@emotion/styled";
 import { ReactElement, ReactNode, useEffect, useRef, useState } from "react";
 import { contentCenter } from "../../styles/content-centerer";
 import { fabric } from "fabric";
-import useResizeObserver from "use-resize-observer/polyfilled";
 
 import { clamp } from "../../utils/utils";
 import useUpdatedState from "../../hooks/useUpdatedState";
@@ -16,7 +15,7 @@ import MinimalLayout from "../../components/MinimalLayout";
 import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";
 import Sidebar from "../../components/Sidebar";
 import Headerbar from "../../components/Headerbar";
-/* ${({ theme }) => contentCenter(theme)} */
+
 const Container = styled.div`
   /* border: 1px solid red; */
 

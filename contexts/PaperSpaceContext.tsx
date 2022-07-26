@@ -14,7 +14,6 @@ import { useMediaQuery } from "react-responsive";
 import styled from "@emotion/styled";
 // import { contentCenter } from "../../styles/content-centerer";
 import { fabric } from "fabric";
-import useResizeObserver from "use-resize-observer/polyfilled";
 
 import { clamp } from "../utils/utils";
 import useUpdatedState from "../hooks/useUpdatedState";
