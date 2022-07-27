@@ -1,6 +1,8 @@
 import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 import React, { Dispatch, SetStateAction, useEffect } from "react";
+
+// contexts:
 import { usePaperSpaceState } from "../../../contexts/PaperSpaceContext";
 
 const Container = styled.li<{ active: boolean }>`
@@ -71,10 +73,8 @@ const TabNavItem = ({
 
   useEffect(() => {
     const currentMode = mode.current;
-    console.log("UE", mode.current, renderMode, id);
 
     if (currentMode == id) {
-      console.log("hey");
       setActiveTab(id);
     }
   }, [renderMode, id]);

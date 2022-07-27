@@ -1,21 +1,24 @@
-import { useTheme } from "@emotion/react";
+import { fabric } from "fabric";
 import React, {
   createContext,
   Dispatch,
   SetStateAction,
   useContext,
   useRef,
+  useEffect,
   useState,
 } from "react";
-import { useEffect } from "react";
-import { useMediaQuery } from "react-responsive";
+import {
+  DragGesture,
+  MoveGesture,
+  PinchGesture,
+  ScrollGesture,
+} from "@use-gesture/vanilla";
 
-// styling:
-import styled from "@emotion/styled";
-// import { contentCenter } from "../../styles/content-centerer";
-import { fabric } from "fabric";
-
+// utils:
 import { clamp } from "../utils/utils";
+
+// hooks:
 import useUpdatedState from "../hooks/useUpdatedState";
 
 export type CanvasMode =
@@ -24,7 +27,8 @@ export type CanvasMode =
   | "pan"
   | "text_add"
   | "text_edit"
-  | "reset";
+  | "reset"
+  | "eraser";
 
 export const MODES: Record<CanvasMode, CanvasMode> = {
   select: "select",
@@ -33,14 +37,18 @@ export const MODES: Record<CanvasMode, CanvasMode> = {
   text_add: "text_add",
   text_edit: "text_edit",
   reset: "reset",
+  eraser: "eraser",
 };
 
 type State = {
   canvas: React.MutableRefObject<fabric.Canvas>;
+  containerRef: React.MutableRefObject<HTMLDivElement | null>;
+  // containerRef: React.MutableRefObject<HTMLDivElement>;
   prevMode: React.MutableRefObject<CanvasMode>;
   mode: React.MutableRefObject<CanvasMode>;
   renderMode: CanvasMode;
   setMode: (val: CanvasMode) => void;
+  pan: (point: { x: number; y: number }) => void;
 
   toggleMode: (newMode: CanvasMode) => void;
   setBackground: (
@@ -58,6 +66,8 @@ const PaperSpaceStateContext = createContext<State | undefined>(undefined);
 const PaperSpaceStateProvider = ({ children }: Props) => {
   // fabric states:
   const canvas = useRef<fabric.Canvas>(new fabric.Canvas(""));
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const prevMode = useRef<CanvasMode>("select");
 
   const [mode, renderMode, setMode] = useUpdatedState<CanvasMode>("select");
@@ -213,13 +223,14 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
 
   // This useEffect is divided into TWO parts (make sure you understand how and why)
   useEffect(() => {
+    const element: HTMLDivElement = containerRef.current as HTMLDivElement;
     // -------------------------------------------------------------------------------
     // 1. TRIGGERS BASED ON EVENTS:
     // you should only call toggleMode in these listeners
     // meaning don't write code for an action
     // -------------------------------------------------------------------------------
     const keyboardTriggers = (e: KeyboardEvent) => {
-      console.log("keydown", mode.current, renderMode);
+      // console.log("keydown", mode.current, renderMode);
 
       if (mode.current === MODES.text_edit) return;
 
@@ -240,10 +251,13 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
       if (key === "t") {
         toggleMode(MODES.text_add);
       }
+      if (key === "e") {
+        toggleMode(MODES.eraser);
+      }
     };
 
     const mouseDownTriggers = (e: fabric.IEvent<MouseEvent>) => {
-      console.log("mousedown", mode.current, renderMode);
+      // console.log("mousedown", mode.current, renderMode);
 
       // left mouse button down:
       if (e.button === 1) {
@@ -262,8 +276,9 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     };
 
     const mouseUpTriggers = (e: fabric.IEvent<MouseEvent>) => {
-      console.log("mouseup", mode.current, renderMode);
+      // console.log("mouseup", mode.current, renderMode);
 
+      console.log("uppp");
       // left mouse button down:
       if (e.button === 1) {
         setLMB(false);
@@ -278,33 +293,43 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
         setRMB(false);
         toggleMode(prevMode.current);
       }
+
+      // if the current mode is panning when we release our pointing devices (mouse or touch):
+      if (mode.current === MODES.pan) {
+        toggleMode(prevMode.current);
+      }
     };
 
     window.addEventListener("keydown", keyboardTriggers);
     canvas.current.on("mouse:down", mouseDownTriggers);
     canvas.current.on("mouse:up", mouseUpTriggers);
 
+    const dragTrigger = new DragGesture(element, (state) => {
+      // means if theres more than one finger or pointer on the screen
+      if (state.touches > 1 && mode.current !== MODES.pan) {
+        toggleMode(MODES.pan);
+      }
+    });
+
     // -------------------------------------------------------------------------------
     // 2. ACTIONS BASED ON CURRENT MODE AND AN EVENT:
     // define actions per event and mode combination
     // -------------------------------------------------------------------------------
     const mouseWheelAction = (fe: fabric.IEvent<WheelEvent>) => {
-      console.log("mouse:wheel", mode.current, renderMode);
+      // console.log("mouse:wheel", mode.current, renderMode);
       zoom(fe.e.deltaY, { x: fe.e.offsetX, y: fe.e.offsetY });
       fe.e.preventDefault();
       fe.e.stopPropagation();
     };
 
     const mouseDownAction = (fe: fabric.IEvent<MouseEvent>) => {
-      console.log("mouse:down", mode.current, renderMode);
-
+      // console.log("mouse:down", mode.current, renderMode);
       if (mode.current === MODES.pan) {
       }
     };
 
     const mouseUpAction = (fe: fabric.IEvent<MouseEvent>) => {
-      console.log("mouse:up", mode.current, renderMode);
-
+      // console.log("mouse:up", mode.current, renderMode);
       if (mode.current === MODES.text_add && fe.button === 1) {
         const cursorPosition = canvas.current.getPointer(fe.e);
         addText(cursorPosition);
@@ -312,21 +337,56 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     };
 
     const mouseMoveAction = (fe: fabric.IEvent<MouseEvent>) => {
-      // console.log("mouse:move", mode.current, renderMode);
-
       if (mode.current === MODES.pan && (lmb.current || rmb.current)) {
-        pan({ x: fe.e.movementX, y: fe.e.movementY });
+        // pan({ x: fe.e.movementX ?? 0, y: fe.e.movementY ?? 0 });
+      }
+      if (mode.current === MODES.eraser && lmb.current) {
       }
     };
+
+    const pinchGesture = new PinchGesture(element, (state) => {
+      console.log("pinch");
+    });
+
+    const scrollGesture = new ScrollGesture(element, (state) => {
+      console.log("scrolling");
+    });
+
+    const dragGesture = new DragGesture(element, (state) => {
+      const [x, y] = state.delta;
+
+      if (mode.current === MODES.pan && state.touches > 1) {
+        // console.log("drag1: pan");
+        pan({ x, y });
+      } else if (mode.current === MODES.pan && lmb.current) {
+        // console.log("drag2: pan");
+        pan({ x, y });
+      }
+    });
+
+    const moveGesture = new MoveGesture(element, (state) => {
+      const [x, y] = state.delta;
+
+      if (mode.current === MODES.pan && rmb.current) {
+        // console.log("move: pan");
+        pan({ x, y });
+      }
+    });
 
     canvas.current.on("mouse:wheel", mouseWheelAction);
     canvas.current.on("mouse:down", mouseDownAction);
     canvas.current.on("mouse:up", mouseUpAction);
-    canvas.current.on("mouse:move", mouseMoveAction);
+    // canvas.current.on("mouse:move", mouseMoveAction);
 
     return () => {
       canvas.current.off();
       window.removeEventListener("keydown", keyboardTriggers);
+      dragTrigger.destroy();
+
+      dragGesture.destroy();
+      pinchGesture.destroy();
+      scrollGesture.destroy();
+      moveGesture.destroy();
     };
   }, []);
 
@@ -358,6 +418,11 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
         canvas.current.selection = false;
         changeCursor("text");
         break;
+      case MODES.eraser:
+        canvas.current.isDrawingMode = true;
+        canvas.current.selection = false;
+        changeCursor("vertical-text");
+        break;
       default:
         break;
     }
@@ -367,12 +432,14 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     <PaperSpaceStateContext.Provider
       value={{
         canvas,
+        containerRef,
         prevMode,
         mode,
         renderMode,
         setMode,
         toggleMode,
         setBackground,
+        pan,
       }}
     >
       {children}
@@ -383,7 +450,9 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
 const usePaperSpaceState = () => {
   const context = useContext(PaperSpaceStateContext);
   if (context === undefined)
-    throw new Error("useUIState must be used within a UIStateProvider");
+    throw new Error(
+      "usePaperSpaceState must be used within a PaperSpaceStateProvider"
+    );
   return context;
 };
 

@@ -1,13 +1,9 @@
-// styling:
-import { css, jsx, Theme, useTheme } from "@emotion/react";
 import styled from "@emotion/styled";
-import { useEffect, useRef, useState } from "react";
-import { contentCenter } from "../../styles/content-centerer";
 import { fabric } from "fabric";
+import { useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 
-import { clamp } from "../../utils/utils";
-import useUpdatedState from "../../hooks/useUpdatedState";
+// hooks:
 import { usePaperSpaceState } from "../../contexts/PaperSpaceContext";
 
 const Container = styled.div`
@@ -15,6 +11,7 @@ const Container = styled.div`
 
   /** overflow hidden is necessary to prevent a bug on mobile where the resize observer won't fire */
   overflow: hidden;
+  touch-action: none;
 
   position: relative;
   flex: 1;
@@ -23,19 +20,14 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Viewbox = styled.canvas`
-  /* border-radius: 5px; */
-  /* width: 100%; */
-  /* height: 100%; */
-`;
+const Viewbox = styled.canvas``;
 
 const PaperSpace = () => {
-  // const containerRef = useRef<HTMLDivElement>(null);
-  const { width = 500, height = 500, ref: containerRef } = useResizeDetector();
-  const { canvas, renderMode, toggleMode, setBackground } =
+  const { width = 0, height = 0, ref } = useResizeDetector<HTMLDivElement>();
+
+  const { canvas, mode, renderMode, toggleMode, setBackground, containerRef } =
     usePaperSpaceState();
 
-  // SET UP:
   useEffect(() => {
     // init fabric canvas:
     canvas.current = new fabric.Canvas("canvas", {
@@ -45,21 +37,22 @@ const PaperSpace = () => {
       fireMiddleClick: true, // <-- enable firing of middle click events
       stopContextMenu: true, // <--  prevent context menu from showing
       // imageSmoothingEnabled: false,
+      // allowTouchScrolling: true,
     });
+
+    containerRef.current = ref.current;
+
+    setBackground("dot", "white", "#292929");
 
     // fabric canvas properties:
     canvas.current.freeDrawingBrush.width = 5;
 
-    setBackground("dot", "white", "#292929");
-
     return () => {
-      console.log("dismount");
       canvas.current.dispose();
     };
   }, []);
 
   useEffect(() => {
-    console.log("change", width, height);
     canvas.current.setDimensions({
       width: width,
       height: height,
@@ -68,7 +61,7 @@ const PaperSpace = () => {
   }, [width, height]);
 
   return (
-    <Container ref={containerRef}>
+    <Container ref={ref}>
       <Viewbox id="canvas"></Viewbox>
     </Container>
   );

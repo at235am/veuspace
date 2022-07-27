@@ -1,20 +1,14 @@
-// styling:
-import { css, jsx, Theme, useTheme } from "@emotion/react";
 import styled from "@emotion/styled";
 import { ReactElement, ReactNode, useEffect, useRef, useState } from "react";
-import { contentCenter } from "../../styles/content-centerer";
-import { fabric } from "fabric";
-
-import { clamp } from "../../utils/utils";
-import useUpdatedState from "../../hooks/useUpdatedState";
-
-import patternimg from "../../assets/pattern-circle3.png";
-import PaperSpace from "../../components/PaperSpace";
 import { NextPage } from "next/types";
+
+// custom components:
 import MinimalLayout from "../../components/MinimalLayout";
-import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";
 import Sidebar from "../../components/Sidebar";
-import Headerbar from "../../components/Headerbar";
+import PaperSpace from "../../components/PaperSpace";
+
+// contexts:
+import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";
 
 const Container = styled.div`
   /* border: 1px solid red; */
@@ -50,26 +44,16 @@ const Float = styled.div`
   gap: 1rem;
 `;
 
-const B = styled.button<{ selected?: boolean }>`
-  color: white;
-  background-color: black;
-
-  border: 1px solid ${({ selected }) => (selected ? "red" : "white")};
-`;
-
 type Props = {};
 
-type HomePageWithNoLayout = NextPage<Props> & {
+type PageWithMinimalLayout = NextPage<Props> & {
   getLayout: (page: ReactElement) => ReactNode;
 };
 
-const Jot: HomePageWithNoLayout = () => {
-  // const containerRef = useRef<HTMLDivElement>(null);
-
+const Jot: PageWithMinimalLayout = () => {
   return (
     <Container>
       <PaperSpaceStateProvider>
-        {/* <Headerbar /> */}
         <Wrapper>
           <Float>
             <Sidebar />
