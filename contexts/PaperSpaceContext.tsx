@@ -25,6 +25,7 @@ export type CanvasMode =
   | "select"
   | "draw"
   | "pan"
+  | "temp_pan"
   | "text_add"
   | "text_edit"
   | "reset"
@@ -34,6 +35,7 @@ export const MODES: Record<CanvasMode, CanvasMode> = {
   select: "select",
   draw: "draw",
   pan: "pan",
+  temp_pan: "temp_pan",
   text_add: "text_add",
   text_edit: "text_edit",
   reset: "reset",
@@ -78,7 +80,7 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     setMode(newMode);
 
     // keeps track of the latest mode selected that is NOT the "pan" mode:
-    if (newMode !== MODES.pan) prevMode.current = newMode;
+    if (newMode !== MODES.temp_pan) prevMode.current = newMode;
   };
 
   const changeCursor = (cursor: string) => {
@@ -251,6 +253,7 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
       if (key === "t") {
         toggleMode(MODES.text_add);
       }
+
       if (key === "e") {
         toggleMode(MODES.eraser);
       }
@@ -271,14 +274,13 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
       // right mouse button down:
       if (e.button === 3) {
         setRMB(true);
-        toggleMode(MODES.pan);
+        toggleMode(MODES.temp_pan);
       }
     };
 
     const mouseUpTriggers = (e: fabric.IEvent<MouseEvent>) => {
       // console.log("mouseup", mode.current, renderMode);
 
-      console.log("uppp");
       // left mouse button down:
       if (e.button === 1) {
         setLMB(false);
@@ -291,11 +293,9 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
       // right mouse button down:
       if (e.button === 3) {
         setRMB(false);
-        toggleMode(prevMode.current);
       }
 
-      // if the current mode is panning when we release our pointing devices (mouse or touch):
-      if (mode.current === MODES.pan) {
+      if (mode.current === MODES.temp_pan) {
         toggleMode(prevMode.current);
       }
     };
@@ -307,7 +307,7 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     const dragTrigger = new DragGesture(element, (state) => {
       // means if theres more than one finger or pointer on the screen
       if (state.touches > 1 && mode.current !== MODES.pan) {
-        toggleMode(MODES.pan);
+        toggleMode(MODES.temp_pan);
       }
     });
 
@@ -354,11 +354,13 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
 
     const dragGesture = new DragGesture(element, (state) => {
       const [x, y] = state.delta;
+      const shouldPan =
+        mode.current === MODES.pan || mode.current === MODES.temp_pan;
 
-      if (mode.current === MODES.pan && state.touches > 1) {
+      if (shouldPan && state.touches > 1) {
         // console.log("drag1: pan");
         pan({ x, y });
-      } else if (mode.current === MODES.pan && lmb.current) {
+      } else if (shouldPan && lmb.current) {
         // console.log("drag2: pan");
         pan({ x, y });
       }
@@ -366,8 +368,10 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
 
     const moveGesture = new MoveGesture(element, (state) => {
       const [x, y] = state.delta;
+      const shouldPan =
+        mode.current === MODES.pan || mode.current === MODES.temp_pan;
 
-      if (mode.current === MODES.pan && rmb.current) {
+      if (shouldPan && rmb.current) {
         // console.log("move: pan");
         pan({ x, y });
       }
@@ -399,6 +403,11 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
         changeCursor("default");
         break;
       case MODES.pan:
+        canvas.current.isDrawingMode = false;
+        canvas.current.selection = false;
+        changeCursor("grabbing");
+        break;
+      case MODES.temp_pan:
         canvas.current.isDrawingMode = false;
         canvas.current.selection = false;
         changeCursor("grabbing");
