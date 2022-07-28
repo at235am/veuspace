@@ -44,6 +44,7 @@ export const MODES: Record<CanvasMode, CanvasMode> = {
 
 type State = {
   canvas: React.MutableRefObject<fabric.Canvas>;
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
   // containerRef: React.MutableRefObject<HTMLDivElement>;
   prevMode: React.MutableRefObject<CanvasMode>;
@@ -58,6 +59,9 @@ type State = {
     patternColor: string,
     backgroundColor: string
   ) => void;
+
+  // new:
+  setCanvasDimensions: (width: number, height: number) => void;
 };
 
 type Props = {
@@ -68,6 +72,8 @@ const PaperSpaceStateContext = createContext<State | undefined>(undefined);
 const PaperSpaceStateProvider = ({ children }: Props) => {
   // fabric states:
   const canvas = useRef<fabric.Canvas>(new fabric.Canvas(""));
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const prevMode = useRef<CanvasMode>("select");
@@ -81,6 +87,26 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
 
     // keeps track of the latest mode selected that is NOT the "pan" mode:
     if (newMode !== MODES.temp_pan) prevMode.current = newMode;
+  };
+
+  const drawRectange = () => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext("2d");
+    ctx?.beginPath();
+    ctx?.rect(500, 500, 50, 50);
+    ctx?.stroke();
+  };
+
+  const setCanvasDimensions = (width: number, height: number) => {
+    console.log({ width, height });
+    if (!canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    ctx?.save();
+
+    canvasRef.current.width = width;
+    canvasRef.current.height = height;
+    ctx?.restore();
   };
 
   const changeCursor = (cursor: string) => {
@@ -441,6 +467,7 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
     <PaperSpaceStateContext.Provider
       value={{
         canvas,
+        canvasRef,
         containerRef,
         prevMode,
         mode,
@@ -449,6 +476,9 @@ const PaperSpaceStateProvider = ({ children }: Props) => {
         toggleMode,
         setBackground,
         pan,
+
+        // new:
+        setCanvasDimensions,
       }}
     >
       {children}

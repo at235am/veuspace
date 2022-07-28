@@ -21,6 +21,8 @@ const Container = styled.div`
 `;
 
 const Wrapper = styled.div`
+  /* border: 1px dashed red; */
+
   position: relative;
 
   flex: 1;
@@ -55,9 +57,9 @@ const Jot: PageWithMinimalLayout = () => {
     <Container>
       <PaperSpaceStateProvider>
         <Wrapper>
-          <Float>
+          {/* <Float>
             <Sidebar />
-          </Float>
+          </Float> */}
           <PaperSpace />
         </Wrapper>
       </PaperSpaceStateProvider>
