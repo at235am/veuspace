@@ -4,8 +4,8 @@ import { NextPage } from "next/types";
 
 // custom components:
 import MinimalLayout from "../../components/MinimalLayout";
-import Sidebar from "../../components/Sidebar";
-import PaperSpace from "../../components/PaperSpace";
+import { Sidebar } from "../../components/Sidebar";
+import { PaperSpace } from "../../components/PaperSpace";
 
 // contexts:
 // import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";

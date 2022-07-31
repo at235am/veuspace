@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { ReactNode } from "react";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
-import SparklingStars from "./SparklingStars";
+import { SparklingStars } from "./SparklingStars";
 // import SparklingStars from "./SparklingStars";
 
 const AppContainer = styled.div`
