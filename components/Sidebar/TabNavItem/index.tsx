@@ -3,10 +3,13 @@ import { motion } from "framer-motion";
 import React, { Dispatch, SetStateAction, useEffect } from "react";
 
 // contexts:
-import { usePaperSpaceState } from "../../../contexts/PaperSpaceContext";
 
 const Container = styled.li<{ active: boolean }>`
   position: relative;
+
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 2px;
 
   background-color: ${({ active }) => (active ? "#00000020" : "transparent")};
 
@@ -16,8 +19,8 @@ const Container = styled.li<{ active: boolean }>`
 `;
 
 const Button = styled.button`
-  height: 3.5rem;
-  width: 3.5rem;
+  width: 100%;
+  height: 100%;
 
   color: white;
 
@@ -26,23 +29,16 @@ const Button = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
 `;
 
 const Line = styled(motion.span)`
   z-index: 10;
   position: absolute;
-  top: calc((3.5rem - 35px) / 2);
-  right: -1px;
+  top: calc((46px - 34px) / 2);
+  right: -2px;
 
-  /* margin-right: 4px; */
-
-  height: 35px;
-  min-width: 3px;
+  height: 34px;
+  min-width: 2px;
   border-radius: 5px;
 
   background-color: ${({ theme }) => theme.colors.primary.main};
@@ -51,6 +47,7 @@ const Line = styled(motion.span)`
 type Props = {
   id: string;
   children: React.ReactNode;
+  activeTool: string;
   activeTab: string;
   setActiveTab: Dispatch<SetStateAction<string>>;
   onClick?: () => void;
@@ -59,29 +56,22 @@ type Props = {
 const TabNavItem = ({
   id,
   children,
+  activeTool,
   activeTab,
   setActiveTab,
   onClick,
 }: Props) => {
-  const { mode, renderMode, toggleMode } = usePaperSpaceState();
-  const active = id === activeTab;
+  // const { mode, renderMode, toggleMode } = usePaperSpaceState();
+  const highlight = id === activeTool || id === activeTab;
 
   const action = () => {
     setActiveTab(id);
     onClick && onClick();
   };
 
-  useEffect(() => {
-    const currentMode = mode.current;
-
-    if (currentMode == id) {
-      setActiveTab(id);
-    }
-  }, [renderMode, id]);
-
   return (
-    <Container active={active}>
-      {active && <Line layoutId="line" />}
+    <Container active={highlight}>
+      {id === activeTab && <Line layoutId="line" />}
       <Button onClick={action}>{children}</Button>
     </Container>
   );

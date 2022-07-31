@@ -4,14 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 
 // hooks:
-import { usePaperSpaceState } from "../../contexts/PaperSpaceContext";
+import { usePaperState } from "../../contexts/PaperContext";
+// import { usePaperSpaceState } from "../../contexts/PaperSpaceContext";
 
 const Container = styled.div`
   /* border: 1px solid blue; */
 
   /** overflow hidden is necessary to prevent a bug on mobile where the resize observer won't fire */
   overflow: hidden;
+  position: relative;
   touch-action: none;
+
+  /* max-width: 100vw; */
+  /* max-height: 100vh; */
 
   position: relative;
   flex: 1;
@@ -20,49 +25,39 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Viewbox = styled.canvas``;
+const Canvas = styled.canvas`
+  position: absolute;
+  background-color: #333;
+`;
 
 const PaperSpace = () => {
-  const { width = 0, height = 0, ref } = useResizeDetector<HTMLDivElement>();
-
-  const { canvas, mode, renderMode, toggleMode, setBackground, containerRef } =
-    usePaperSpaceState();
+  const { app, containerRef, canvasRef, init, setCanvasSize, zoom } =
+    usePaperState();
+  const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
+    targetRef: containerRef,
+  });
 
   useEffect(() => {
-    // init fabric canvas:
-    canvas.current = new fabric.Canvas("canvas", {
-      fill: "red",
-      backgroundColor: "pink",
-      fireRightClick: true, // <-- enable firing of right click events
-      fireMiddleClick: true, // <-- enable firing of middle click events
-      stopContextMenu: true, // <--  prevent context menu from showing
-      // imageSmoothingEnabled: false,
-      // allowTouchScrolling: true,
-    });
+    if (!canvasRef.current) return;
 
-    containerRef.current = ref.current;
+    console.log("initilized");
+    init(canvasRef.current);
 
-    setBackground("dot", "white", "#292929");
-
-    // fabric canvas properties:
-    canvas.current.freeDrawingBrush.width = 5;
-
-    return () => {
-      canvas.current.dispose();
-    };
+    return () => {};
   }, []);
 
   useEffect(() => {
-    canvas.current.setDimensions({
-      width: width,
-      height: height,
-    });
-    canvas.current.renderAll();
+    setCanvasSize(width, height);
   }, [width, height]);
 
   return (
-    <Container ref={ref}>
-      <Viewbox id="canvas"></Viewbox>
+    <Container
+      ref={containerRef}
+      onWheel={(e) => {
+        zoom(e.deltaY, { x: e.clientX, y: e.clientY });
+      }}
+    >
+      <Canvas ref={canvasRef}></Canvas>
     </Container>
   );
 };

@@ -8,7 +8,8 @@ import Sidebar from "../../components/Sidebar";
 import PaperSpace from "../../components/PaperSpace";
 
 // contexts:
-import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";
+// import { PaperSpaceStateProvider } from "../../contexts/PaperSpaceContext";
+import { PaperStateProvider } from "../../contexts/PaperContext";
 
 const Container = styled.div`
   /* border: 1px solid red; */
@@ -53,14 +54,14 @@ type PageWithMinimalLayout = NextPage<Props> & {
 const Jot: PageWithMinimalLayout = () => {
   return (
     <Container>
-      <PaperSpaceStateProvider>
+      <PaperStateProvider>
         <Wrapper>
           <Float>
             <Sidebar />
           </Float>
           <PaperSpace />
         </Wrapper>
-      </PaperSpaceStateProvider>
+      </PaperStateProvider>
     </Container>
   );
 };

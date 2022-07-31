@@ -1,6 +1,5 @@
 // libary:
 import styled from "@emotion/styled";
-import { css, keyframes } from "@emotion/react";
 
 // nextjs:
 import type { NextPage } from "next";
@@ -52,7 +51,7 @@ const ActivityBar = styled.div`
 `;
 
 const Headerbar = () => {
-  const { renderMode, toggleMode, setBackground } = usePaperSpaceState();
+  // const { renderMode, toggleMode, setBackground } = usePaperSpaceState();
 
   return (
     <Container>

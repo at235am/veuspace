@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid";
 import { MdSyncProblem } from "react-icons/md";
+import Color from "color";
+import paper from "paper";
 
 type Position = {
   x: number;
@@ -43,3 +45,8 @@ export const clamp = (num: number, min: number, max: number) =>
 
 export const prettyNumber = (num: number) =>
   num.toFixed(2).replace(/[.,]00$/, "");
+
+export const paperColor = (color: string | number) => {
+  const c = new Color(color).object();
+  return new paper.Color(c.r / 255, c.g / 255, c.b / 255, c.alpha);
+};

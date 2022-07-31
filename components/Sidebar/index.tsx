@@ -7,26 +7,41 @@ import type { NextPage } from "next";
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
-import {
-  CanvasMode,
-  MODES,
-  usePaperSpaceState,
-} from "../../contexts/PaperSpaceContext";
 
-import {
-  MdOutlineTextFields,
-  MdDraw,
-  MdKeyboardArrowLeft,
-  MdShare,
-  MdLockOpen,
-} from "react-icons/md";
-import { GiPlayButton } from "react-icons/gi";
-import { RiDragMoveLine } from "react-icons/ri";
-import { TbNotebook } from "react-icons/tb";
 import Logo from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import TabNavItem from "./TabNavItem";
+import { usePaperState, TOOL, CustomTool } from "../../contexts/PaperContext";
+import { nanoid, random } from "nanoid";
+
+import {
+  IconPencil,
+  IconClick,
+  IconNotebook,
+  IconArrowsMove,
+  IconShare,
+  IconCursorText,
+  IconHighlight,
+  IconTypography,
+  IconChevronLeft,
+  IconMenu,
+  IconShape,
+  IconShape2,
+  IconShape3,
+  IconRectangle,
+  IconCircleRectangle,
+  IconRotateRectangle,
+  IconPlus,
+  IconMinus,
+  IconBug,
+  IconCircle,
+} from "@tabler/icons";
+import Color from "color";
+import {
+  getRandomIntInclusive as randomInt,
+  paperColor,
+} from "../../utils/utils";
 
 // contexts:
 
@@ -35,18 +50,19 @@ import TabNavItem from "./TabNavItem";
 // icons:
 
 const Container = styled(motion.div)`
+  position: relative;
   overflow: hidden;
   border-radius: 10px;
   height: 100%;
 
   background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
 
   display: flex;
   flex-direction: row;
 `;
 
-const Header = styled.li`
+const Header = styled.div`
   position: relative;
   width: 100%;
 
@@ -59,14 +75,24 @@ const Header = styled.li`
   align-items: center;
 `;
 
-const Toolbar = styled.ul`
+const toolBarWidth = 50;
+
+const ToolWrapper = styled.ul`
+  min-width: ${toolBarWidth}px;
+  max-width: ${toolBarWidth}px;
+  padding: 2px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const Toolbar = styled.div`
   /* border: 1px solid red; */
 
   background-color: #303030;
   background-color: rgba(0, 0, 0, 0.15);
-
-  min-width: 3.5rem;
-  height: 100%;
 
   display: flex;
   flex-direction: column;
@@ -84,14 +110,6 @@ const ActivityBar = styled.ul`
   flex-direction: column;
 `;
 
-const CursorRotate = styled.span`
-  transform: rotate(-120deg);
-  svg {
-    width: 20px;
-    width: 20px;
-  }
-`;
-
 const ToggleBarButton = styled(motion.button)`
   background-color: transparent;
   border-radius: 50%;
@@ -106,52 +124,13 @@ const ToggleBarButton = styled(motion.button)`
   &:hover {
     background-color: #333;
   }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const CircleCenter = styled.div`
-  /* position: relative; */
-  z-index: 10;
-  position: absolute;
-
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const ToolCircle = styled(motion.span)`
-  /* position: absolute; */
-  /* z-index: 10; */
-  /* z-index: -2; */
-
-  /* top: 0; */
-  /* left: 0; */
-  /* margin: 10px; */
-
-  height: 5px;
-  width: 5px;
-  height: 2rem;
-  width: 2rem;
-
-  border-radius: 8px;
-
-  border: 2px solid ${({ theme }) => theme.colors.primary.main};
-
-  background-color: ${({ theme }) => theme.colors.primary.main};
-  background-color: #222;
-  background-color: transparent;
 `;
 
 const TC = styled.div`
   background-color: #111;
   padding: 1rem;
 `;
+
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
 };
@@ -165,15 +144,24 @@ const TabContent: { [id: string]: ReactNode } = {
   share: <Test text="share" />,
 };
 
-const ToolMarker = () => {};
+type CircleOptions = {
+  name?: string;
+  x?: number;
+  y?: number;
+  radius?: number;
+  color?: string | number;
+};
+
+const iconSize = 22;
+const iconStroke = 2;
 
 const Sidebar = () => {
-  const { mode, renderMode, toggleMode, setBackground } = usePaperSpaceState();
+  // const { mode, renderMode, toggleMode, setBackground } = usePaperSpaceState();
+  const { app, zoom, activeTool, activateTool } = usePaperState();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("notespaces");
-
-  const tabHandler = { activeTab, setActiveTab };
+  const [activeTab, setActiveTab] = useState("notebook");
+  const tabHandler = { activeTab, setActiveTab, activeTool };
 
   const sidebarAnim = {
     variants: {
@@ -181,7 +169,7 @@ const Sidebar = () => {
         width: "auto",
       },
       close: {
-        width: "3.5rem",
+        width: toolBarWidth,
       },
     },
     animate: sidebarOpen ? "open" : "close",
@@ -204,6 +192,43 @@ const Sidebar = () => {
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
 
+  const drawCircle = (options: CircleOptions) => {
+    const {
+      name = nanoid(),
+      x = 0,
+      y = 0,
+      radius = 1,
+      color = "#000000",
+    } = options;
+
+    const paper = app.current;
+    const circle = new paper.Path.Circle(new paper.Point(x, y), radius);
+
+    const s = new paper.Point(0, 0);
+    // s.
+    circle.name = name;
+    circle.fillColor = paperColor(color);
+  };
+
+  const drawRandomCircle = () => {
+    const paper = app.current;
+
+    const p = paper.project.view.viewToProject(
+      new paper.Point(
+        randomInt(0, paper.view.viewSize.width),
+        randomInt(0, paper.view.viewSize.height)
+      )
+    );
+
+    // console.log(r);
+    drawCircle({
+      x: p.x,
+      y: p.y,
+      radius: randomInt(10, 50),
+      color: randomInt(0, 0xffffff),
+    });
+  };
+
   return (
     <Container {...sidebarAnim}>
       <Toolbar>
@@ -212,55 +237,100 @@ const Sidebar = () => {
             {...toggleButtonAnim}
             onClick={() => setSidebarOpen((v) => !v)}
           >
-            <MdKeyboardArrowLeft />
+            <IconMenu size={16} />
           </ToggleBarButton>
         </Header>
+        <ToolWrapper>
+          <TabNavItem {...tabHandler} id={TOOL.notebook} onClick={openSidebar}>
+            <IconNotebook size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem id="notespaces" {...tabHandler} onClick={openSidebar}>
-          <TbNotebook />
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.select}
+            // activeTool={activeTool === TOOL.select}
+            onClick={() => {
+              console.log("select");
+              activateTool(TOOL.select);
+            }}
+          >
+            <IconClick size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem
-          id="select"
-          {...tabHandler}
-          onClick={() => toggleMode(MODES.select)}
-        >
-          <CursorRotate>
-            <GiPlayButton />
-          </CursorRotate>
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.draw}
+            onClick={() => {
+              console.log("draw");
+              activateTool(TOOL.draw);
+              drawRandomCircle();
+            }}
+          >
+            <IconPencil size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem
-          id="draw"
-          {...tabHandler}
-          onClick={() => toggleMode(MODES.draw)}
-        >
-          <MdDraw />
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.pan}
+            onClick={() => {
+              activateTool(TOOL.pan);
+            }}
+          >
+            <IconArrowsMove size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem
-          id="pan"
-          {...tabHandler}
-          onClick={() => toggleMode(MODES.pan)}
-        >
-          <RiDragMoveLine />
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.circle}
+            onClick={() => {
+              activateTool(TOOL.circle);
+            }}
+          >
+            <IconCircle size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem
-          id="text_add"
-          {...tabHandler}
-          onClick={() => toggleMode(MODES.text_add)}
-        >
-          <MdOutlineTextFields />
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.rectangle}
+            onClick={() => {
+              activateTool(TOOL.rectangle);
+            }}
+          >
+            <IconRectangle size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        <TabNavItem id="share" onClick={openSidebar} {...tabHandler}>
-          <MdShare />
-        </TabNavItem>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.text_add}
+            onClick={() => {
+              activateTool(TOOL.text_add);
+            }}
+          >
+            <IconTypography size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
 
-        {/* <PropertyButton>
-          <MdLockOpen />
-        </PropertyButton> */}
+          <TabNavItem {...tabHandler} id="zoom_in" onClick={() => zoom(-1)}>
+            <IconPlus size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
+          <TabNavItem {...tabHandler} id="zoom_out" onClick={() => zoom(1)}>
+            <IconMinus size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
+
+          <TabNavItem
+            {...tabHandler}
+            id="TESTTESTTEST"
+            onClick={() => {
+              console.log("current tool", activeTool);
+              activateTool(TOOL.select);
+            }}
+          >
+            <IconBug size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
+
+          <TabNavItem {...tabHandler} id="share" onClick={() => {}}>
+            <IconShare size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
+        </ToolWrapper>
       </Toolbar>
 
       <ActivityBar>
@@ -284,31 +354,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-{
-  /* <PropertyButton
-            selected={renderMode === MODES.text_edit}
-            onClick={() => toggleMode(MODES.text_edit)}
-          >
-            text_edit
-          </PropertyButton>
-          <PropertyButton
-            onClick={() => setBackground("dot", "white", "#292929")}
-          >
-            dot
-          </PropertyButton>
-          <PropertyButton
-            onClick={() => setBackground("grid", "white", "#292929")}
-          >
-            grid
-          </PropertyButton>
-          <PropertyButton
-            onClick={() => setBackground("hline", "white", "#292929")}
-          >
-            hline
-          </PropertyButton>
-          <PropertyButton
-            onClick={() => setBackground("vline", "white", "#292929")}
-          >
-            vline
-          </PropertyButton> */
-}

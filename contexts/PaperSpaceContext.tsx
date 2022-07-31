@@ -14,6 +14,7 @@ import {
   PinchGesture,
   ScrollGesture,
 } from "@use-gesture/vanilla";
+import Paper from "paper";
 
 // utils:
 import { clamp } from "../utils/utils";
@@ -45,7 +46,6 @@ export const MODES: Record<CanvasMode, CanvasMode> = {
 type State = {
   canvas: React.MutableRefObject<fabric.Canvas>;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
-  // containerRef: React.MutableRefObject<HTMLDivElement>;
   prevMode: React.MutableRefObject<CanvasMode>;
   mode: React.MutableRefObject<CanvasMode>;
   renderMode: CanvasMode;
