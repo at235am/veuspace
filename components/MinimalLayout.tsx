@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { ReactNode } from "react";
-import Footer from "./Footer";
+// import { Footer } from "./Footer";
 
 // import SparklingStars from "./SparklingStars";
 

@@ -1,41 +1,8 @@
-import styled from "@emotion/styled";
+import { Logo } from "../Logo";
+import { Container, List, StretchedItem, Item } from "./Navbar.styles";
+import { NavbarItem } from "./NavbarItem";
 
-import NavbarItem from "./NavbarItem";
-import Logo from "../Logo";
-import { contentCenter } from "../../styles/content-centerer";
-
-// icons:
-
-const Container = styled.nav`
-  height: 5rem;
-
-  background-color: ${({ theme }) => theme.colors.background.dark};
-  background-color: transparent;
-
-  display: flex;
-  justify-content: center;
-`;
-
-const List = styled.ul`
-  /* border: 2px dashed orange; */
-
-  ${({ theme }) => contentCenter(theme)}
-
-  display: flex;
-  /* justify-content: space-between; */
-  align-items: center;
-  gap: 1rem;
-`;
-
-const Item = styled.li`
-  color: white;
-`;
-
-const StretchedItem = styled(Item)`
-  flex: 1;
-`;
-
-const links = [
+export const links = [
   // { name: "Home", link: "/", order: 0, color: "#428ae8", icon: MdMap },
   { name: "Jot", link: "/jot", order: 0, color: "#19b28e" },
   {

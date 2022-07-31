@@ -8,7 +8,7 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 
-import Logo from "../Logo";
+import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import TabNavItem from "./TabNavItem";

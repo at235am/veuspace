@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import { NextPage } from "next/types";
 import { ReactElement, ReactNode } from "react";
 import DefaultLayout from "../components/DefaultLayout";
-import MinimalLayout from "../components/MinimalLayout";
+// import MinimalLayout from "../components/MinimalLayout";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;

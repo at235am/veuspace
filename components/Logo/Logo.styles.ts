@@ -2,19 +2,7 @@
 import styled from "@emotion/styled";
 import { keyframes } from "@emotion/react";
 
-// nextjs:
-import type { NextPage } from "next";
-import Link from "next/link";
-import Head from "next/head";
-import Image from "next/image";
-
-// contexts:
-
-// custom components:
-
-// icons:
-
-const Container = styled.div`
+export const Container = styled.div`
   /* border: 1px solid red; */
 
   width: 100%;
@@ -35,7 +23,7 @@ const Container = styled.div`
   }
 `;
 
-const WelcomeMessage = styled.h1`
+export const WelcomeMessage = styled.h1`
   font-size: 1.5rem;
   font-weight: 600;
   color: #fff;
@@ -50,7 +38,7 @@ const animatedText = keyframes`
   }
 `;
 
-const T = styled.span`
+export const T = styled.span`
   line-height: 10px;
   font-size: inherit;
   font-weight: 700;
@@ -73,22 +61,10 @@ const T = styled.span`
 `;
 
 // exclude the gradient:
-const X = styled.span`
+export const X = styled.span`
   font-size: inherit;
   font-weight: 400;
   letter-spacing: -2px;
 
   color: #fff;
 `;
-
-const Logo = () => {
-  return (
-    <WelcomeMessage>
-      <T>
-        veu<X>space</X>
-      </T>
-    </WelcomeMessage>
-  );
-};
-
-export default Logo;
