@@ -2,9 +2,9 @@
 import styled from "@emotion/styled";
 
 import React, { useState } from "react";
-import { IconType } from "react-icons";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { TablerIcon } from "@tabler/icons";
 
 const A = styled(motion.a)`
   overflow: hidden;
@@ -78,7 +78,7 @@ const Text = styled.span`
 type Props = {
   color?: string;
   name: string;
-  icon?: IconType;
+  icon?: TablerIcon;
   link: string;
 };
 

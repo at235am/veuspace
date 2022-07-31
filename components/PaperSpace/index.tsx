@@ -1,5 +1,4 @@
 import styled from "@emotion/styled";
-import { fabric } from "fabric";
 import { useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 

@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { MdSyncProblem } from "react-icons/md";
+
 import Color from "color";
 import paper from "paper";
 

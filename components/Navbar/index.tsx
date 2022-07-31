@@ -1,15 +1,10 @@
 import styled from "@emotion/styled";
 
-// icons:
-import { MdMap, MdShoppingBasket, MdPlusOne, MdCheckBox } from "react-icons/md";
-import { RiAuctionFill } from "react-icons/ri";
-import { GiStoneSphere } from "react-icons/gi";
-
 import NavbarItem from "./NavbarItem";
 import Logo from "../Logo";
-
 import { contentCenter } from "../../styles/content-centerer";
-// import Logo from "./Logo";
+
+// icons:
 
 const Container = styled.nav`
   height: 5rem;
@@ -42,20 +37,20 @@ const StretchedItem = styled(Item)`
 
 const links = [
   // { name: "Home", link: "/", order: 0, color: "#428ae8", icon: MdMap },
-  { name: "Jot", link: "/jot", order: 0, color: "#19b28e", icon: MdMap },
+  { name: "Jot", link: "/jot", order: 0, color: "#19b28e" },
   {
     name: "Register",
     link: "/register",
     order: 1,
     color: "#fee257",
-    icon: RiAuctionFill,
+    // icon: RiAuctionFill,
   },
   {
     name: "Create",
     link: "/create",
     order: 3,
     color: "#f99155",
-    icon: MdShoppingBasket,
+    // icon: MdShoppingBasket,
   },
 ];
 
