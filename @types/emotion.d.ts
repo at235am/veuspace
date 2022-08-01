@@ -39,7 +39,7 @@ declare module "@emotion/react" {
   export type MainColor = Partial<Color> & Pick<Color, "main">;
 
   export interface Theme {
-    name: string;
+    id: string;
     dimensions: Dimension;
     font: Font;
     breakpoints: Breakpoints;

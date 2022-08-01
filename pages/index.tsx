@@ -8,15 +8,8 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 
-// :
 import { contentCenter } from "../styles/content-centerer";
-
-// contexts:
-import { useThemeState } from "../contexts/ThemeContext";
-
-// custom components:
-
-// icons:
+import { useThemeController } from "../styles/theme/Theme.context";
 
 const Container = styled.div`
   /* border: 1px solid red; */
@@ -92,7 +85,7 @@ const X = styled.span`
 `;
 
 const Home = () => {
-  const { toggleTheme } = useThemeState();
+  const { toggleBetweenLightAndDarkMode } = useThemeController();
   return (
     <Container id="index">
       <Content>

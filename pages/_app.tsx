@@ -2,13 +2,16 @@
 import { css, jsx, Theme, useTheme } from "@emotion/react";
 import styled from "@emotion/styled";
 
-import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { ThemeStateProvider } from "../contexts/ThemeContext";
+// import { ThemeStateProvider } from "../contexts/ThemeContext";
+import {
+  ThemeControllerProvider,
+  useThemeController,
+} from "../styles/theme/Theme.context";
 import { UIStateProvider } from "../contexts/UIContext";
 import { useRouter } from "next/router";
 import { NextPage } from "next/types";
-import { ReactElement, ReactNode } from "react";
+import { ReactElement, ReactNode, useEffect } from "react";
 import DefaultLayout from "../components/DefaultLayout";
 // import MinimalLayout from "../components/MinimalLayout";
 
@@ -25,11 +28,11 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
     Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
 
   return (
-    <ThemeStateProvider>
+    <ThemeControllerProvider>
       <UIStateProvider>
         {getLayout(<Component {...pageProps} />)}
       </UIStateProvider>
-    </ThemeStateProvider>
+    </ThemeControllerProvider>
   );
 };
 

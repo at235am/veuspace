@@ -1,12 +1,10 @@
 import { nanoid } from "nanoid";
-
 import Color from "color";
 import paper from "paper";
 
-type Position = {
-  x: number;
-  y: number;
-};
+export interface HasId {
+  id: string;
+}
 
 export const getRandomIntInclusive = (min: number, max: number) => {
   min = Math.ceil(min);
@@ -38,8 +36,6 @@ export const loadImage = (
   };
 };
 
-export const ORIGIN: Position = { x: 0, y: 0 };
-
 export const clamp = (num: number, min: number, max: number) =>
   Math.max(min, Math.min(num, max));
 
@@ -50,3 +46,21 @@ export const paperColor = (color: string | number) => {
   const c = new Color(color).object();
   return new paper.Color(c.r / 255, c.g / 255, c.b / 255, c.alpha);
 };
+
+/**
+ * Turns an array of item objects with type T into
+ * an object with key value (k, v) pairs of (id, T)
+ * @param arr an array of objects with atleast an "id" key
+ * @returns an object with id strings as its keys and the item object as the values
+ */
+export const arrayToObject = <T extends HasId>(arr: T[]) => {
+  const objects: { [id: string]: T } = {};
+  arr.forEach((item) => {
+    objects[item.id] = item;
+  });
+
+  return objects;
+};
+
+export const mapToArray = <T>(map: { [id: string]: T }) =>
+  Object.entries(map).map(([id, item]) => item);
