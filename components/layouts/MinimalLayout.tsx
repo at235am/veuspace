@@ -34,7 +34,7 @@ type Props = {
   children: ReactNode;
 };
 
-const MinimalLayout = ({ children }: Props) => {
+export const MinimalLayout = ({ children }: Props) => {
   return (
     <AppContainer id="app">
       <PageContainer id="page-container">{children}</PageContainer>
@@ -42,5 +42,3 @@ const MinimalLayout = ({ children }: Props) => {
     </AppContainer>
   );
 };
-
-export default MinimalLayout;

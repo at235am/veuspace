@@ -1,19 +1,9 @@
-// styling:
-import { css, jsx, Theme, useTheme } from "@emotion/react";
-import styled from "@emotion/styled";
-
 import type { AppProps } from "next/app";
-// import { ThemeStateProvider } from "../contexts/ThemeContext";
-import {
-  ThemeControllerProvider,
-  useThemeController,
-} from "../styles/theme/Theme.context";
+import type { NextPage } from "next/types";
+import type { ReactElement, ReactNode } from "react";
+import { ThemeControllerProvider } from "../styles/theme/Theme.context";
 import { UIStateProvider } from "../contexts/UIContext";
-import { useRouter } from "next/router";
-import { NextPage } from "next/types";
-import { ReactElement, ReactNode, useEffect } from "react";
-import DefaultLayout from "../components/DefaultLayout";
-// import MinimalLayout from "../components/MinimalLayout";
+import { DefaultLayout } from "../components/layouts/DefaultLayout";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;

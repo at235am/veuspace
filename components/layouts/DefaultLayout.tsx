@@ -1,9 +1,8 @@
 import styled from "@emotion/styled";
 import { ReactNode } from "react";
-import { Footer } from "./Footer";
-import { Navbar } from "./Navbar";
-import { SparklingStars } from "./SparklingStars";
-// import SparklingStars from "./SparklingStars";
+import { Footer } from "../Footer";
+import { Navbar } from "../Navbar";
+import { SparklingStars } from "../SparklingStars";
 
 const AppContainer = styled.div`
   /* border: 2px dashed red; */
@@ -65,7 +64,7 @@ type Props = {
   children: ReactNode;
 };
 
-const DefaultLayout = ({ children }: Props) => {
+export const DefaultLayout = ({ children }: Props) => {
   return (
     <AppContainer id="app">
       <Header>
@@ -79,5 +78,3 @@ const DefaultLayout = ({ children }: Props) => {
     </AppContainer>
   );
 };
-
-export default DefaultLayout;
