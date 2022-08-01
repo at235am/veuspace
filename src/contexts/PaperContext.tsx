@@ -17,9 +17,7 @@ import paper from "paper";
 import { nanoid } from "nanoid";
 
 // utils:
-import { clamp, paperColor } from "../utils/utils";
-
-// hooks:
+import { clamp, paperColor, roundIntToNearestMultiple } from "../utils/utils";
 
 export type Tools =
   | "notebook"
@@ -142,6 +140,8 @@ const PaperStateProvider = ({ children }: Props) => {
     app.current.view.center = app.current.view.center.add(offset);
   };
 
+  const pan = () => {};
+
   const drawBackground = () => {
     // console.log("bg generate");
     const bgLayer = app.current.project.layers.find(
@@ -159,23 +159,52 @@ const PaperStateProvider = ({ children }: Props) => {
       path.fillColor = paperColor("#ffffff");
       const symbol = new app.current.SymbolDefinition(path);
 
-      const boundz = app.current.project.view.bounds;
-      const width =
-        containerRef.current?.getBoundingClientRect().width ?? boundz.width;
-      const height =
-        containerRef.current?.getBoundingClientRect().height ?? boundz.height;
+      const viewbox_bounds = app.current.project.view.bounds;
 
-      console.log(boundz.topLeft.x, boundz.topLeft.y);
+      // const width =
+      //   containerRef.current?.getBoundingClientRect().width ?? boundz.width;
+      // const height =
+      //   containerRef.current?.getBoundingClientRect().height ?? boundz.height;
+
+      // console.log(boundz.topLeft.x, boundz.topLeft.y);
       // console.log(width, height);
-      const d = 60;
+
+      const d = 50; // the distances or gap between each point
+
+      // add a buffer by subtracting d from the top left to expand the bounding box
+      // add a buffer by adding d from the bottom right to expand the bounding box
+      const topLeft = {
+        x: viewbox_bounds.topLeft.x - d,
+        y: viewbox_bounds.topLeft.y - d,
+      };
+      const bottomRight = {
+        x: viewbox_bounds.bottomRight.x + d,
+        y: viewbox_bounds.bottomRight.y + d,
+      };
+
+      const width = Math.abs(bottomRight.x - topLeft.x);
+      const height = Math.abs(bottomRight.y - topLeft.y);
+
+      // setting x,y = 0 and using the width, height divided by th
       for (let x = 0; x < width / d; x++) {
         for (let y = 0; y < height / d; y++) {
+          const offset = d; // we subtract this number from the final positions to offset the bigger bounding box we created
+
+          const offsetX = roundIntToNearestMultiple(
+            viewbox_bounds.topLeft.x,
+            d
+          );
+          const offsetY = roundIntToNearestMultiple(
+            viewbox_bounds.topLeft.y,
+            d
+          );
+          const X = offsetX + x * d - offset;
+          const Y = offsetY + y * d - offset;
+
+          // console.log({ x, y, X, Y });
           symbol.place(
             // app.current.project.view.projectToView(
-            new app.current.Point(
-              boundz.topLeft.x + x * d,
-              boundz.topLeft.y + y * d
-            )
+            new app.current.Point(X, Y)
             // )
           );
         }
@@ -187,6 +216,7 @@ const PaperStateProvider = ({ children }: Props) => {
 
   const init = (canvasElement: HTMLCanvasElement) => {
     if (app.current.view) return;
+    if (!containerRef.current) return;
 
     app.current = new paper.PaperScope();
     app.current.setup(canvasElement);
@@ -194,6 +224,10 @@ const PaperStateProvider = ({ children }: Props) => {
     // useful debug settings
     app.current.settings.handleSize = 6;
     app.current.project.activeLayer.selectedColor = paperColor("#ff0000");
+
+    // set canvas size always based on the container size:
+    const containerBox = containerRef.current.getBoundingClientRect();
+    setCanvasSize(containerBox.width, containerBox.height);
 
     // create the background layer:
     const bgLayer = new app.current.Layer();
@@ -214,6 +248,8 @@ const PaperStateProvider = ({ children }: Props) => {
     const itemLayer = new app.current.Layer();
     itemLayer.name = "items";
     itemLayer.activate();
+
+    drawCircle({ x: 0, y: 0, radius: 10, color: "#ff0000" });
 
     // create the group where we'll group our selected items:
     const selectedItemsGroup = new app.current.Group();
@@ -241,7 +277,7 @@ const PaperStateProvider = ({ children }: Props) => {
     if (!tool) return;
 
     tool.activate();
-    // setActiveTool(name);
+    setActiveTool(name);
     if (name !== TOOL.temp_select) prevActiveTool.current = name;
   };
 
@@ -424,7 +460,7 @@ const PaperStateProvider = ({ children }: Props) => {
           const pan_offset = event.point.subtract(event.downPoint);
           app.current.view.center =
             app.current.view.center.subtract(pan_offset);
-          // generateBackground();
+          drawBackground();
         }
       },
       mouseup: (event: paper.ToolEvent) => {
@@ -503,7 +539,8 @@ const PaperStateProvider = ({ children }: Props) => {
       if (event.key === "d") {
         console.log("--------------DEBUG------------------------");
         // console.debug(app.current.project.);
-        console.log("SELECTED ITEMS", selectedItems.current);
+        // console.log("SELECTED ITEMS", selectedItems.current);
+        drawBackground();
         // console.log("CHILDREN", selectedItems.current?.children);
         console.log("-------------END DEBUG----------------------");
       }
@@ -516,7 +553,7 @@ const PaperStateProvider = ({ children }: Props) => {
   }, []);
 
   useEffect(() => {
-    console.log("PaperContext rendering");
+    console.log("!!!!! PaperContext re-rendering");
   });
 
   return (

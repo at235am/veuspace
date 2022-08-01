@@ -64,3 +64,6 @@ export const arrayToObject = <T extends HasId>(arr: T[]) => {
 
 export const mapToArray = <T>(map: { [id: string]: T }) =>
   Object.entries(map).map(([id, item]) => item);
+
+export const roundIntToNearestMultiple = (num: number, multiple: number) =>
+  Math.round(num / multiple) * multiple;
