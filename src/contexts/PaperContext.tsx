@@ -8,7 +8,6 @@ import React, {
   useState,
 } from "react";
 
-import paper from "paper";
 import { nanoid } from "nanoid";
 import { colorToNumber as clr } from "../utils/utils";
 
@@ -78,14 +77,6 @@ export type RectangleOptions = CircleOptions & {
   height?: number;
 };
 
-export class CustomTool extends paper.Tool {
-  name: Tools;
-  constructor(name: Tools) {
-    super();
-    this.name = name;
-  }
-}
-
 type State = {
   app: React.MutableRefObject<Application | undefined>;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -121,9 +112,9 @@ const PaperStateProvider = ({ children }: Props) => {
   // useful states for handling events
   const [activeTool, setActiveTool] = useState<Tools>(TOOL.select);
 
-  const selectedItems = useRef<paper.Group | null>(null);
-  const hitResult = useRef<paper.HitResult | null>(null);
-  const transformBoxes = useRef<paper.Layer | null>(null);
+  // const selectedItems = useRef<paper.Group | null>(null);
+  // const hitResult = useRef<paper.HitResult | null>(null);
+  // const transformBoxes = useRef<paper.Layer | null>(null);
 
   const init = (canvasElement: HTMLCanvasElement) => {
     if (!containerRef.current) return;

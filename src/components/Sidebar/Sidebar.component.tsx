@@ -12,7 +12,7 @@ import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import { TabNavItem } from "./TabNavItem";
-import { usePaperState, TOOL, CustomTool } from "../../contexts/PaperContext";
+import { usePaperState, TOOL } from "../../contexts/PaperContext";
 import { nanoid, random } from "nanoid";
 
 import {
@@ -38,10 +38,7 @@ import {
   IconCircle,
 } from "@tabler/icons";
 import Color from "color";
-import {
-  getRandomIntInclusive as randomInt,
-  paperColor,
-} from "../../utils/utils";
+import { getRandomIntInclusive as randomInt } from "../../utils/utils";
 import {
   TC,
   toolBarWidth,

@@ -1,6 +1,5 @@
 import { nanoid } from "nanoid";
 import Color from "color";
-import paper from "paper";
 
 export interface HasId {
   id: string;
@@ -41,11 +40,6 @@ export const clamp = (num: number, min: number, max: number) =>
 
 export const prettyNumber = (num: number) =>
   num.toFixed(2).replace(/[.,]00$/, "");
-
-export const paperColor = (color: string | number) => {
-  const c = new Color(color).object();
-  return new paper.Color(c.r / 255, c.g / 255, c.b / 255, c.alpha);
-};
 
 export const colorToNumber = (color: string | number) => {
   return new Color(color).rgbNumber();
