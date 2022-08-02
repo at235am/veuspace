@@ -52,6 +52,7 @@ import {
   ToolWrapper,
   ActivityBar,
 } from "./Sidebar.styles";
+import { Graphics } from "pixi.js-legacy";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -79,9 +80,10 @@ const iconStroke = 2;
 
 const Sidebar = () => {
   // const { mode, renderMode, toggleMode, setBackground } = usePaperSpaceState();
-  const { app, zoom, activeTool, activateTool } = usePaperState();
+  const { app, activeTool, activateTool, drawCircle, viewport } =
+    usePaperState();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("notebook");
   const tabHandler = { activeTab, setActiveTab, activeTool };
 
@@ -114,35 +116,17 @@ const Sidebar = () => {
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const drawCircle = (options: CircleOptions) => {
-    const {
-      name = nanoid(),
-      x = 0,
-      y = 0,
-      radius = 1,
-      color = "#000000",
-    } = options;
-
-    const paper = app.current;
-    const circle = new paper.Path.Circle(new paper.Point(x, y), radius);
-
-    const s = new paper.Point(0, 0);
-    // s.
-    circle.name = name;
-    circle.fillColor = paperColor(color);
-  };
+  const zoom = (change: number) => {};
 
   const drawRandomCircle = () => {
-    const paper = app.current;
+    if (!app.current || !viewport.current) return;
 
-    const p = paper.project.view.viewToProject(
-      new paper.Point(
-        randomInt(0, paper.view.viewSize.width),
-        randomInt(0, paper.view.viewSize.height)
-      )
+    const { width, height } = app.current.screen;
+
+    const p = viewport.current.toWorld(
+      randomInt(0, width),
+      randomInt(0, height)
     );
-
-    // console.log(r);
     drawCircle({
       x: p.x,
       y: p.y,
@@ -184,8 +168,10 @@ const Sidebar = () => {
             id={TOOL.draw}
             onClick={() => {
               console.log("draw");
+              [...Array(50).keys()].forEach(() => drawRandomCircle());
+
               activateTool(TOOL.draw);
-              drawRandomCircle();
+              // drawRandomCircle();
             }}
           >
             <IconPencil size={iconSize} stroke={iconStroke} />
@@ -205,6 +191,7 @@ const Sidebar = () => {
             {...tabHandler}
             id={TOOL.circle}
             onClick={() => {
+              drawRandomCircle();
               activateTool(TOOL.circle);
             }}
           >
@@ -215,6 +202,18 @@ const Sidebar = () => {
             {...tabHandler}
             id={TOOL.rectangle}
             onClick={() => {
+              console.log("rect");
+              drawCircle({
+                x: 500,
+                y: 500,
+                // x: (app.current?.screen.width ?? 0) / 2,
+                // y: (app.current?.screen.height ?? 0) / 2,
+                radius: randomInt(10, 50),
+                color: randomInt(0, 0xffffff),
+                strokeWidth: 2,
+                strokeColor: 0xffffff,
+              });
+
               activateTool(TOOL.rectangle);
             }}
           >

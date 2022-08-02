@@ -8,8 +8,7 @@ import { useResizeDetector } from "react-resize-detector";
 import { Canvas, Container } from "./PaperSpace.styles";
 
 const PaperSpace = () => {
-  const { app, containerRef, canvasRef, init, setCanvasSize, zoom } =
-    usePaperState();
+  const { app, containerRef, canvasRef, init, setCanvasSize } = usePaperState();
   const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
     targetRef: containerRef,
   });
@@ -17,24 +16,20 @@ const PaperSpace = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    console.log("initilized");
+    console.log("calling init");
     init(canvasRef.current);
 
     return () => {};
   }, []);
 
   useEffect(() => {
+    if (width === 0 || height === 0) return;
     setCanvasSize(width, height);
   }, [width, height]);
 
   return (
-    <Container
-      ref={containerRef}
-      onWheel={(e) => {
-        zoom(e.deltaY, { x: e.clientX, y: e.clientY });
-      }}
-    >
-      <Canvas ref={canvasRef}></Canvas>
+    <Container ref={containerRef}>
+      <Canvas ref={canvasRef} />
     </Container>
   );
 };

@@ -7,17 +7,31 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import {
-  DragGesture,
-  MoveGesture,
-  PinchGesture,
-  ScrollGesture,
-} from "@use-gesture/vanilla";
+
 import paper from "paper";
 import { nanoid } from "nanoid";
+import { colorToNumber as clr } from "../utils/utils";
+
+import { getRandomIntInclusive as randomInt } from "../utils/utils";
+
+import { Viewport } from "pixi-viewport";
+
+import {
+  Application,
+  autoDetectRenderer,
+  CanvasRenderer,
+  Container,
+  Graphics,
+  InteractionData,
+  InteractionEvent,
+  Rectangle,
+  Renderer,
+} from "pixi.js-legacy";
 
 // utils:
-import { clamp, paperColor, roundIntToNearestMultiple } from "../utils/utils";
+import { clamp, roundIntToNearestMultiple } from "../utils/utils";
+
+import useUpdatedState from "../hooks/useUpdatedState";
 
 export type Tools =
   | "notebook"
@@ -54,6 +68,9 @@ export type CircleOptions = {
   y?: number;
   radius?: number;
   color?: string | number;
+  fillAlpha?: number;
+  strokeWidth?: number;
+  strokeColor?: string | number;
 };
 
 export type RectangleOptions = CircleOptions & {
@@ -70,21 +87,18 @@ export class CustomTool extends paper.Tool {
 }
 
 type State = {
-  app: React.MutableRefObject<paper.PaperScope>;
+  app: React.MutableRefObject<Application | undefined>;
   containerRef: React.MutableRefObject<HTMLDivElement | null>;
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  viewport: React.MutableRefObject<Viewport | null>;
   init: (canvas: HTMLCanvasElement) => void;
   activeTool: Tools;
   activateTool: (name: Tools) => void;
   setCanvasSize: (width: number, height: number) => void;
   drawBackground: () => void;
-  zoom: (
-    dir: number,
-    point?: {
-      x: number;
-      y: number;
-    }
-  ) => void;
+
+  // drawing functions:
+  drawCircle: (options: CircleOptions) => void;
 };
 
 type Props = {
@@ -94,455 +108,271 @@ type Props = {
 const PaperStateContext = createContext<State | undefined>(undefined);
 
 const PaperStateProvider = ({ children }: Props) => {
-  const app = useRef<paper.PaperScope>(new paper.PaperScope());
+  // important states:
+  const app = useRef<Application>();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const viewport = useRef<Viewport | null>(null);
 
+  // useful to generate certain things:
+  const [cell_size, cellSize, setCellSize] = useUpdatedState(60);
   const prevActiveTool = useRef<Tools>(TOOL.select);
 
   // useful states for handling events
   const [activeTool, setActiveTool] = useState<Tools>(TOOL.select);
+
   const selectedItems = useRef<paper.Group | null>(null);
   const hitResult = useRef<paper.HitResult | null>(null);
-
   const transformBoxes = useRef<paper.Layer | null>(null);
 
-  const hitOptions = {
-    bounds: true, // the corners and side-centerse of the bounding rectangle of items
-    fill: true,
-    stroke: true,
-    segments: false,
-    center: true,
-    tolerance: 5,
+  const init = (canvasElement: HTMLCanvasElement) => {
+    if (!containerRef.current) return;
+    if (app.current) return;
+
+    const box = containerRef.current.getBoundingClientRect();
+
+    app.current = new Application({
+      width: box.width,
+      height: box.height,
+      resolution: 1, // use 2 for hardware accelerated devices
+      antialias: true,
+      autoDensity: true,
+      view: canvasElement,
+      backgroundAlpha: 0,
+    });
+
+    if (app.current.renderer instanceof CanvasRenderer) console.log("CANVAS");
+    if (app.current.renderer instanceof Renderer) console.log("WEBGL");
+
+    // create viewport (all items will be here):
+    const vp = new Viewport({
+      interaction: app.current.renderer.plugins.interaction,
+      passiveWheel: false,
+      disableOnContextMenu: true,
+    });
+    vp.name = "items";
+    vp.drag({
+      mouseButtons: "all", // can specify combos of "left" | "right" | "middle" clicks
+    })
+      .wheel({
+        wheelZoom: true, // zooms with mouse wheel
+        center: null, // makes it zoom on pointer
+      })
+
+      .clampZoom({
+        minScale: 0.4, // minimum scale
+        maxScale: 10, // minimum scale
+      })
+      .pinch({ noDrag: false })
+      .on("zoomed", () => drawBackground())
+      .on("moved-end", () => drawBackground());
+
+    viewport.current = vp;
+
+    // add a background container to generate our infinite background patterns:
+    const background = new Container();
+    background.name = "background";
+    viewport.current.addChild(background);
+
+    // add the viewport to the application:
+    app.current.stage.addChild(viewport.current);
+
+    // const selectedItems = new Container();
+    // selectedItems.name = "active";
+    // app.current.stage.addChild(selectedItems);
   };
-
-  const zoom = (dir: number, point?: { x: number; y: number }) => {
-    if (!point)
-      point = { x: app.current.view.center.x, y: app.current.view.center.y };
-
-    const oldZoom = app.current.view.zoom;
-    const newZoom = dir > 0 ? oldZoom * 0.95 : oldZoom * 1.05;
-
-    const beta = oldZoom / newZoom;
-
-    const p = new app.current.Point(point.x, point.y);
-
-    //viewToProject: gives the coordinates in the Project space from the Screen Coordinates
-    const viewPosition = app.current.view.viewToProject(p);
-
-    const mpos = viewPosition;
-    const ctr = app.current.view.center;
-
-    const pc = mpos.subtract(ctr);
-    const offset = mpos.subtract(pc.multiply(beta)).subtract(ctr);
-
-    app.current.view.zoom = newZoom;
-    app.current.view.center = app.current.view.center.add(offset);
-  };
-
-  const pan = () => {};
 
   const drawBackground = () => {
-    // console.log("bg generate");
-    const bgLayer = app.current.project.layers.find(
-      (layer) => layer.name === "background"
-    );
-    const itemLayer = app.current.project.layers.find(
-      (layer) => layer.name === "items"
-    );
+    if (!app.current) return;
+    if (!viewport.current) return;
 
-    if (bgLayer) {
-      bgLayer.removeChildren();
-      bgLayer.activate();
+    const vp = viewport.current;
+    const bgc: Container = vp.getChildByName("background");
+    bgc.removeChildren();
 
-      const path = new app.current.Path.Circle(new app.current.Point(0, 0), 1);
-      path.fillColor = paperColor("#ffffff");
-      const symbol = new app.current.SymbolDefinition(path);
+    const cell = cell_size.current; // the gap between each cell of the grid
+    const pattern = new Graphics();
 
-      const viewbox_bounds = app.current.project.view.bounds;
+    // measurements
+    const vp_bounds = vp.getVisibleBounds();
+    const gridbox = vp_bounds.pad(cell);
+    const hboxes = Math.round(gridbox.width / cell);
+    const vboxes = Math.round(gridbox.height / cell);
 
-      // const width =
-      //   containerRef.current?.getBoundingClientRect().width ?? boundz.width;
-      // const height =
-      //   containerRef.current?.getBoundingClientRect().height ?? boundz.height;
+    // for circle:
+    pattern.beginFill(clr(0xffffff), 1);
+    pattern.lineStyle({ width: 0 });
 
-      // console.log(boundz.topLeft.x, boundz.topLeft.y);
-      // console.log(width, height);
+    // for rect:
+    // pattern.beginFill(0, 0);
+    // pattern.lineStyle({ width: 1, color: 0xffffff });
 
-      const d = 50; // the distances or gap between each point
+    for (let x = 0; x < hboxes; x++) {
+      for (let y = 0; y < vboxes; y++) {
+        const offsetX = roundIntToNearestMultiple(vp_bounds.x, cell);
+        const offsetY = roundIntToNearestMultiple(vp_bounds.y, cell);
+        const X = offsetX + x * cell;
+        const Y = offsetY + y * cell;
 
-      // add a buffer by subtracting d from the top left to expand the bounding box
-      // add a buffer by adding d from the bottom right to expand the bounding box
-      const topLeft = {
-        x: viewbox_bounds.topLeft.x - d,
-        y: viewbox_bounds.topLeft.y - d,
-      };
-      const bottomRight = {
-        x: viewbox_bounds.bottomRight.x + d,
-        y: viewbox_bounds.bottomRight.y + d,
-      };
-
-      const width = Math.abs(bottomRight.x - topLeft.x);
-      const height = Math.abs(bottomRight.y - topLeft.y);
-
-      // setting x,y = 0 and using the width, height divided by th
-      for (let x = 0; x < width / d; x++) {
-        for (let y = 0; y < height / d; y++) {
-          const offset = d; // we subtract this number from the final positions to offset the bigger bounding box we created
-
-          const offsetX = roundIntToNearestMultiple(
-            viewbox_bounds.topLeft.x,
-            d
-          );
-          const offsetY = roundIntToNearestMultiple(
-            viewbox_bounds.topLeft.y,
-            d
-          );
-          const X = offsetX + x * d - offset;
-          const Y = offsetY + y * d - offset;
-
-          // console.log({ x, y, X, Y });
-          symbol.place(
-            // app.current.project.view.projectToView(
-            new app.current.Point(X, Y)
-            // )
-          );
-        }
+        pattern.drawCircle(X, Y, 1); // for circle
+        // pattern.drawRect(X, Y, cell, cell); // for rect
       }
     }
-
-    if (itemLayer) itemLayer.activate();
+    pattern.endFill();
+    bgc.addChild(pattern);
   };
 
-  const init = (canvasElement: HTMLCanvasElement) => {
-    if (app.current.view) return;
-    if (!containerRef.current) return;
+  const deselectAll = () => {};
 
-    app.current = new paper.PaperScope();
-    app.current.setup(canvasElement);
-
-    // useful debug settings
-    app.current.settings.handleSize = 6;
-    app.current.project.activeLayer.selectedColor = paperColor("#ff0000");
-
-    // set canvas size always based on the container size:
-    const containerBox = containerRef.current.getBoundingClientRect();
-    setCanvasSize(containerBox.width, containerBox.height);
-
-    // create the background layer:
-    const bgLayer = new app.current.Layer();
-    bgLayer.name = "background";
-    drawBackground();
-
-    // create the layer where we keep all our items:
-    const transformLayer = new app.current.Layer();
-    transformLayer.name = "transform";
-    transformLayer.on({
-      mousedrag: (event: paper.Tool) => {
-        console.log("transform drag");
-      },
-    });
-    transformBoxes.current = transformLayer;
-
-    // create the layer where we keep all our items:
-    const itemLayer = new app.current.Layer();
-    itemLayer.name = "items";
-    itemLayer.activate();
-
-    drawCircle({ x: 0, y: 0, radius: 10, color: "#ff0000" });
-
-    // create the group where we'll group our selected items:
-    const selectedItemsGroup = new app.current.Group();
-    selectedItemsGroup.name = "selected";
-    itemLayer.addChild(selectedItemsGroup);
-    selectedItems.current = selectedItemsGroup;
-
-    initTools();
-    activateTool(TOOL.select);
+  const disablePanning = () => {
+    viewport.current?.drag({ pressDrag: false });
   };
-
-  const deselectAll = () => {
-    app.current.project.activeLayer.selected = false;
-    destroyTransfromHandles();
-    if (selectedItems.current)
-      removeChildrenFromGroupOnly(selectedItems.current);
+  const enablePanning = () => {
+    viewport.current?.drag({ pressDrag: true });
   };
 
   const activateTool = (name: Tools) => {
-    const tool = app.current.tools.find((t) => {
-      const customTool = t as CustomTool;
-      return customTool.name === name;
-    });
-
-    if (!tool) return;
-
-    tool.activate();
     setActiveTool(name);
     if (name !== TOOL.temp_select) prevActiveTool.current = name;
   };
 
-  const drawTransformHandles = (
-    item: paper.Item,
-    color: string | number,
-    padding = 3
-  ) => {
-    if (!transformBoxes.current) return;
-
-    const p = padding;
-    const { topLeft, bottomRight } = item.bounds;
-
-    const currentActiveLayer = app.current.project.activeLayer;
-    transformBoxes.current.activate();
-
-    const boundBox = new app.current.Path.Rectangle(
-      new app.current.Rectangle(
-        new app.current.Point(topLeft.x - p, topLeft.y - p),
-        new app.current.Point(bottomRight.x + p, bottomRight.y + p)
-      )
-    );
-    boundBox.strokeColor = paperColor(color ?? "#0000ff");
-    boundBox.strokeWidth = 2;
-    transformBoxes.current.addChild(boundBox);
-    currentActiveLayer.activate();
-  };
-
-  const destroyTransfromHandles = () => {
-    transformBoxes.current?.removeChildren();
-  };
-
-  /**
-   * !!!!!!!!!!!!!! DANGEROUS !!!!!!!!!!!!!!
-   * Adds a item to the group designated for holding selected item.
-   * This function itself is safe, however, if you manually add an item
-   * to a group with Group.addChild() instead, you can end up adding a
-   * group to itself, which will cause a lot of recursion calls which is
-   * caused by paper.js constructors(). This will cause a MAXIMUM STACK ERROR.
-   * @param item the paper.Item to be added
-   * @returns
-   */
-  const addItemToSelectedGroup = (item: paper.Item) => {
-    if (!selectedItems.current) return;
-
-    if (selectedItems.current.name !== item.name)
-      selectedItems.current.addChild(item);
-  };
-
-  const removeChildrenFromGroupOnly = (group: paper.Group) => {
-    // remove all the children from the group and re-add them to the activeLayer ("items")
-    group
-      .removeChildren()
-      .forEach((item) => app.current.project.activeLayer.addChild(item));
-  };
-
   const drawCircle = (options: CircleOptions) => {
+    if (!app.current) return;
+    if (!viewport.current) return;
     const {
-      name = nanoid(),
       x = 0,
       y = 0,
-      radius = 1,
-      color = "#000000",
+      radius = 5,
+      color = 0xaabbcc,
+      name,
+      strokeColor = 0xaabbcc,
+      strokeWidth = 0,
     } = options;
 
-    const paper = app.current;
-    const circle = new app.current.Path.Circle(new paper.Point(x, y), radius);
+    const vp = viewport.current;
 
-    circle.name = name;
-    circle.fillColor = paperColor(color);
+    const gfx = new Graphics();
+    gfx.lineStyle({ color: clr(strokeColor), width: strokeWidth });
+    gfx.beginFill(clr(color), 1);
+    gfx.drawCircle(0, 0, radius);
+    gfx.endFill();
+
+    gfx.position.set(x, y);
+    gfx.buttonMode = true;
+    gfx.interactive = true;
+
+    let dragging = false;
+    let mousedowndata: InteractionData | null;
+    let offset = { x: 0, y: 0 };
+
+    const onDragStart = (event: InteractionEvent) => {
+      if (!viewport.current) return;
+      // viewport.current.pause = true;
+      disablePanning();
+
+      dragging = true;
+      gfx.alpha = 0.8;
+      mousedowndata = event.data;
+
+      const lp = event.data.getLocalPosition(gfx.parent);
+      offset = { x: gfx.x - lp.x, y: gfx.y - lp.y };
+    };
+
+    const onDragEnd = (event: InteractionEvent) => {
+      if (!viewport.current) return;
+      // viewport.current.pause = false;
+      enablePanning();
+
+      dragging = false;
+      gfx.alpha = 1;
+      mousedowndata = null;
+    };
+
+    const onDragMove = (event: InteractionEvent) => {
+      if (dragging) {
+        if (!mousedowndata) return;
+        const new_pos = mousedowndata.getLocalPosition(gfx.parent);
+        gfx.position.set(new_pos.x + offset.x, new_pos.y + offset.y);
+      }
+    };
+
+    gfx
+      .on("pointerdown", onDragStart)
+      .on("pointerup", onDragEnd)
+      .on("pointerupoutside", onDragEnd)
+      .on("pointermove", onDragMove);
+
+    vp.addChild(gfx);
   };
 
   const drawRectangle = (options: RectangleOptions) => {
-    const {
-      name = nanoid(),
+    if (!app.current) return;
+    if (!viewport.current) return;
+    let {
       x = 0,
       y = 0,
-      radius = 1,
-      width = 1,
-      height = 1,
-      color = "#000000",
+      radius = 5,
+      color,
+      fillAlpha = 1,
+      name,
+      strokeColor = 0xaabbcc,
+      strokeWidth = 0,
+      width = 10,
+      height = 10,
     } = options;
 
-    const rect = new app.current.Path.Rectangle(
-      new paper.Rectangle(x, y, width, height),
-      new paper.Size(radius, radius)
-    );
+    const vp = viewport.current;
+    // const world = vp.toWorld(x, y);
+    const world = { x, y };
+    const graphics = new Graphics();
 
-    rect.name = name;
-    rect.fillColor = paperColor(color);
+    color = color ? clr(color) : undefined;
+    fillAlpha = color ? fillAlpha : 0;
+    graphics.beginFill(color, fillAlpha);
+    graphics.lineStyle({ color: clr(strokeColor), width: strokeWidth });
+    graphics.drawRect(world.x, world.y, width, height);
+    graphics.endFill();
 
-    // rect.onKeyDown = (event: paper.ToolEvent) => {
-    //   console.log("ON KEY DOWN");
-    //   if (event.modifiers.control) {
-    //     console.log("CHILDREN", selectedItems.current?.children);
-    //   }
-    // };
-    // }
-    // rect.on(selectListeners);
-    // rect.onMouseDown = (event: any) => {
-    // const toolname = (app.current.tool as CustomTool).name;
-    // if (toolname !== TOOL.temp_select && toolname !== TOOL.select) {
-    //   console.log("changed to tool");
-    //   activateTool(TOOL.temp_select);
-    //   app.current.tool.emit("mousedown", event);
-    // };
-
-    return rect;
+    vp.addChild(graphics);
   };
 
-  const initTools = () => {
-    if (!app.current.view) return;
-
-    ///////////////////////////////////////////////////////////////////////////////////////
-    const selectionTool = new CustomTool(TOOL.select);
-    const tempSelectionTool = new CustomTool(TOOL.temp_select);
-
-    const selectListeners = {
-      mousedown: (event: paper.ToolEvent) => {
-        console.log("> TOOL:select:mousedown");
-        // activateTool(TOOL.temp_select);
-        // deselectAll(); // everytime theres a mousedown event we just deselect all items;
-
-        const items = app.current.project.layers.find(
-          (layer) => layer.name === "items"
-        );
-
-        if (!items) return;
-        hitResult.current = items.hitTest(event.point, hitOptions);
-
-        if (!hitResult.current) deselectAll();
-
-        if (!hitResult.current || !selectedItems.current) return;
-
-        // deselectAll();
-        const activeItem = hitResult.current.item;
-
-        const isAlreadySelected = selectedItems.current.children.some(
-          (item) => item.id === activeItem.id
-        );
-
-        const isAlreadySelected2 = selectedItems.current.isParent(activeItem);
-
-        if (!isAlreadySelected) {
-          if (event.modifiers.shift) {
-            // MULTI SELECT so we can just add the item:
-            addItemToSelectedGroup(activeItem);
-          } else {
-            // SINGLE SELECT so we have to remove all other items first:
-            removeChildrenFromGroupOnly(selectedItems.current);
-            addItemToSelectedGroup(activeItem);
-          }
-        }
-
-        // destroy all current transform handles:
-        destroyTransfromHandles();
-
-        // draw transform handles for each individual selected items:
-        selectedItems.current.children.forEach((item) => {
-          drawTransformHandles(item, "#ff0000");
-        });
-
-        // draw transform handles for the group of selected items
-        if (selectedItems.current.children.length > 1) {
-          drawTransformHandles(selectedItems.current, "#00ff00", 5);
-        }
-      },
-      mousedrag: (event: paper.ToolEvent) => {
-        // console.log("> TOOL:select:mousedrag");
-
-        if (!selectedItems.current) return;
-        if (selectedItems.current.children.length > 0) {
-          // move selected item and their transform handles:
-          const { x, y } = event.delta;
-          selectedItems.current.translate(new app.current.Point(x, y));
-          transformBoxes.current?.translate(new app.current.Point(x, y));
-        }
-
-        if (!hitResult.current) {
-          const pan_offset = event.point.subtract(event.downPoint);
-          app.current.view.center =
-            app.current.view.center.subtract(pan_offset);
-          drawBackground();
-        }
-      },
-      mouseup: (event: paper.ToolEvent) => {
-        console.log("> TOOL:select:mouseup");
-        // activateTool(prevActiveTool.current);
-      },
-    };
-
-    selectionTool.on(selectListeners);
-    tempSelectionTool.on({
-      ...selectListeners,
-      mouseup: (event: any) => {
-        activateTool(prevActiveTool.current);
-      },
-    });
-
-    ///////////////////////////////////////////////////////////////////////////////////////
-    const circleTool = new CustomTool(TOOL.circle);
-
-    circleTool.on({
-      mousedown: (event: paper.ToolEvent) => {
-        drawCircle({
-          color: "#00ff00",
-          x: event.downPoint.x,
-          y: event.downPoint.y,
-          radius: 50,
-        });
-      },
-      mousedrag: (event: any) => {},
-    });
-    ///////////////////////////////////////////////////////////////////////////////////////
-    const rectangeTool = new CustomTool(TOOL.rectangle);
-
-    let preview: paper.Path.Rectangle;
-    rectangeTool.on({
-      mousedown: (event: paper.ToolEvent) => {
-        console.log("> TOOL:RECT:mousedown");
-        // deselectAll();
-      },
-      mousedrag: (event: any) => {
-        console.log("> TOOL:RECT:mousedrag");
-        preview?.remove();
-        preview = drawRectangle({
-          color: "#00ff00",
-          x: event.downPoint.x,
-          y: event.downPoint.y,
-          width: event.point.x - event.downPoint.x,
-          height: event.point.y - event.downPoint.y,
-          radius: 0,
-        });
-      },
-      mouseup: (event: any) => {
-        console.log("> TOOL:RECT:up");
-
-        preview?.remove();
-        drawRectangle({
-          color: "#00ff00",
-          x: event.downPoint.x,
-          y: event.downPoint.y,
-          width: event.point.x - event.downPoint.x,
-          height: event.point.y - event.downPoint.y,
-          radius: 5,
-        });
-        activateTool(TOOL.select);
-      },
-    });
-  };
+  const initTools = () => {};
 
   const setCanvasSize = (width: number, height: number) => {
-    const Paper = app.current;
-    Paper.view.viewSize = new Paper.Size(width, height);
+    if (!app.current) return;
+    app.current.renderer.resize(width, height);
+    app.current.view.style.width = `${width}px`;
+    app.current.view.style.height = `${height}px`;
+
+    if (!viewport.current) return;
+    viewport.current.resize(width, height);
+    drawBackground();
   };
 
   useEffect(() => {
     const test = (event: KeyboardEvent) => {
       if (event.key === "d") {
         console.log("--------------DEBUG------------------------");
-        // console.debug(app.current.project.);
-        // console.log("SELECTED ITEMS", selectedItems.current);
-        drawBackground();
-        // console.log("CHILDREN", selectedItems.current?.children);
+        // console.log(app.current?.stage.children.length);
+        // console.log(app.current?.stage.children.map((item) => item));
+        setCellSize((v) => v + 5);
         console.log("-------------END DEBUG----------------------");
+      }
+      if (event.key === "a") {
+        if (!viewport.current) return;
+        if (!app.current) return;
+        const color = randomInt(0, 0xffffff);
+
+        const bounds = viewport.current.getVisibleBounds();
+        console.log(bounds);
+        drawRectangle({
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+          strokeWidth: 2,
+          strokeColor: color,
+        });
       }
     };
 
@@ -551,6 +381,11 @@ const PaperStateProvider = ({ children }: Props) => {
       window.removeEventListener("keydown", test);
     };
   }, []);
+
+  useEffect(() => {
+    console.log("cell size changed to", cellSize);
+    drawBackground();
+  }, [cellSize]);
 
   useEffect(() => {
     console.log("!!!!! PaperContext re-rendering");
@@ -562,13 +397,14 @@ const PaperStateProvider = ({ children }: Props) => {
         app,
         containerRef,
         canvasRef,
-
+        viewport,
         init,
         activeTool,
         activateTool,
         setCanvasSize,
         drawBackground,
-        zoom,
+
+        drawCircle,
       }}
     >
       {children}

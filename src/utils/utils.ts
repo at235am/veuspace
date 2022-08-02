@@ -47,6 +47,10 @@ export const paperColor = (color: string | number) => {
   return new paper.Color(c.r / 255, c.g / 255, c.b / 255, c.alpha);
 };
 
+export const colorToNumber = (color: string | number) => {
+  return new Color(color).rgbNumber();
+};
+
 /**
  * Turns an array of item objects with type T into
  * an object with key value (k, v) pairs of (id, T)

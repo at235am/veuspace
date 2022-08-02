@@ -1,17 +1,23 @@
-import { MutableRefObject, useRef, useState } from "react";
+import {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 const useUpdatedState = <T>(
   state: T
-): [MutableRefObject<T>, T, (val: T) => void] => {
+): [MutableRefObject<T>, T, Dispatch<SetStateAction<T>>] => {
   const [value, setValue] = useState<T>(state);
   const valueRef = useRef<T>(state);
 
-  const setState = (val: T) => {
-    valueRef.current = val;
-    setValue(val);
-  };
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
-  return [valueRef, value, setState];
+  return [valueRef, value, setValue];
 };
 
 export default useUpdatedState;
