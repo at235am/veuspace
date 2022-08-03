@@ -12,7 +12,7 @@ import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import { TabNavItem } from "./TabNavItem";
-import { usePaperState, TOOL } from "../../contexts/PaperContext";
+import { usePaperState, TOOL, Tool } from "../../contexts/PaperContext";
 import { nanoid, random } from "nanoid";
 
 import {
@@ -55,13 +55,16 @@ const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
 };
 
-const TabContent: { [id: string]: ReactNode } = {
-  notespaces: <Test text="notespaces" />,
-  select: <Test text="select" />,
-  draw: <Test text="draw" />,
-  pan: <Test text="pan" />,
-  text_add: <Test text="text_add" />,
-  share: <Test text="share" />,
+const TabContent: Record<Tool, ReactNode> = {
+  [TOOL.SELECT]: <Test text="select" />,
+  [TOOL.FREEHAND]: <Test text="draw" />,
+  [TOOL.TEXT_ADD]: <Test text="text_add" />,
+  [TOOL.SHAPE]: <Test text="SHAPE" />,
+  [TOOL.CIRCLE]: <Test text="CIRCLE" />,
+  [TOOL.RECTANGLE]: <Test text="RECTANGLE" />,
+  [TOOL.TEXT_ADD]: <Test text="TEXT_ADD" />,
+  [TOOL.TEXT_EDIT]: <Test text="TEXT_EDIT" />,
+  [TOOL.NOTEBOOK]: <Test text="notespaces" />,
 };
 
 type CircleOptions = {
@@ -81,7 +84,7 @@ const Sidebar = () => {
     usePaperState();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("notebook");
+  const [activeTab, setActiveTab] = useState<Tool>(TOOL.SELECT);
   const tabHandler = { activeTab, setActiveTab, activeTool };
 
   const sidebarAnim = {
@@ -144,17 +147,17 @@ const Sidebar = () => {
           </ToggleBarButton>
         </Header>
         <ToolWrapper>
-          <TabNavItem {...tabHandler} id={TOOL.notebook} onClick={openSidebar}>
+          <TabNavItem {...tabHandler} id={TOOL.NOTEBOOK} onClick={openSidebar}>
             <IconNotebook size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 
           <TabNavItem
             {...tabHandler}
-            id={TOOL.select}
-            // activeTool={activeTool === TOOL.select}
+            id={TOOL.SELECT}
+            // activeTool={activeTool === TOOL.SELECT.select}
             onClick={() => {
               console.log("select");
-              activateTool(TOOL.select);
+              activateTool(TOOL.SELECT);
             }}
           >
             <IconClick size={iconSize} stroke={iconStroke} />
@@ -162,13 +165,10 @@ const Sidebar = () => {
 
           <TabNavItem
             {...tabHandler}
-            id={TOOL.draw}
+            id={TOOL.FREEHAND}
             onClick={() => {
-              console.log("draw");
-              [...Array(50).keys()].forEach(() => drawRandomCircle());
-
-              activateTool(TOOL.draw);
-              // drawRandomCircle();
+              console.log("freehand");
+              activateTool(TOOL.FREEHAND);
             }}
           >
             <IconPencil size={iconSize} stroke={iconStroke} />
@@ -176,20 +176,11 @@ const Sidebar = () => {
 
           <TabNavItem
             {...tabHandler}
-            id={TOOL.pan}
+            id={TOOL.CIRCLE}
             onClick={() => {
-              activateTool(TOOL.pan);
-            }}
-          >
-            <IconArrowsMove size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.circle}
-            onClick={() => {
-              drawRandomCircle();
-              activateTool(TOOL.circle);
+              // drawRandomCircle();
+              [...Array(50).keys()].forEach(() => drawRandomCircle());
+              activateTool(TOOL.CIRCLE);
             }}
           >
             <IconCircle size={iconSize} stroke={iconStroke} />
@@ -197,9 +188,8 @@ const Sidebar = () => {
 
           <TabNavItem
             {...tabHandler}
-            id={TOOL.rectangle}
+            id={TOOL.RECTANGLE}
             onClick={() => {
-              console.log("rect");
               drawCircle({
                 x: 500,
                 y: 500,
@@ -211,7 +201,7 @@ const Sidebar = () => {
                 strokeColor: 0xffffff,
               });
 
-              activateTool(TOOL.rectangle);
+              activateTool(TOOL.RECTANGLE);
             }}
           >
             <IconRectangle size={iconSize} stroke={iconStroke} />
@@ -219,33 +209,41 @@ const Sidebar = () => {
 
           <TabNavItem
             {...tabHandler}
-            id={TOOL.text_add}
+            id={TOOL.TEXT_ADD}
             onClick={() => {
-              activateTool(TOOL.text_add);
+              activateTool(TOOL.TEXT_ADD);
             }}
           >
             <IconTypography size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 
-          <TabNavItem {...tabHandler} id="zoom_in" onClick={() => zoom(-1)}>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.TEXT_EDIT}
+            onClick={() => zoom(-1)}
+          >
             <IconPlus size={iconSize} stroke={iconStroke} />
           </TabNavItem>
-          <TabNavItem {...tabHandler} id="zoom_out" onClick={() => zoom(1)}>
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.TEXT_EDIT}
+            onClick={() => zoom(1)}
+          >
             <IconMinus size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 
           <TabNavItem
             {...tabHandler}
-            id="TESTTESTTEST"
+            id={TOOL.TEXT_EDIT}
             onClick={() => {
               console.log("current tool", activeTool);
-              activateTool(TOOL.select);
+              activateTool(TOOL.SELECT);
             }}
           >
             <IconBug size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 
-          <TabNavItem {...tabHandler} id="share" onClick={() => {}}>
+          <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={() => {}}>
             <IconShare size={iconSize} stroke={iconStroke} />
           </TabNavItem>
         </ToolWrapper>

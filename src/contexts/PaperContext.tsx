@@ -31,35 +31,23 @@ import {
 import { clamp, roundIntToNearestMultiple } from "../utils/utils";
 
 import useUpdatedState from "../hooks/useUpdatedState";
+import getStroke from "perfect-freehand";
+import { ToolWrapper } from "../components/Sidebar/Sidebar.styles";
 
-export type Tools =
-  | "notebook"
-  | "select"
-  | "temp_select"
-  | "draw"
-  | "pan"
-  | "temp_pan"
-  | "circle"
-  | "rectangle"
-  | "text_add"
-  | "text_edit"
-  | "reset"
-  | "eraser";
+export const TOOL = {
+  SELECT: "select",
+  FREEHAND: "freehand",
+  SHAPE: "shape",
+  CIRCLE: "circle",
+  RECTANGLE: "rectangle",
+  TEXT_ADD: "text_add",
+  TEXT_EDIT: "text_edit",
+  NOTEBOOK: "notebook",
+} as const;
 
-export const TOOL: Record<Tools, Tools> = {
-  notebook: "notebook",
-  select: "select",
-  temp_select: "temp_select",
-  draw: "draw",
-  pan: "pan",
-  temp_pan: "temp_pan",
-  circle: "circle",
-  rectangle: "rectangle",
-  text_add: "text_add",
-  text_edit: "text_edit",
-  reset: "reset",
-  eraser: "eraser",
-};
+export type ReverseMap<T> = T[keyof T];
+
+export type Tool = ReverseMap<typeof TOOL>;
 
 export type CircleOptions = {
   name?: string;
@@ -83,8 +71,8 @@ type State = {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   viewport: React.MutableRefObject<Viewport | null>;
   init: (canvas: HTMLCanvasElement) => void;
-  activeTool: Tools;
-  activateTool: (name: Tools) => void;
+  activeTool: Tool;
+  activateTool: (name: Tool) => void;
   setCanvasSize: (width: number, height: number) => void;
   drawBackground: () => void;
 
@@ -107,10 +95,10 @@ const PaperStateProvider = ({ children }: Props) => {
 
   // useful to generate certain things:
   const [cell_size, cellSize, setCellSize] = useUpdatedState(60);
-  const prevActiveTool = useRef<Tools>(TOOL.select);
+  const prevActiveTool = useRef<Tool>(TOOL.SELECT);
 
   // useful states for handling events
-  const [activeTool, setActiveTool] = useState<Tools>(TOOL.select);
+  const [activeTool, setActiveTool] = useState<Tool>(TOOL.SELECT);
 
   // const selectedItems = useRef<paper.Group | null>(null);
   // const hitResult = useRef<paper.HitResult | null>(null);
@@ -165,12 +153,30 @@ const PaperStateProvider = ({ children }: Props) => {
     background.name = "background";
     viewport.current.addChild(background);
 
+    const freehandSpace = new Container();
+    freehandSpace.name = "freehand";
+    viewport.current.addChild(background);
+
     // add the viewport to the application:
     app.current.stage.addChild(viewport.current);
 
     // const selectedItems = new Container();
     // selectedItems.name = "active";
     // app.current.stage.addChild(selectedItems);
+  };
+
+  const initTools = () => {};
+
+  const drawFreehand = () => {
+    if (!app.current) return;
+    if (!viewport.current) return;
+    // getStroke()
+
+    let points: number[][] = [];
+    const line = new Graphics();
+    line.beginFill(0xffffff);
+
+    line.endFill();
   };
 
   const drawBackground = () => {
@@ -222,9 +228,9 @@ const PaperStateProvider = ({ children }: Props) => {
     viewport.current?.drag({ pressDrag: true });
   };
 
-  const activateTool = (name: Tools) => {
+  const activateTool = (name: Tool) => {
     setActiveTool(name);
-    if (name !== TOOL.temp_select) prevActiveTool.current = name;
+    if (name !== TOOL.SHAPE) prevActiveTool.current = name;
   };
 
   const drawCircle = (options: CircleOptions) => {
@@ -327,8 +333,6 @@ const PaperStateProvider = ({ children }: Props) => {
     vp.addChild(graphics);
   };
 
-  const initTools = () => {};
-
   const setCanvasSize = (width: number, height: number) => {
     if (!app.current) return;
     app.current.renderer.resize(width, height);
@@ -346,16 +350,14 @@ const PaperStateProvider = ({ children }: Props) => {
         console.log("--------------DEBUG------------------------");
         // console.log(app.current?.stage.children.length);
         // console.log(app.current?.stage.children.map((item) => item));
-        setCellSize((v) => v + 5);
+        // setCellSize((v) => v + 5);
         console.log("-------------END DEBUG----------------------");
       }
       if (event.key === "a") {
         if (!viewport.current) return;
         if (!app.current) return;
         const color = randomInt(0, 0xffffff);
-
         const bounds = viewport.current.getVisibleBounds();
-        console.log(bounds);
         drawRectangle({
           x: bounds.x,
           y: bounds.y,
@@ -374,7 +376,23 @@ const PaperStateProvider = ({ children }: Props) => {
   }, []);
 
   useEffect(() => {
-    console.log("cell size changed to", cellSize);
+    switch (activeTool) {
+      case TOOL.SELECT:
+        break;
+      case TOOL.FREEHAND:
+        break;
+      case TOOL.CIRCLE:
+        break;
+      case TOOL.RECTANGLE:
+        break;
+
+      default:
+        break;
+    }
+  }, [activeTool]);
+
+  useEffect(() => {
+    console.log("Cell size changed to", cellSize);
     drawBackground();
   }, [cellSize]);
 

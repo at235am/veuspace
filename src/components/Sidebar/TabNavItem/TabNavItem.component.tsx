@@ -1,12 +1,13 @@
 import React, { Dispatch, SetStateAction, useEffect } from "react";
+import { Tool } from "../../../contexts/PaperContext";
 import { Container, Line, Button } from "./TabNavItem.styles";
 
 type Props = {
-  id: string;
+  id: Tool;
   children: React.ReactNode;
-  activeTool: string;
-  activeTab: string;
-  setActiveTab: Dispatch<SetStateAction<string>>;
+  activeTool: Tool;
+  activeTab: Tool;
+  setActiveTab: Dispatch<SetStateAction<Tool>>;
   onClick?: () => void;
 };
 
