@@ -57,6 +57,7 @@ const Test = ({ text }: { text: string }) => {
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <Test text="select" />,
+  [TOOL.ERASE]: <Test text="draw" />,
   [TOOL.FREEHAND]: <Test text="draw" />,
   [TOOL.TEXT_ADD]: <Test text="text_add" />,
   [TOOL.SHAPE]: <Test text="SHAPE" />,
@@ -64,7 +65,6 @@ const TabContent: Record<Tool, ReactNode> = {
   [TOOL.RECTANGLE]: <Test text="RECTANGLE" />,
   [TOOL.TEXT_ADD]: <Test text="TEXT_ADD" />,
   [TOOL.TEXT_EDIT]: <Test text="TEXT_EDIT" />,
-  [TOOL.NOTEBOOK]: <Test text="notespaces" />,
 };
 
 type CircleOptions = {
@@ -147,7 +147,7 @@ const Sidebar = () => {
           </ToggleBarButton>
         </Header>
         <ToolWrapper>
-          <TabNavItem {...tabHandler} id={TOOL.NOTEBOOK} onClick={openSidebar}>
+          <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={openSidebar}>
             <IconNotebook size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 

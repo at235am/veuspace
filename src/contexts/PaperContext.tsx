@@ -9,7 +9,7 @@ import React, {
 } from "react";
 
 import { nanoid } from "nanoid";
-import { colorToNumber as clr } from "../utils/utils";
+import { colorToNumber as clr, getRandomIntInclusive } from "../utils/utils";
 
 import { getRandomIntInclusive as randomInt } from "../utils/utils";
 
@@ -23,6 +23,7 @@ import {
   Graphics,
   InteractionData,
   InteractionEvent,
+  InteractionManager,
   Rectangle,
   Renderer,
 } from "pixi.js-legacy";
@@ -31,18 +32,18 @@ import {
 import { clamp, roundIntToNearestMultiple } from "../utils/utils";
 
 import useUpdatedState from "../hooks/useUpdatedState";
-import getStroke from "perfect-freehand";
-import { ToolWrapper } from "../components/Sidebar/Sidebar.styles";
+import getStroke, { getStrokePoints, StrokeOptions } from "perfect-freehand";
 
 export const TOOL = {
-  SELECT: "select",
-  FREEHAND: "freehand",
-  SHAPE: "shape",
-  CIRCLE: "circle",
-  RECTANGLE: "rectangle",
-  TEXT_ADD: "text_add",
-  TEXT_EDIT: "text_edit",
-  NOTEBOOK: "notebook",
+  //                         DESKTOP                     | MOBILE
+  SELECT: "select", //       L=pan  M=pan R=pan   W=zoom | L1=pan   L2=zoom L3=pan
+  ERASE: "erase", //         L=tool M=pan R=erase W=zoom | L1=erase L2=zoom L3=pan
+  FREEHAND: "freehand", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  SHAPE: "shape", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  CIRCLE: "circle", //       L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  RECTANGLE: "rectangle", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  TEXT_ADD: "text_add", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  TEXT_EDIT: "text_edit", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
 } as const;
 
 export type ReverseMap<T> = T[keyof T];
@@ -78,6 +79,8 @@ type State = {
 
   // drawing functions:
   drawCircle: (options: CircleOptions) => void;
+
+  text: {};
 };
 
 type Props = {
@@ -85,20 +88,28 @@ type Props = {
 };
 
 const PaperStateContext = createContext<State | undefined>(undefined);
-
+/** @todo turn most of this hook into a class and return just one variable*/
 const PaperStateProvider = ({ children }: Props) => {
   // important states:
   const app = useRef<Application>();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  //
   const viewport = useRef<Viewport | null>(null);
+  const items = useRef<Container | null>(null);
+  // const freehand = useRef<Container | null>(null);
 
   // useful to generate certain things:
   const [cell_size, cellSize, setCellSize] = useUpdatedState(60);
   const prevActiveTool = useRef<Tool>(TOOL.SELECT);
 
   // useful states for handling events
-  const [activeTool, setActiveTool] = useState<Tool>(TOOL.SELECT);
+  const [active_tool, activeTool, setActiveTool] = useUpdatedState<Tool>(
+    TOOL.SELECT
+  );
+
+  const [text, setText] = useState({});
 
   // const selectedItems = useRef<paper.Group | null>(null);
   // const hitResult = useRef<paper.HitResult | null>(null);
@@ -129,7 +140,7 @@ const PaperStateProvider = ({ children }: Props) => {
       passiveWheel: false,
       disableOnContextMenu: true,
     });
-    vp.name = "items";
+    vp.name = "viewport";
     vp.drag({
       mouseButtons: "all", // can specify combos of "left" | "right" | "middle" clicks
     })
@@ -137,46 +148,208 @@ const PaperStateProvider = ({ children }: Props) => {
         wheelZoom: true, // zooms with mouse wheel
         center: null, // makes it zoom on pointer
       })
-
       .clampZoom({
-        minScale: 0.4, // minimum scale
+        minScale: 0.3, // minimum scale
         maxScale: 10, // minimum scale
       })
-      .pinch({ noDrag: false })
-      .on("zoomed", () => drawBackground())
-      .on("moved-end", () => drawBackground());
+      .pinch({ noDrag: true })
+      .on("zoomed", () => drawBackground()) //    pixi-viewport event only
+      .on("moved-end", () => drawBackground()) // pixi-viewport event only
+      .on("pointerdown", (event: InteractionEvent) => {
+        if (!app.current || !items.current) return;
+
+        // THIS IS ONLY TRUE if the original event is NOT a TouchEvent
+        // event.data.button returns 1 on touch devices WHICH IS NOT the middle click
+        let isMiddleClick = event.data.button === 1;
+        let touches = 1;
+
+        if (window.TouchEvent) {
+          // firefox does not have TouchEvent so we need to check
+          // if window.TouchEvent existts before referencing it
+          if (event.data.originalEvent instanceof window.TouchEvent) {
+            const touchEvent = event.data.originalEvent as TouchEvent;
+            touches = touchEvent.touches.length;
+            isMiddleClick = false; // since this is
+          }
+        }
+        if (isMiddleClick) return; // to stop the hit test
+
+        // do a hit test:
+        const interation = app.current.renderer.plugins
+          .interaction as InteractionManager;
+        const hit = interation.hitTest(event.data.global, items.current);
+
+        if (hit) disablePanning();
+      })
+      .on("pointerup", (event: InteractionEvent) => {
+        console.log("pointerup", active_tool.current);
+        if (active_tool.current === TOOL.SELECT) enablePanning();
+        else disablePanning();
+      });
+
+    // freehand listeners:
+
+    let path = new Graphics();
+    let dragging = false;
+    let points: number[][] = [];
+    let color = 0;
+
+    const options: StrokeOptions = {
+      size: 10,
+      thinning: 0.8,
+      smoothing: 0.01,
+
+      streamline: 0.99,
+      easing: (t) => t,
+      start: {
+        taper: 0,
+        cap: true,
+      },
+      end: {
+        taper: 0,
+        cap: true,
+      },
+    };
+
+    vp.on("pointerdown", (event: InteractionEvent) => {
+      if (active_tool.current === TOOL.FREEHAND) {
+        console.log("freehand OSDJFlksjldf");
+        dragging = true;
+        path = new Graphics();
+        color = getRandomIntInclusive(0, 0xffffff);
+        path.lineStyle({ width: 0 });
+        items.current?.addChild(path);
+
+        // const { x, y } = event.data.global;
+        const { x, y } = vp.toWorld(event.data.global);
+
+        // path.position.set(x, y);
+        points.push([x, y]);
+      }
+    })
+      .on("pointermove", (event: InteractionEvent) => {
+        if (active_tool.current === TOOL.FREEHAND && dragging) {
+          // console.log("pointermove");
+          // const { x, y } = event.data.global;
+          const { x, y } = vp.toWorld(event.data.global);
+          points.push([x, y]);
+
+          path.clear();
+          path.beginFill(color, 1);
+          const s = getStroke(points, options);
+          const fs = s.flatMap((i) => i);
+          path.drawPolygon(fs);
+          path.endFill();
+        }
+      })
+      .on("pointerup", () => {
+        if (active_tool.current === TOOL.FREEHAND) {
+          // path.destroy();
+          // const finalPath = new Graphics();
+          // const s = getStroke(points, {
+          //   ...options,
+          //   end: {
+          //     taper: true,
+          //     cap: false,
+          //   },
+          // });
+          // const fs = s.flatMap((i) => i);
+          // finalPath.beginFill(color, 1);
+          // finalPath.drawPolygon(fs);
+          // finalPath.endFill();
+          // items.current?.addChild(finalPath);
+
+          dragging = false;
+          points = [];
+        }
+      });
 
     viewport.current = vp;
 
-    // add a background container to generate our infinite background patterns:
+    // background container to generate our infinite background patterns:
     const background = new Container();
     background.name = "background";
-    viewport.current.addChild(background);
 
-    const freehandSpace = new Container();
-    freehandSpace.name = "freehand";
-    viewport.current.addChild(background);
+    // container where we'll put all items that get join and are interactable
+    const itemsContainer = new Container();
+    itemsContainer.name = "items";
+    items.current = itemsContainer;
 
-    // add the viewport to the application:
+    // prolly dont need this
+    // const freehandSpace = new Container();
+    // freehandSpace.name = "freehand";
+    // freehand.current = freehandSpace;
+
+    // freehandSpace.visible = false;
+
+    // ADDING CHILD ORDER IS IMPORTANT:
+    viewport.current.addChild(background);
+    viewport.current.addChild(itemsContainer);
+    // viewport.current.addChild(freehandSpace);
     app.current.stage.addChild(viewport.current);
 
     // const selectedItems = new Container();
     // selectedItems.name = "active";
     // app.current.stage.addChild(selectedItems);
+
+    // initTools(freehandSpace);
   };
 
-  const initTools = () => {};
+  const initTools = (freehandContainer: Container) => {
+    if (!viewport.current) return;
+    console.log("initTools:", freehandContainer);
 
-  const drawFreehand = () => {
+    const vp = viewport.current;
+
+    const { x, y, width, height } = vp.getVisibleBounds();
+
+    const surface = new Graphics();
+    surface.beginFill(0);
+    surface.drawRect(0, 0, width, height);
+    surface.endFill();
+    surface.position.set(x, y);
+
+    freehandContainer
+      .on("click", (ie: InteractionEvent) => {
+        console.log("> freehand:pointerdown");
+      })
+      .on("pointerdown", (ie: InteractionEvent) => {
+        console.log("> freehand:pointerdown");
+      });
+
+    freehandContainer.zIndex = 5000;
+
+    freehandContainer.addChild(surface);
+
+    freehandContainer.zIndex = 6000;
+    // freehandContainer.visible = false;
+  };
+
+  const activateFreehandMode = () => {
+    if (!viewport.current) return;
+    const vp = viewport.current;
+    const bounds = vp.getVisibleBounds();
+  };
+
+  const drawFreehand = (points: number[][]) => {
     if (!app.current) return;
     if (!viewport.current) return;
     // getStroke()
 
-    let points: number[][] = [];
+    // let points: number[][] = [];
     const line = new Graphics();
-    line.beginFill(0xffffff);
+
+    const color = getRandomIntInclusive(0, 0xffffff);
+
+    line.position.set(500, 500);
+    line.beginFill();
+    line.lineStyle(1, color);
+    line.moveTo(0, 0).lineTo(50, 50);
 
     line.endFill();
+
+    // const items: Container = viewport.current.getChildByName("items");
+    viewport.current.addChild(line);
   };
 
   const drawBackground = () => {
@@ -222,10 +395,11 @@ const PaperStateProvider = ({ children }: Props) => {
   const deselectAll = () => {};
 
   const disablePanning = () => {
-    viewport.current?.drag({ pressDrag: false });
+    // viewport.current?.drag({ pressDrag: false, mouseButtons: "all" });
+    viewport.current?.drag({ pressDrag: true, mouseButtons: "middle" });
   };
   const enablePanning = () => {
-    viewport.current?.drag({ pressDrag: true });
+    viewport.current?.drag({ pressDrag: true, mouseButtons: "all" });
   };
 
   const activateTool = (name: Tool) => {
@@ -264,8 +438,7 @@ const PaperStateProvider = ({ children }: Props) => {
 
     const onDragStart = (event: InteractionEvent) => {
       if (!viewport.current) return;
-      // viewport.current.pause = true;
-      disablePanning();
+      // disablePanning();
 
       dragging = true;
       gfx.alpha = 0.8;
@@ -277,8 +450,7 @@ const PaperStateProvider = ({ children }: Props) => {
 
     const onDragEnd = (event: InteractionEvent) => {
       if (!viewport.current) return;
-      // viewport.current.pause = false;
-      enablePanning();
+      // enablePanning();
 
       dragging = false;
       gfx.alpha = 1;
@@ -299,7 +471,7 @@ const PaperStateProvider = ({ children }: Props) => {
       .on("pointerupoutside", onDragEnd)
       .on("pointermove", onDragMove);
 
-    vp.addChild(gfx);
+    items.current?.addChild(gfx);
   };
 
   const drawRectangle = (options: RectangleOptions) => {
@@ -351,6 +523,7 @@ const PaperStateProvider = ({ children }: Props) => {
         // console.log(app.current?.stage.children.length);
         // console.log(app.current?.stage.children.map((item) => item));
         // setCellSize((v) => v + 5);
+        // drawFreehand();
         console.log("-------------END DEBUG----------------------");
       }
       if (event.key === "a") {
@@ -376,10 +549,16 @@ const PaperStateProvider = ({ children }: Props) => {
   }, []);
 
   useEffect(() => {
+    if (!viewport.current || !app.current) return;
+
     switch (activeTool) {
       case TOOL.SELECT:
+        enablePanning();
         break;
       case TOOL.FREEHAND:
+        console.log("freehand mode is activating");
+        disablePanning();
+
         break;
       case TOOL.CIRCLE:
         break;
@@ -387,6 +566,7 @@ const PaperStateProvider = ({ children }: Props) => {
         break;
 
       default:
+        enablePanning();
         break;
     }
   }, [activeTool]);
@@ -403,6 +583,7 @@ const PaperStateProvider = ({ children }: Props) => {
   return (
     <PaperStateContext.Provider
       value={{
+        text,
         app,
         containerRef,
         canvasRef,

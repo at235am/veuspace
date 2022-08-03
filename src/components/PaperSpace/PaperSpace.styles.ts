@@ -22,3 +22,10 @@ export const Container = styled.div`
 export const Canvas = styled.canvas`
   position: absolute;
 `;
+
+export const Popup = styled.pre`
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1rem;
+`;

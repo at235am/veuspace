@@ -5,10 +5,11 @@ import { usePaperState } from "../../contexts/PaperContext";
 import { useResizeDetector } from "react-resize-detector";
 
 // styles:
-import { Canvas, Container } from "./PaperSpace.styles";
+import { Canvas, Container, Popup } from "./PaperSpace.styles";
 
 const PaperSpace = () => {
-  const { app, containerRef, canvasRef, init, setCanvasSize } = usePaperState();
+  const { app, containerRef, canvasRef, init, setCanvasSize, text } =
+    usePaperState();
   const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
     targetRef: containerRef,
   });
@@ -30,6 +31,7 @@ const PaperSpace = () => {
   return (
     <Container ref={containerRef}>
       <Canvas ref={canvasRef} />
+      <Popup>{JSON.stringify(text, null, 2)}</Popup>
     </Container>
   );
 };
