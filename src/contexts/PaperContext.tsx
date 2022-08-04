@@ -55,10 +55,9 @@ type Props = {
 };
 
 const PaperStateContext = createContext<State | undefined>(undefined);
-/** @todo turn most of this hook into a class and return just one variable*/
+
 const PaperStateProvider = ({ children }: Props) => {
-  // pixim = pixi manager
-  const pixim = useRef<PixiApplication>(new PixiApplication());
+  const pixim = useRef<PixiApplication>(PixiApplication.getInstance());
 
   // gui states:
   const [mode, setMode] = useState<Tool>(TOOL.SELECT);
@@ -66,8 +65,7 @@ const PaperStateProvider = ({ children }: Props) => {
   const [text, setText] = useState({});
 
   const setup = (canvas: HTMLCanvasElement, container: HTMLElement) => {
-    pixim.current?.destroy();
-    pixim.current = new PixiApplication(canvas, container);
+    pixim.current.setup(canvas, container);
   };
 
   const deselectAll = () => {};
@@ -84,9 +82,9 @@ const PaperStateProvider = ({ children }: Props) => {
       strokeColor = 0xaabbcc,
       strokeWidth = 0,
     } = options;
-    const pixi = pixim.current;
-    const viewport = pixi.viewport;
+
     const gfx = new Graphics();
+
     gfx.lineStyle({ color: ctn(strokeColor), width: strokeWidth });
     gfx.beginFill(ctn(color), 1);
     gfx.drawCircle(0, 0, radius);
@@ -94,9 +92,12 @@ const PaperStateProvider = ({ children }: Props) => {
     gfx.position.set(x, y);
     gfx.buttonMode = true;
     gfx.interactive = true;
+
+    // listener variables:
     let dragging = false;
     let mousedowndata: InteractionData | null;
     let offset = { x: 0, y: 0 };
+
     const onDragStart = (event: InteractionEvent) => {
       dragging = true;
       gfx.alpha = 0.8;
@@ -122,7 +123,7 @@ const PaperStateProvider = ({ children }: Props) => {
       .on("pointerupoutside", onDragEnd)
       .on("pointermove", onDragMove);
 
-    pixi.items.addChild(gfx);
+    pixim.current.items.addChild(gfx);
   };
 
   const drawRectangle = (options: RectangleOptions) => {};
@@ -135,6 +136,7 @@ const PaperStateProvider = ({ children }: Props) => {
         console.log("-------------END DEBUG----------------------");
       }
       if (event.key === "r") {
+        if (!pixim.current) return;
         const color = randomInt(0, 0xffffff);
         const bounds = pixim.current.viewport.getVisibleBounds();
         drawRectangle({
@@ -146,25 +148,14 @@ const PaperStateProvider = ({ children }: Props) => {
           strokeColor: color,
         });
       }
-      if (event.key === "c") pixim.current.items.removeChildren();
+      if (event.key === "c") pixim.current?.items.removeChildren();
       if (event.key === "f") setCellSize((v) => v + 10);
       if (event.key === "a")
-        console.log(">> ITEMS:", pixim.current.items.children.length);
+        console.log(">> ITEMS:", pixim.current?.items.children.length);
     };
     window.addEventListener("keydown", test);
     return () => {
       window.removeEventListener("keydown", test);
-    };
-  }, []);
-
-  useEffect(() => {
-    const pixi = pixim.current;
-    console.log("--------------------------------");
-    console.log("PIXI APP:", pixi.id);
-
-    return () => {
-      console.log("DESTROYING", pixi.id);
-      pixi.destroy();
     };
   }, []);
 

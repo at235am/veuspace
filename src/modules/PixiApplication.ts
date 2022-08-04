@@ -3,10 +3,12 @@ import getStroke, { StrokeOptions } from "perfect-freehand";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
+  autoDetectRenderer,
   Container,
   Graphics,
   InteractionEvent,
   InteractionManager,
+  Renderer,
 } from "pixi.js-legacy";
 import {
   colorToNumber as ctn,
@@ -31,8 +33,10 @@ export type ReverseMap<T> = T[keyof T];
 export type Tool = ReverseMap<typeof TOOL>;
 
 export class PixiApplication {
+  private static instance: PixiApplication;
+  private static settedup = false;
+
   public readonly id: string;
-  private _destroyed: boolean;
   public readonly app: Application;
   public readonly viewport: Viewport;
   public readonly background: Container;
@@ -40,29 +44,13 @@ export class PixiApplication {
   private _mode: Tool;
   private _cellSize: number;
 
-  constructor();
-  constructor(canvas: HTMLCanvasElement, container: HTMLElement);
-  constructor(canvas?: HTMLCanvasElement, container?: HTMLElement) {
-    this.id = nanoid();
-    this._destroyed = false;
+  constructor() {
+    this.id = nanoid(5);
     this._mode = "select";
     this._cellSize = 60;
 
-    const box = container?.getBoundingClientRect() || { width: 0, height: 0 };
-    // create a new pixi application
+    this.app = new Application();
 
-    console.log(box);
-    this.app = new Application({
-      width: box.width,
-      height: box.height,
-      resolution: window.devicePixelRatio,
-      antialias: true,
-      autoDensity: true,
-      view: canvas,
-      backgroundAlpha: 0,
-    });
-
-    // create instances:
     this.viewport = new Viewport({
       interaction: this.app.renderer.plugins.interaction,
       passiveWheel: false,
@@ -81,18 +69,33 @@ export class PixiApplication {
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
 
-    if (!canvas || !container) return;
-
     this.setSelectListeners();
   }
 
-  public destroy() {
-    if (this._destroyed) return;
-    //   this._destroyed = true;
-    //   this.items.destroy();
-    //   this.background.destroy();
-    //   this.viewport.destroy();
-    //   this.app.destroy();
+  public static getInstance(): PixiApplication {
+    if (!PixiApplication.instance) {
+      console.log("hey");
+      PixiApplication.instance = new PixiApplication();
+    }
+    return PixiApplication.instance;
+  }
+
+  public setup(canvas?: HTMLCanvasElement, container?: HTMLElement) {
+    if (PixiApplication.settedup) return;
+
+    PixiApplication.settedup = true;
+    this.app.renderer.destroy();
+    const box = container?.getBoundingClientRect() || { width: 0, height: 0 };
+
+    this.app.renderer = autoDetectRenderer({
+      width: box.width,
+      height: box.height,
+      resolution: window.devicePixelRatio,
+      antialias: true,
+      autoDensity: true,
+      view: canvas,
+      backgroundAlpha: 0,
+    });
   }
 
   public get mode() {
@@ -100,7 +103,6 @@ export class PixiApplication {
   }
 
   public set mode(value: Tool) {
-    console.log("calling _mode setter", value, this._mode);
     if (value === this._mode) return;
 
     this._mode = value;
@@ -119,7 +121,6 @@ export class PixiApplication {
         break;
       case TOOL.RECTANGLE:
         break;
-
       default:
         break;
     }
