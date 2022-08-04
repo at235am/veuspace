@@ -36,47 +36,26 @@ export class PixiApplication {
   private static instance: PixiApplication;
   private static settedup = false;
 
-  public readonly id: string;
   public readonly app: Application;
-  public readonly viewport: Viewport;
   public readonly background: Container;
   public readonly items: Container;
+  private _viewport: Viewport;
   private _mode: Tool;
   private _cellSize: number;
 
   constructor() {
-    this.id = nanoid(5);
     this._mode = "select";
     this._cellSize = 60;
 
     this.app = new Application();
-
-    this.viewport = new Viewport({
-      interaction: this.app.renderer.plugins.interaction,
-      passiveWheel: false,
-      disableOnContextMenu: true,
-    });
+    this._viewport = new Viewport();
     this.background = new Container();
     this.items = new Container();
-
-    // name the instances:
-    this.viewport.name = "viewport";
-    this.background.name = "background";
-    this.items.name = "items";
-
-    // add children (order is important):
-    this.viewport.addChild(this.background);
-    this.viewport.addChild(this.items);
-    this.app.stage.addChild(this.viewport);
-
-    this.setSelectListeners();
   }
 
   public static getInstance(): PixiApplication {
-    if (!PixiApplication.instance) {
-      console.log("hey");
+    if (!PixiApplication.instance)
       PixiApplication.instance = new PixiApplication();
-    }
     return PixiApplication.instance;
   }
 
@@ -84,9 +63,11 @@ export class PixiApplication {
     if (PixiApplication.settedup) return;
 
     PixiApplication.settedup = true;
+    this._viewport.destroy();
     this.app.renderer.destroy();
     const box = container?.getBoundingClientRect() || { width: 0, height: 0 };
 
+    // make the new renderer:
     this.app.renderer = autoDetectRenderer({
       width: box.width,
       height: box.height,
@@ -96,6 +77,28 @@ export class PixiApplication {
       view: canvas,
       backgroundAlpha: 0,
     });
+
+    // make the new viewport
+    this._viewport = new Viewport({
+      interaction: this.app.renderer.plugins.interaction,
+      passiveWheel: false,
+      disableOnContextMenu: true,
+    });
+
+    // name the instances:
+    this.viewport.name = "viewport";
+    this.background.name = "background";
+    this.items.name = "items";
+
+    // adding the boxes (order is important):
+    this.viewport.addChild(this.background);
+    this.viewport.addChild(this.items);
+    this.app.stage.addChild(this.viewport);
+    this.setSelectListeners();
+  }
+
+  public get viewport() {
+    return this._viewport;
   }
 
   public get mode() {

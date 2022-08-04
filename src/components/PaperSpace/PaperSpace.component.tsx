@@ -21,6 +21,7 @@ const PaperSpace = () => {
 
     console.log("Initializing Pixi App");
     setup(canvasRef.current, containerRef.current);
+    // pixim.current.viewport;
 
     return () => {};
   }, []);

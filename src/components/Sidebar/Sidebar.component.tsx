@@ -125,9 +125,7 @@ const Sidebar = () => {
   const zoom = (change: number) => {};
 
   const drawRandomCircle = () => {
-    // if (!pixim.current) return;
     const pixi = pixim.current;
-    console.log("random circle");
     const { width, height } = pixi.app.screen;
 
     const p = pixi.viewport.toWorld(randomInt(0, width), randomInt(0, height));
