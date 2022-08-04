@@ -135,12 +135,9 @@ const PaperStateProvider = ({ children }: Props) => {
 
   useEffect(() => {
     const test = (event: KeyboardEvent) => {
-      const im = pixim.current.app.renderer.plugins
-        .interaction as InteractionManager;
       if (event.key === "d") {
         console.log("--------------DEBUG------------------------");
         console.log(">> FPS:", pixim.current?.app.ticker.FPS);
-        // im.destroy();
         console.log("-------------END DEBUG----------------------");
       }
       if (event.key === "r") {
@@ -160,10 +157,6 @@ const PaperStateProvider = ({ children }: Props) => {
       if (event.key === "f") setCellSize((v) => v + 10);
       if (event.key === "a")
         console.log(">> ITEMS:", pixim.current?.items.children.length);
-      if (event.key === "m") {
-        // const renderer = pixim.current.app.renderer;
-        // new InteractionManager(renderer);
-      }
     };
     window.addEventListener("keydown", test);
     return () => {
