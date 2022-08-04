@@ -80,7 +80,7 @@ export class PixiApplication {
 
     // make the new viewport
     this._viewport = new Viewport({
-      interaction: this.app.renderer.plugins.interaction,
+      // interaction: this.app.renderer.plugins.interaction,
       passiveWheel: false,
       disableOnContextMenu: true,
     });
@@ -95,6 +95,11 @@ export class PixiApplication {
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
     this.setSelectListeners();
+
+    const im = this.app.renderer.plugins.interaction as InteractionManager;
+    im.on("pointerdown", () => {
+      console.log("hello");
+    });
   }
 
   public get viewport() {
@@ -214,7 +219,7 @@ export class PixiApplication {
       .on("zoomed", () => this.drawBackgroundPattern()) //    pixi-viewport event only
       .on("moved-end", () => this.drawBackgroundPattern()) // pixi-viewport event only
       .on("pointerdown", (event: InteractionEvent) => {
-        // if (!app.current || !items.current) return;
+        console.log("viewport:pointerdown");
 
         // THIS IS ONLY TRUE if the original event is NOT a TouchEvent
         // event.data.button returns 1 on touch devices WHICH IS NOT the middle click
@@ -239,9 +244,6 @@ export class PixiApplication {
         if (hit) this.disablePanning();
       })
       .on("pointerup", (event: InteractionEvent) => {
-        console.log("pointer up");
-        // console.log("pointerup", active_tool.current);
-        console.log(this._mode === TOOL.SELECT);
         if (this._mode === TOOL.SELECT) this.enablePanning();
         else this.disablePanning();
       });

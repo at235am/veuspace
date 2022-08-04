@@ -49,7 +49,7 @@ import {
   ToolWrapper,
   ActivityBar,
 } from "./Sidebar.styles";
-import { Graphics } from "pixi.js-legacy";
+import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
 
 const Test = ({ text }: { text: string }) => {
