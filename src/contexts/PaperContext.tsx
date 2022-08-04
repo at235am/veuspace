@@ -24,15 +24,29 @@ import {
   InteractionData,
   InteractionEvent,
   InteractionManager,
+  Polygon,
   Rectangle,
   Renderer,
+  Ticker,
 } from "pixi.js-legacy";
+
+import polygonClipping, {
+  Geom,
+  MultiPolygon,
+  Pair,
+  // Polygon,
+  Ring,
+} from "polygon-clipping";
 
 // utils:
 import { clamp, roundIntToNearestMultiple } from "../utils/utils";
 
 import useUpdatedState from "../hooks/useUpdatedState";
-import getStroke, { getStrokePoints, StrokeOptions } from "perfect-freehand";
+import getStroke, {
+  getStrokeOutlinePoints,
+  getStrokePoints,
+  StrokeOptions,
+} from "perfect-freehand";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -124,12 +138,14 @@ const PaperStateProvider = ({ children }: Props) => {
     app.current = new Application({
       width: box.width,
       height: box.height,
-      resolution: 1, // use 2 for hardware accelerated devices
+      resolution: window.devicePixelRatio,
       antialias: true,
       autoDensity: true,
       view: canvasElement,
       backgroundAlpha: 0,
     });
+
+    console.log("res", window.devicePixelRatio);
 
     if (app.current.renderer instanceof CanvasRenderer) console.log("CANVAS");
     if (app.current.renderer instanceof Renderer) console.log("WEBGL");
@@ -182,10 +198,12 @@ const PaperStateProvider = ({ children }: Props) => {
         if (hit) disablePanning();
       })
       .on("pointerup", (event: InteractionEvent) => {
-        console.log("pointerup", active_tool.current);
+        // console.log("pointerup", active_tool.current);
         if (active_tool.current === TOOL.SELECT) enablePanning();
         else disablePanning();
       });
+
+    // vp.removez
 
     // freehand listeners:
 
@@ -193,13 +211,13 @@ const PaperStateProvider = ({ children }: Props) => {
     let dragging = false;
     let points: number[][] = [];
     let color = 0;
+    let newPoint;
 
     const options: StrokeOptions = {
       size: 10,
       thinning: 0.8,
       smoothing: 0.01,
-
-      streamline: 0.99,
+      streamline: 1,
       easing: (t) => t,
       start: {
         taper: 0,
@@ -207,20 +225,21 @@ const PaperStateProvider = ({ children }: Props) => {
       },
       end: {
         taper: 0,
-        cap: true,
+        cap: false,
       },
     };
 
     vp.on("pointerdown", (event: InteractionEvent) => {
       if (active_tool.current === TOOL.FREEHAND) {
-        console.log("freehand OSDJFlksjldf");
         dragging = true;
         path = new Graphics();
-        color = getRandomIntInclusive(0, 0xffffff);
-        path.lineStyle({ width: 0 });
-        items.current?.addChild(path);
+        path.on("pointerdown", (ie: InteractionEvent) => {
+          console.log("strokepoly", ie.currentTarget);
+        });
 
-        // const { x, y } = event.data.global;
+        color = getRandomIntInclusive(0, 0xffffff);
+
+        items.current?.addChild(path);
         const { x, y } = vp.toWorld(event.data.global);
 
         // path.position.set(x, y);
@@ -229,21 +248,36 @@ const PaperStateProvider = ({ children }: Props) => {
     })
       .on("pointermove", (event: InteractionEvent) => {
         if (active_tool.current === TOOL.FREEHAND && dragging) {
-          // console.log("pointermove");
-          // const { x, y } = event.data.global;
+          console.log("456");
+          const s1 = getStroke(points, options);
+
           const { x, y } = vp.toWorld(event.data.global);
           points.push([x, y]);
 
           path.clear();
           path.beginFill(color, 1);
-          const s = getStroke(points, options);
+          path.lineStyle({ width: 1, color: 0xffffff });
+          // const s = getStroke(points, options);
+          // const c = getStrokePoints(points, options);
+          // const s = getStrokeOutlinePoints(c, options);
+          const s2 = getStroke(points, options);
+
+          // const poly = polygonClipping.difference([bs as Ring]);
+          // const p = poly[0];
+          // const s = [...p[0]];
+          const s = s2;
           const fs = s.flatMap((i) => i);
           path.drawPolygon(fs);
+
+          // path.drawShape(new Polygon(fs));
+          // path.finishPoly();
+          // path.closePath();
           path.endFill();
         }
       })
       .on("pointerup", () => {
         if (active_tool.current === TOOL.FREEHAND) {
+          // console.log(path.)
           // path.destroy();
           // const finalPath = new Graphics();
           // const s = getStroke(points, {
@@ -258,7 +292,7 @@ const PaperStateProvider = ({ children }: Props) => {
           // finalPath.drawPolygon(fs);
           // finalPath.endFill();
           // items.current?.addChild(finalPath);
-
+          // path.interactive = true;
           dragging = false;
           points = [];
         }
@@ -275,18 +309,18 @@ const PaperStateProvider = ({ children }: Props) => {
     itemsContainer.name = "items";
     items.current = itemsContainer;
 
-    // prolly dont need this
-    // const freehandSpace = new Container();
-    // freehandSpace.name = "freehand";
-    // freehand.current = freehandSpace;
-
-    // freehandSpace.visible = false;
-
     // ADDING CHILD ORDER IS IMPORTANT:
     viewport.current.addChild(background);
     viewport.current.addChild(itemsContainer);
-    // viewport.current.addChild(freehandSpace);
     app.current.stage.addChild(viewport.current);
+
+    // app.current.renderer.on("render", () => {
+    //   console.log("hello");
+    // });
+
+    // app.current.ticker.add((e) => {
+    // console.log(app.current?.ticker.FPS, Ticker.shared.FPS);
+    // });
 
     // const selectedItems = new Container();
     // selectedItems.name = "active";
@@ -395,8 +429,8 @@ const PaperStateProvider = ({ children }: Props) => {
   const deselectAll = () => {};
 
   const disablePanning = () => {
-    // viewport.current?.drag({ pressDrag: false, mouseButtons: "all" });
-    viewport.current?.drag({ pressDrag: true, mouseButtons: "middle" });
+    viewport.current?.drag({ pressDrag: false, mouseButtons: "all" });
+    // viewport.current?.drag({ pressDrag: true, mouseButtons: "middle" });
   };
   const enablePanning = () => {
     viewport.current?.drag({ pressDrag: true, mouseButtons: "all" });
@@ -518,15 +552,18 @@ const PaperStateProvider = ({ children }: Props) => {
 
   useEffect(() => {
     const test = (event: KeyboardEvent) => {
+      if (event.key === "z") items.current?.removeChildren();
       if (event.key === "d") {
         console.log("--------------DEBUG------------------------");
         // console.log(app.current?.stage.children.length);
         // console.log(app.current?.stage.children.map((item) => item));
         // setCellSize((v) => v + 5);
         // drawFreehand();
+        console.log(">> FPS:", Ticker.shared.FPS);
+
         console.log("-------------END DEBUG----------------------");
       }
-      if (event.key === "a") {
+      if (event.key === "b") {
         if (!viewport.current) return;
         if (!app.current) return;
         const color = randomInt(0, 0xffffff);
@@ -539,6 +576,9 @@ const PaperStateProvider = ({ children }: Props) => {
           strokeWidth: 2,
           strokeColor: color,
         });
+      }
+      if (event.key === "a") {
+        console.log(">> ITEMS:", items.current?.children.length);
       }
     };
 

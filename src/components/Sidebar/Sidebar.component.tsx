@@ -120,7 +120,7 @@ const Sidebar = () => {
 
   const drawRandomCircle = () => {
     if (!app.current || !viewport.current) return;
-
+    console.log("random circle");
     const { width, height } = app.current.screen;
 
     const p = viewport.current.toWorld(
