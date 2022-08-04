@@ -8,24 +8,26 @@ import { useResizeDetector } from "react-resize-detector";
 import { Canvas, Container, Popup } from "./PaperSpace.styles";
 
 const PaperSpace = () => {
-  const { app, containerRef, canvasRef, init, setCanvasSize, text } =
-    usePaperState();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const { pixim, setup, text } = usePaperState();
   const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
     targetRef: containerRef,
   });
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !containerRef.current) return;
 
-    console.log("calling init");
-    init(canvasRef.current);
+    console.log("Initializing Pixi App");
+    setup(canvasRef.current, containerRef.current);
 
     return () => {};
   }, []);
 
   useEffect(() => {
     if (width === 0 || height === 0) return;
-    setCanvasSize(width, height);
+    pixim.current.resize(width, height);
   }, [width, height]);
 
   return (

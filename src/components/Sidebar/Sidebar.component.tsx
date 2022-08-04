@@ -12,7 +12,7 @@ import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
 import { TabNavItem } from "./TabNavItem";
-import { usePaperState, TOOL, Tool } from "../../contexts/PaperContext";
+import { usePaperState } from "../../contexts/PaperContext";
 import { nanoid, random } from "nanoid";
 
 import {
@@ -50,6 +50,7 @@ import {
   ActivityBar,
 } from "./Sidebar.styles";
 import { Graphics } from "pixi.js-legacy";
+import { TOOL, Tool } from "../../modules/PixiApplication";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -79,9 +80,12 @@ const iconSize = 22;
 const iconStroke = 2;
 
 const Sidebar = () => {
-  // const { mode, renderMode, toggleMode, setBackground } = usePaperSpaceState();
-  const { app, activeTool, activateTool, drawCircle, viewport } =
-    usePaperState();
+  const {
+    pixim,
+    mode: activeTool,
+    setMode: activateTool,
+    drawCircle,
+  } = usePaperState();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tool>(TOOL.SELECT);
@@ -96,6 +100,7 @@ const Sidebar = () => {
         width: toolBarWidth,
       },
     },
+    initial: "close",
     animate: sidebarOpen ? "open" : "close",
     transition: { type: "tween", duration: 0.25 },
   };
@@ -109,6 +114,7 @@ const Sidebar = () => {
         rotate: 180,
       },
     },
+    initial: "close",
     animate: sidebarOpen ? "open" : "close",
     transition: { type: "tween", duration: 0.25 },
   };
@@ -119,14 +125,13 @@ const Sidebar = () => {
   const zoom = (change: number) => {};
 
   const drawRandomCircle = () => {
-    if (!app.current || !viewport.current) return;
+    // if (!pixiRef.current) return;
+    const pixi = pixim.current;
     console.log("random circle");
-    const { width, height } = app.current.screen;
+    const { width, height } = pixi.app.screen;
 
-    const p = viewport.current.toWorld(
-      randomInt(0, width),
-      randomInt(0, height)
-    );
+    const p = pixi.viewport.toWorld(randomInt(0, width), randomInt(0, height));
+
     drawCircle({
       x: p.x,
       y: p.y,
