@@ -13,13 +13,17 @@ export class BaseTool {
   protected longPressed: boolean;
   protected longPressCallback?: () => void;
   private timer?: NodeJS.Timeout;
+  protected cursor: string;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     this.pixi = pixi;
-    this.longPressed = false;
-    this.touches = 0; // the number of points pressed on a screen
-    this.button = null;
     this.longPressCallback = longPressCallback;
+    this.cursor = "default";
+
+    // important for classes that extend this BaseTool class:
+    this.longPressed = false;
+    this.touches = 0; // good for detecting muliple touches or points
+    this.button = null; // see below:
     // this.button represents the button pressed/clicked/tapped
     // 0 = primary button   (usually the left click)
     // 1 = auxiliary button (usually the middle/scroll click)
@@ -31,6 +35,9 @@ export class BaseTool {
     renderer.plugins.interaction.destroy();
     renderer.plugins.interaction = new InteractionManager(renderer, options);
     this.interaction = renderer.plugins.interaction;
+
+    // appearance:
+    this.pixi.viewport.cursor = this.cursor;
 
     // handle viewport listeners:
     this.pixi.viewport
@@ -53,7 +60,6 @@ export class BaseTool {
     this.interaction?.on("pointerdown", this.setTouchesAndButton);
     this.interaction?.on("pointerdown", this.startLongPressCount);
     this.interaction?.on("pointerup", this.reset);
-
     this.interaction?.on("pointermove", this.determineLongPressAction);
   }
 
@@ -91,7 +97,12 @@ export class BaseTool {
       });
       this.pixi.viewport.emit("pointerdown", event); // must emit another pointerdown event on viewport
       if (this.longPressCallback) this.longPressCallback();
+      else {
+        const fn = this.pixi.longPressFn;
+        if (fn) fn();
+      }
       window.navigator.vibrate(30);
+      this.pixi.viewport.cursor = "move";
     }, 1000);
   };
 
@@ -107,5 +118,6 @@ export class BaseTool {
     this.button = null;
     this.longPressed = false;
     clearTimeout(this.timer);
+    this.pixi.viewport.cursor = this.cursor;
   };
 }

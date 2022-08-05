@@ -15,8 +15,8 @@ export class SelectTool extends BaseTool {
   private offset: { x: number; y: number };
   private gfx: DisplayObject | null;
 
-  constructor(pixi: PixiApplication) {
-    super(pixi);
+  constructor(pixi: PixiApplication, longPressCallback?: () => void) {
+    super(pixi, longPressCallback);
 
     this.dragging = false;
     this.mousedowndata = null;

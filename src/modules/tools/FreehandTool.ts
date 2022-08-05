@@ -37,8 +37,9 @@ export class FreehandTool extends BaseTool {
   private _strokeOptions: StrokeOptions;
   private _freeOptions: FreehandToolOptions;
 
-  constructor(pixi: PixiApplication) {
-    super(pixi);
+  constructor(pixi: PixiApplication, longPressCallback?: () => void) {
+    super(pixi, longPressCallback);
+    this.cursor = "crosshair";
 
     this._strokeOptions = DEFAULT_STROKE_OPTIONS;
     this._freeOptions = { color: 0 };
@@ -74,7 +75,7 @@ export class FreehandTool extends BaseTool {
   };
 
   drawMove = (event: InteractionEvent) => {
-    if (!this.dragging || this.longPressed) return;
+    if (!this.dragging || this.longPressed || this.touches > 1) return;
 
     const { color } = this._freeOptions;
     const s1 = getStroke(this.points, this._strokeOptions);

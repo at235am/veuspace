@@ -37,6 +37,7 @@ export class PixiApplication {
   private _viewport: Viewport;
   private _mode: Tool;
   private _cellSize: number;
+  public longPressFn?: () => void;
 
   private constructor() {
     this._mode = "select";
@@ -89,7 +90,7 @@ export class PixiApplication {
     this.viewport.addChild(this.background);
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
-    // this.setSelectListeners();
+
     const select = new SelectTool(PixiApplication.getInstance());
     select.activate();
   }
