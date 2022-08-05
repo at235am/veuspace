@@ -74,34 +74,34 @@ export class FreehandTool extends BaseTool {
   };
 
   drawMove = (event: InteractionEvent) => {
-    if (this.dragging) {
-      const { color } = this._freeOptions;
-      const s1 = getStroke(this.points, this._strokeOptions);
-      const t = event.data.global;
+    if (!this.dragging || this.longPressed) return;
 
-      const { x, y } = this.pixi.viewport.toWorld(event.data.global);
-      this.points.push([x, y]);
+    const { color } = this._freeOptions;
+    const s1 = getStroke(this.points, this._strokeOptions);
+    const t = event.data.global;
 
-      this.path.clear();
-      this.path.beginFill(ctn(color), 1);
-      this.path.lineStyle({ width: 1, color: 0xffffff });
-      // const s = getStroke(points, options);
-      // const c = getStrokePoints(points, options);
-      // const s = getStrokeOutlinePoints(c, options);
-      const s2 = getStroke(this.points, this._strokeOptions);
+    const { x, y } = this.pixi.viewport.toWorld(event.data.global);
+    this.points.push([x, y]);
 
-      // const poly = polygonClipping.difference([s2 as Ring]);
-      // const p = poly[0];
-      // const s = [...p[0]];
-      const s = s2;
-      const fs = s.flatMap((i) => i);
-      this.path.drawPolygon(fs);
+    this.path.clear();
+    this.path.beginFill(ctn(color), 1);
+    this.path.lineStyle({ width: 1, color: 0xffffff });
+    // const s = getStroke(points, options);
+    // const c = getStrokePoints(points, options);
+    // const s = getStrokeOutlinePoints(c, options);
+    const s2 = getStroke(this.points, this._strokeOptions);
 
-      // path.drawShape(new Polygon(fs));
-      // path.finishPoly();
-      // path.closePath();
-      this.path.endFill();
-    }
+    // const poly = polygonClipping.difference([s2 as Ring]);
+    // const p = poly[0];
+    // const s = [...p[0]];
+    const s = s2;
+    const fs = s.flatMap((i) => i);
+    this.path.drawPolygon(fs);
+
+    // path.drawShape(new Polygon(fs));
+    // path.finishPoly();
+    // path.closePath();
+    this.path.endFill();
   };
 
   drawEnd = () => {
@@ -126,6 +126,8 @@ export class FreehandTool extends BaseTool {
     // path.interactive = true;
     this.dragging = false;
     this.points = [];
+
+    this.pixi.disablePanning();
     // }
   };
 }

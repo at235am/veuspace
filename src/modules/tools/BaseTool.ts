@@ -10,11 +10,16 @@ export class BaseTool {
   protected interaction?: InteractionManager;
   protected touches: number;
   protected button: number | null;
+  protected longPressed: boolean;
+  protected longPressCallback?: () => void;
+  private timer?: NodeJS.Timeout;
 
-  constructor(pixi: PixiApplication) {
+  constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     this.pixi = pixi;
+    this.longPressed = false;
     this.touches = 0; // the number of points pressed on a screen
     this.button = null;
+    this.longPressCallback = longPressCallback;
     // this.button represents the button pressed/clicked/tapped
     // 0 = primary button   (usually the left click)
     // 1 = auxiliary button (usually the middle/scroll click)
@@ -45,11 +50,14 @@ export class BaseTool {
       .on("moved-end", () => this.pixi.drawBackgroundPattern()); // pixi-viewport event only
 
     // attack global listeners:
-    this.interaction?.on("pointerdown", this.determinePannableAnd);
-    this.interaction?.on("pointerup", this.pointerup);
+    this.interaction?.on("pointerdown", this.setTouchesAndButton);
+    this.interaction?.on("pointerdown", this.startLongPressCount);
+    this.interaction?.on("pointerup", this.reset);
+
+    this.interaction?.on("pointermove", this.determineLongPressAction);
   }
 
-  determinePannableAnd = (event: InteractionEvent) => {
+  private setTouchesAndButton = (event: InteractionEvent) => {
     console.log("base:pointerdown");
 
     this.touches = 1;
@@ -72,8 +80,32 @@ export class BaseTool {
     }
   };
 
-  pointerup = (event: InteractionEvent) => {
+  private startLongPressCount = (event: InteractionEvent) => {
+    if (this.touches !== 1) return clearTimeout(this.timer);
+
+    this.timer = setTimeout(() => {
+      this.longPressed = true;
+      this.pixi.viewport.drag({
+        pressDrag: true,
+        mouseButtons: "left-middle",
+      });
+      this.pixi.viewport.emit("pointerdown", event); // must emit another pointerdown event on viewport
+      if (this.longPressCallback) this.longPressCallback();
+      window.navigator.vibrate(30);
+    }, 1000);
+  };
+
+  private determineLongPressAction = (event: InteractionEvent) => {
+    clearTimeout(this.timer);
+    if (this.longPressed) {
+      this.pixi.viewport.emit("pointermove", event);
+    }
+  };
+
+  private reset = (event: InteractionEvent) => {
     console.log("base:pointerup");
     this.button = null;
+    this.longPressed = false;
+    clearTimeout(this.timer);
   };
 }
