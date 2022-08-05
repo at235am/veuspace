@@ -1,14 +1,27 @@
 import {
+  DisplayObject,
+  InteractionData,
   InteractionEvent,
   InteractionManager,
   InteractionManagerOptions,
+  Point,
 } from "pixi.js-legacy";
 import { PixiApplication, TOOL } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 
 export class SelectTool extends BaseTool {
+  private dragging: boolean;
+  private mousedowndata: InteractionData | null;
+  private offset: { x: number; y: number };
+  private gfx: DisplayObject | null;
+
   constructor(pixi: PixiApplication) {
     super(pixi);
+
+    this.dragging = false;
+    this.mousedowndata = null;
+    this.offset = { x: 0, y: 0 };
+    this.gfx = null;
   }
 
   activate(options?: InteractionManagerOptions | undefined) {
@@ -18,36 +31,43 @@ export class SelectTool extends BaseTool {
     this.pixi.enablePanning();
 
     // attach global listeners:
-    this.interaction?.on("pointerdown", this.onPointerDown);
-    this.interaction?.on("pointerup", this.onPointerUp);
+    // this.interaction?.on("pointerdown", this.onPointerDown);
+    // this.interaction?.on("pointerup", this.onPointerUp);
+
+    this.interaction?.on("pointerdown", this.moveStart);
+    this.interaction?.on("pointerup", this.moveEnd);
+    this.interaction?.on("pointerupoutside", this.moveEnd);
+    this.interaction?.on("pointermove", this.moveMove);
   }
 
-  onPointerDown = (event: InteractionEvent) => {
-    // THIS IS ONLY TRUE if the original event is NOT a TouchEvent
-    // event.data.button returns 1 on touch devices WHICH IS NOT the middle click
-    let isMiddleClick = event.data.button === 1;
-    let touches = 1;
-
-    if (window.TouchEvent) {
-      // firefox does not have TouchEvent so we need to check
-      // if window.TouchEvent existts before referencing it
-      if (event.data.originalEvent instanceof window.TouchEvent) {
-        const touchEvent = event.data.originalEvent as TouchEvent;
-        touches = touchEvent.touches.length;
-        isMiddleClick = false; // since this is
-      }
-    }
-    if (isMiddleClick) return; // to stop the hit test
-
-    // do a hit test:
+  moveStart = (event: InteractionEvent) => {
+    console.log("select:pointerdown:onDragStart");
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
-    const hit = im.hitTest(event.data.global, this.pixi.items);
+    this.gfx = im.hitTest(event.data.global, this.pixi.items);
 
-    if (hit) this.pixi.disablePanning();
+    if (this.button === 1) return;
+    if (!this.gfx) return;
+
+    this.pixi.disablePanning();
+    this.dragging = true;
+    this.gfx.alpha = 0.8;
+    this.mousedowndata = event.data;
+    const lp = event.data.getLocalPosition(this.gfx.parent);
+    this.offset = { x: this.gfx.x - lp.x, y: this.gfx.y - lp.y };
   };
 
-  onPointerUp = (event: InteractionEvent) => {
-    if (this.pixi.mode === TOOL.SELECT) this.pixi.enablePanning();
-    else this.pixi.disablePanning();
+  moveEnd = (event: InteractionEvent) => {
+    this.pixi.enablePanning();
+
+    if (this.gfx) this.gfx.alpha = 1;
+    this.dragging = false;
+    this.mousedowndata = null;
+    this.gfx = null;
+  };
+
+  moveMove = (event: InteractionEvent) => {
+    if (!(this.dragging && this.gfx && this.mousedowndata)) return;
+    const new_pos = this.mousedowndata.getLocalPosition(this.gfx.parent);
+    this.gfx.position.set(new_pos.x + this.offset.x, new_pos.y + this.offset.y);
   };
 }

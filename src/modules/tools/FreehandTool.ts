@@ -54,18 +54,17 @@ export class FreehandTool extends BaseTool {
 
     // attach listeners:
     if (blank) return;
-    this.interaction?.on("pointerdown", this.onPointerDown);
-    this.interaction?.on("pointerup", this.onPointerUp);
-    this.interaction?.on("pointermove", this.onPointerMove);
+    this.interaction?.on("pointerdown", this.drawStart);
+    this.interaction?.on("pointerup", this.drawEnd);
+    this.interaction?.on("pointermove", this.drawMove);
   }
 
-  onPointerDown = (event: InteractionEvent) => {
+  drawStart = (event: InteractionEvent) => {
+    if (this.button === 1) return;
+    console.log("freehand:pointerdown");
     this.dragging = true;
     this.path = new Graphics();
-    this.path.on("pointerdown", (ie: InteractionEvent) => {
-      console.log("drawing:pointerdown", ie.currentTarget);
-    });
-
+    this.path.interactive = true;
     // color = getRandomIntInclusive(0, 0xffffff);
 
     this.pixi.items.addChild(this.path);
@@ -74,9 +73,8 @@ export class FreehandTool extends BaseTool {
     this.points.push([x, y]);
   };
 
-  onPointerMove = (event: InteractionEvent) => {
+  drawMove = (event: InteractionEvent) => {
     if (this.dragging) {
-      console.log("456");
       const { color } = this._freeOptions;
       const s1 = getStroke(this.points, this._strokeOptions);
       const t = event.data.global;
@@ -106,7 +104,9 @@ export class FreehandTool extends BaseTool {
     }
   };
 
-  onPointerUp = () => {
+  drawEnd = () => {
+    console.log("freehand:pointerup");
+
     // if (this._mode === TOOL.FREEHAND) {
     // console.log(path.)
     // path.destroy();

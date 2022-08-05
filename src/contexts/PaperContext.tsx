@@ -13,12 +13,7 @@ import React, {
 import { colorToNumber as ctn } from "../utils/utils";
 import { getRandomIntInclusive as randomInt } from "../utils/utils";
 
-import {
-  Graphics,
-  InteractionData,
-  InteractionEvent,
-  InteractionManager,
-} from "pixi.js-legacy";
+import { Graphics } from "pixi.js-legacy";
 
 import { PixiApplication, TOOL, Tool } from "../modules/PixiApplication";
 
@@ -97,36 +92,6 @@ const PaperStateProvider = ({ children }: Props) => {
     gfx.position.set(x, y);
     gfx.buttonMode = true;
     gfx.interactive = true;
-
-    // listener variables:
-    let dragging = false;
-    let mousedowndata: InteractionData | null;
-    let offset = { x: 0, y: 0 };
-
-    const onDragStart = (event: InteractionEvent) => {
-      dragging = true;
-      gfx.alpha = 0.8;
-      mousedowndata = event.data;
-      const lp = event.data.getLocalPosition(gfx.parent);
-      offset = { x: gfx.x - lp.x, y: gfx.y - lp.y };
-    };
-    const onDragEnd = (event: InteractionEvent) => {
-      dragging = false;
-      gfx.alpha = 1;
-      mousedowndata = null;
-    };
-    const onDragMove = (event: InteractionEvent) => {
-      if (dragging) {
-        if (!mousedowndata) return;
-        const new_pos = mousedowndata.getLocalPosition(gfx.parent);
-        gfx.position.set(new_pos.x + offset.x, new_pos.y + offset.y);
-      }
-    };
-    gfx
-      .on("pointerdown", onDragStart)
-      .on("pointerup", onDragEnd)
-      .on("pointerupoutside", onDragEnd)
-      .on("pointermove", onDragMove);
 
     pixim.current.items.addChild(gfx);
   };

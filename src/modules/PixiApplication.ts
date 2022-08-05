@@ -14,7 +14,7 @@ import { SelectTool } from "./tools/SelectTool";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
-  SELECT: "select", //       L=pan  M=pan R=pan   W=zoom | L1=pan   L2=zoom L3=pan
+  SELECT: "select", //       L=tool M=pan R=pan   W=zoom | L1=pan   L2=zoom L3=pan
   ERASE: "erase", //         L=tool M=pan R=erase W=zoom | L1=erase L2=zoom L3=pan
   FREEHAND: "freehand", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   SHAPE: "shape", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
@@ -145,18 +145,16 @@ export class PixiApplication {
   }
 
   public disablePanning() {
-    // console.log("disablePanning");
-    // this.viewport.drag({ pressDrag: false, mouseButtons: "all" });
-    this.viewport.drag({ pressDrag: true, mouseButtons: "middle" });
+    console.log("disablePanning");
+    this.viewport.drag({ pressDrag: false, mouseButtons: "middle" });
   }
 
   public enablePanning() {
-    // console.log("enablePanning");
+    console.log("enablePanning");
     this.viewport.drag({ pressDrag: true, mouseButtons: "middle" });
   }
 
   public drawBackgroundPattern() {
-    //  const this.background: Container = this.viewport.getChildByName("background");
     this.background.removeChildren();
 
     const cell = this._cellSize; // the gap between each cell of the grid ;
