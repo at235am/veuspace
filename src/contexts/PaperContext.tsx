@@ -16,6 +16,8 @@ import { getRandomIntInclusive as randomInt } from "../utils/utils";
 import { Graphics } from "pixi.js-legacy";
 
 import { PixiApplication, TOOL, Tool } from "../modules/PixiApplication";
+import getStroke from "perfect-freehand";
+import { Ring, union } from "polygon-clipping";
 
 export type CircleOptions = {
   name?: string;
@@ -122,6 +124,34 @@ const PaperStateProvider = ({ children }: Props) => {
       if (event.key === "f") setCellSize((v) => v + 10);
       if (event.key === "a")
         console.log(">> ITEMS:", pixim.current?.items.children.length);
+      if (event.key === "w") {
+        console.log("--------------------");
+        console.log("drawing poly");
+        const stroke = [
+          [200, 200],
+          [300, 300],
+          [400, 300],
+          [500, 300],
+        ];
+
+        const outlinePoints = getStroke(stroke);
+        const flattened = union([outlinePoints as Ring]);
+        // const draw = outlinePoints.flatMap((item) => item);
+        const draw = outlinePoints.flatMap((item) => item);
+
+        console.log({ stroke });
+        console.log({ flattened });
+        console.log({ outlinePoints });
+        console.log({ draw });
+
+        const path = new Graphics();
+        path.beginFill(0x458158, 1);
+        path.lineStyle({ width: 1, color: 0xffffff });
+        path.drawPolygon(draw);
+        path.endFill();
+
+        pixim.current.items.addChild(path);
+      }
     };
     window.addEventListener("keydown", test);
     return () => {

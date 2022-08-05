@@ -19,9 +19,7 @@ const PaperSpace = () => {
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
-    console.log("Initializing Pixi App");
     setup(canvasRef.current, containerRef.current);
-    // pixim.current.viewport;
 
     return () => {};
   }, []);

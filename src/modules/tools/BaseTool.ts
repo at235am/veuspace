@@ -103,7 +103,7 @@ export class BaseTool {
       }
       window.navigator.vibrate(30);
       this.pixi.viewport.cursor = "move";
-    }, 1000);
+    }, 750);
   };
 
   private determineLongPressAction = (event: InteractionEvent) => {
@@ -119,5 +119,7 @@ export class BaseTool {
     this.longPressed = false;
     clearTimeout(this.timer);
     this.pixi.viewport.cursor = this.cursor;
+
+    this.pixi.enablePanning();
   };
 }

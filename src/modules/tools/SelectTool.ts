@@ -57,7 +57,7 @@ export class SelectTool extends BaseTool {
   };
 
   moveEnd = (event: InteractionEvent) => {
-    this.pixi.enablePanning();
+    // this.pixi.enablePanning();
 
     if (this.gfx) this.gfx.alpha = 1;
     this.dragging = false;

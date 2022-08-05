@@ -1,6 +1,6 @@
 import getStroke, { StrokeOptions } from "perfect-freehand";
-import { colorToNumber as ctn } from "../../utils/utils";
-
+import { colorToNumber as ctn, getRandomIntInclusive } from "../../utils/utils";
+import polygonClipping, { Ring } from "polygon-clipping";
 import {
   Graphics,
   InteractionEvent,
@@ -16,9 +16,9 @@ export type FreehandToolOptions = {
 
 const DEFAULT_STROKE_OPTIONS: StrokeOptions = {
   size: 10,
-  thinning: 0.8,
-  smoothing: 0.01,
-  streamline: 1,
+  smoothing: 0.5,
+  thinning: 0.7,
+  streamline: 0.99,
   easing: (t) => t,
   start: {
     taper: 0,
@@ -26,7 +26,7 @@ const DEFAULT_STROKE_OPTIONS: StrokeOptions = {
   },
   end: {
     taper: 0,
-    cap: false,
+    cap: true,
   },
 };
 
@@ -65,7 +65,7 @@ export class FreehandTool extends BaseTool {
     console.log("freehand:pointerdown");
     this.dragging = true;
     this.path = new Graphics();
-    this.path.interactive = true;
+    // this.path.interactive = true;
     // color = getRandomIntInclusive(0, 0xffffff);
 
     this.pixi.items.addChild(this.path);
@@ -76,39 +76,34 @@ export class FreehandTool extends BaseTool {
 
   drawMove = (event: InteractionEvent) => {
     if (!this.dragging || this.longPressed || this.touches > 1) return;
-
     const { color } = this._freeOptions;
-    const s1 = getStroke(this.points, this._strokeOptions);
-    const t = event.data.global;
+    // const s1 = getStroke(this.points, this._strokeOptions);
+    // const t = event.data.global;
 
     const { x, y } = this.pixi.viewport.toWorld(event.data.global);
     this.points.push([x, y]);
+    this.path.clear();
+
+    const outlinePoints = getStroke(this.points, this._strokeOptions);
+    const faces = polygonClipping.xor([outlinePoints as Ring]);
 
     this.path.clear();
     this.path.beginFill(ctn(color), 1);
-    this.path.lineStyle({ width: 1, color: 0xffffff });
-    // const s = getStroke(points, options);
-    // const c = getStrokePoints(points, options);
-    // const s = getStrokeOutlinePoints(c, options);
-    const s2 = getStroke(this.points, this._strokeOptions);
-
-    // const poly = polygonClipping.difference([s2 as Ring]);
-    // const p = poly[0];
-    // const s = [...p[0]];
-    const s = s2;
-    const fs = s.flatMap((i) => i);
-    this.path.drawPolygon(fs);
-
-    // path.drawShape(new Polygon(fs));
-    // path.finishPoly();
-    // path.closePath();
+    faces.forEach((face, i) => {
+      face.forEach((points, j) => {
+        // this.path.lineStyle({ width: 1, color: 0xffffff });
+        if (j !== 0) this.path.beginHole();
+        this.path.drawPolygon(points.flatMap((p) => p));
+        this.path.finishPoly();
+        if (j !== 0) this.path.endHole();
+      });
+    });
     this.path.endFill();
   };
 
   drawEnd = () => {
     console.log("freehand:pointerup");
 
-    // if (this._mode === TOOL.FREEHAND) {
     // console.log(path.)
     // path.destroy();
     // const finalPath = new Graphics();
@@ -124,11 +119,12 @@ export class FreehandTool extends BaseTool {
     // finalPath.drawPolygon(fs);
     // finalPath.endFill();
     // items.current?.addChild(finalPath);
-    // path.interactive = true;
+    this.path.interactive = true;
     this.dragging = false;
     this.points = [];
 
-    this.pixi.disablePanning();
-    // }
+    // this.pixi.enablePanning();
+
+    // this.pixi.disablePanning();
   };
 }
