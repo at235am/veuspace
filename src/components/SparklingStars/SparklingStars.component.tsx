@@ -35,8 +35,6 @@ const SparklingStars = ({
       }
     : {};
 
-  if (disable) return null;
-
   useEffect(() => {
     const stars = numberOfStars ?? Math.round(window.innerWidth / 10);
 
@@ -49,6 +47,8 @@ const SparklingStars = ({
 
     setStarz(starss);
   }, []);
+
+  if (disable) return null;
 
   return (
     <Container className="stars" z={interactable ? 1 : -1}>

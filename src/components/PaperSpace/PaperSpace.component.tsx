@@ -22,7 +22,7 @@ const PaperSpace = () => {
     setup(canvasRef.current, containerRef.current);
 
     return () => {};
-  }, []);
+  }, [setup]);
 
   useEffect(() => {
     if (width === 0 || height === 0) return;
