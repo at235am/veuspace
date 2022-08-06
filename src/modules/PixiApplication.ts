@@ -1,3 +1,4 @@
+import { SVGScene } from "@pixi-essentials/svg";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
@@ -34,7 +35,7 @@ export class PixiApplication {
   public readonly app: Application;
   public readonly background: Container;
   public readonly items: Container;
-  private _viewport: Viewport;
+  public readonly viewport: Viewport;
   private _mode: Tool;
   private _cellSize: number;
   public longPressFn?: () => void;
@@ -44,9 +45,13 @@ export class PixiApplication {
     this._cellSize = 60;
 
     this.app = new Application();
-    this._viewport = new Viewport();
     this.background = new Container();
     this.items = new Container();
+    this.viewport = new Viewport({
+      // interaction: this.app.renderer.plugins.interaction,
+      passiveWheel: false,
+      disableOnContextMenu: true,
+    });
   }
 
   public static getInstance(): PixiApplication {
@@ -59,11 +64,11 @@ export class PixiApplication {
     if (PixiApplication.initialized) return;
 
     PixiApplication.initialized = true;
-    this._viewport.destroy();
-    this.app.renderer.destroy();
+
     const box = container?.getBoundingClientRect() || { width: 0, height: 0 };
 
-    // make the new renderer:
+    // destroy and remake the renderer:
+    this.app.renderer.destroy();
     this.app.renderer = autoDetectRenderer({
       width: box.width,
       height: box.height,
@@ -74,29 +79,18 @@ export class PixiApplication {
       backgroundAlpha: 0,
     });
 
-    // make the new viewport
-    this._viewport = new Viewport({
-      // interaction: this.app.renderer.plugins.interaction,
-      passiveWheel: false,
-      disableOnContextMenu: true,
-    });
-
-    // name the instances:
+    // name the major containers:
     this.viewport.name = "viewport";
     this.background.name = "background";
     this.items.name = "items";
 
-    // adding the boxes (order is important):
+    // add the containers to the stage (order is important):
     this.viewport.addChild(this.background);
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
 
-    const select = new SelectTool(PixiApplication.getInstance());
+    const select = new SelectTool(this);
     select.activate();
-  }
-
-  public get viewport() {
-    return this._viewport;
   }
 
   public get mode() {

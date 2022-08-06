@@ -101,7 +101,7 @@ export class BaseTool {
         const fn = this.pixi.longPressFn;
         if (fn) fn();
       }
-      window.navigator.vibrate(30);
+      window.navigator.vibrate(15);
       this.pixi.viewport.cursor = "move";
     }, 750);
   };
