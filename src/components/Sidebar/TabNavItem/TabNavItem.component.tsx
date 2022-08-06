@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect } from "react";
-import { Tool } from "../../../contexts/PaperContext";
+import { Tool } from "../../../modules/PixiApplication";
 import { Container, Line, Button } from "./TabNavItem.styles";
 
 type Props = {

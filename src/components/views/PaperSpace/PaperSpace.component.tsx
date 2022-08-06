@@ -1,16 +1,11 @@
 import { ReactElement, ReactNode, useEffect, useRef, useState } from "react";
 import { NextPage } from "next/types";
 
-// contexts:
-import { PaperStateProvider } from "../../contexts/PaperContext";
-
 // styles:
-import { Container, Wrapper, Float } from "./PaperSpacePage.styles";
+import { Container } from "./PaperSpace.styles";
 
 // custom components:
-import { MinimalLayout } from "../../components/layouts/MinimalLayout";
-import { Sidebar } from "../../components/Sidebar";
-import { PaperSpace } from "../../components/PaperSpace";
+import { MinimalLayout } from "../../layouts/MinimalLayout";
 import dynamic from "next/dynamic";
 
 const loader = () =>
