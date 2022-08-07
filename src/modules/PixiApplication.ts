@@ -151,31 +151,25 @@ export class PixiApplication {
 
   public drawBackgroundPattern() {
     this.background.removeChildren();
-
     const cell = this._cellSize; // the gap between each cell of the grid ;
     const pattern = new Graphics();
-
     // measurements
     const vp_bounds = this.viewport.getVisibleBounds();
     const gridbox = vp_bounds.pad(cell);
     const hboxes = Math.round(gridbox.width / cell);
     const vboxes = Math.round(gridbox.height / cell);
-
     // for circle:
     pattern.beginFill(ctn(0xffffff), 1);
     pattern.lineStyle({ width: 0 });
-
     // for rect:
     // pattern.beginFill(0, 0);
     // pattern.lineStyle({ width: 1, color: 0xffffff });
-
     for (let x = 0; x < hboxes; x++) {
       for (let y = 0; y < vboxes; y++) {
         const offsetX = roundIntToNearestMultiple(vp_bounds.x, cell);
         const offsetY = roundIntToNearestMultiple(vp_bounds.y, cell);
         const X = offsetX + x * cell;
         const Y = offsetY + y * cell;
-
         pattern.drawCircle(X, Y, 1); // for circle
         // pattern.drawRect(X, Y, cell, cell); // for rect
       }

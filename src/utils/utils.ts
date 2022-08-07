@@ -81,3 +81,8 @@ export const getSvgPathFromStroke = (stroke: number[][]) => {
   d.push("Z");
   return d.join(" ");
 };
+
+export const midpoint = (p1: number[], p2: number[]) => [
+  p1[0] + (p2[0] - p1[0]) / 2,
+  p1[1] + (p2[1] - p1[1]) / 2,
+];
