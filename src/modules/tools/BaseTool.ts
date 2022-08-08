@@ -64,7 +64,7 @@ export class BaseTool {
   }
 
   private setTouchesAndButton = (event: InteractionEvent) => {
-    console.log("base:pointerdown");
+    // console.log("base:pointerdown");
 
     this.touches = 1;
     this.button = event.data.button;
@@ -114,7 +114,7 @@ export class BaseTool {
   };
 
   private reset = (event: InteractionEvent) => {
-    console.log("base:pointerup");
+    // console.log("base:pointerup");
     this.button = null;
     this.longPressed = false;
     clearTimeout(this.timer);

@@ -140,12 +140,12 @@ export class PixiApplication {
   }
 
   public disablePanning() {
-    console.log("disablePanning");
+    // console.log("disablePanning");
     this.viewport.drag({ pressDrag: false, mouseButtons: "middle" });
   }
 
   public enablePanning() {
-    console.log("enablePanning");
+    // console.log("enablePanning");
     this.viewport.drag({ pressDrag: true, mouseButtons: "middle" });
   }
 
