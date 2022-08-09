@@ -31,7 +31,7 @@ const PaperSpace = () => {
 
   return (
     <Container ref={containerRef}>
-      <Canvas ref={canvasRef} />
+      <Canvas ref={canvasRef} tabIndex={0} />
       <Popup>{JSON.stringify(text, null, 2)}</Popup>
     </Container>
   );
