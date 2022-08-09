@@ -18,38 +18,26 @@ import { nanoid, random } from "nanoid";
 import {
   IconPencil,
   IconClick,
-  IconNotebook,
-  IconArrowsMove,
-  IconShare,
-  IconCursorText,
-  IconHighlight,
   IconTypography,
-  IconChevronLeft,
-  IconMenu,
   IconShape,
   IconShape2,
   IconShape3,
   IconRectangle,
   IconCircleRectangle,
   IconRotateRectangle,
-  IconPlus,
-  IconMinus,
-  IconBug,
   IconCircle,
   IconEraser,
+  IconPhoto,
 } from "@tabler/icons";
 import Color from "color";
 import { getRandomIntInclusive as randomInt } from "../../utils/utils";
 import {
   TC,
-  toolBarWidth,
   Container,
   Toolbar,
   Header,
   ToggleBarButton,
-  ToolWrapper,
-  ActivityBar,
-  SubTools,
+  ToolPropertiesContainer,
 } from "./Sidebar.styles";
 import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
@@ -62,7 +50,7 @@ const Test = ({ text }: { text: string }) => {
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <Test text="select" />,
-  [TOOL.ERASE]: <Test text="draw" />,
+  [TOOL.ERASE]: <></>,
   [TOOL.FREEHAND]: <Test text="draw" />,
   [TOOL.TEXT_ADD]: <Test text="text_add" />,
   [TOOL.SHAPE]: <Test text="SHAPE" />,
@@ -70,14 +58,7 @@ const TabContent: Record<Tool, ReactNode> = {
   [TOOL.RECTANGLE]: <Test text="RECTANGLE" />,
   [TOOL.TEXT_ADD]: <Test text="TEXT_ADD" />,
   [TOOL.TEXT_EDIT]: <Test text="TEXT_EDIT" />,
-};
-
-type CircleOptions = {
-  name?: string;
-  x?: number;
-  y?: number;
-  radius?: number;
-  color?: string | number;
+  [TOOL.IMAGE]: <Test text="IMAGE" />,
 };
 
 const iconSize = 22;
@@ -87,23 +68,20 @@ const Sidebar = () => {
   const {
     pixim,
     mode: activeTool,
-    setMode: activateTool,
+    setMode: setActiveTool,
     drawCircle,
   } = usePaperState();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tool>(TOOL.SELECT);
-  const tabHandler = { activeTab, setActiveTab, activeTool };
+  const tabHandler = { activeTool, setActiveTool, setSidebarOpen };
 
   const sidebarAnim = {
     variants: {
       open: {
-        // width: "auto",
         height: "auto",
       },
       close: {
-        // width: toolBarWidth,
-        height: toolBarWidth,
+        height: 0,
       },
     },
     initial: "close",
@@ -128,8 +106,6 @@ const Sidebar = () => {
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const zoom = (change: number) => {};
-
   const drawRandomCircle = () => {
     const pixi = pixim.current;
     const { width, height } = pixi.app.screen;
@@ -145,122 +121,54 @@ const Sidebar = () => {
   };
 
   return (
-    <Container {...sidebarAnim}>
+    <Container>
       <Toolbar>
-        {/* <Header>
-          <ToggleBarButton
-            {...toggleButtonAnim}
-            onClick={() => setSidebarOpen((v) => !v)}
-          >
-            <IconMenu size={16} />
-          </ToggleBarButton>
-        </Header> */}
-        <ToolWrapper>
-          {/* <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={openSidebar}>
-            <IconNotebook size={iconSize} stroke={iconStroke} />
-          </TabNavItem> */}
+        <TabNavItem {...tabHandler} id={TOOL.SELECT}>
+          <IconClick size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.SELECT}
-            onClick={() => {
-              // setSidebarOpen((v) => !v);
-              console.log("select");
-              activateTool(TOOL.SELECT);
-            }}
-          >
-            <IconClick size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
+        <TabNavItem {...tabHandler} id={TOOL.FREEHAND}>
+          <IconPencil size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.FREEHAND}
-            onClick={() => {
-              console.log("freehand");
-              activateTool(TOOL.FREEHAND);
-            }}
-          >
-            <IconPencil size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
+        <TabNavItem {...tabHandler} id={TOOL.ERASE}>
+          <IconEraser size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.ERASE}
-            onClick={() => {
-              // setSidebarOpen((v) => !v);
-              console.log("eraser");
-              activateTool(TOOL.ERASE);
-            }}
-          >
-            <IconEraser size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
+        <TabNavItem {...tabHandler} id={TOOL.CIRCLE}>
+          <IconCircle size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.CIRCLE}
-            onClick={() => {
-              // drawRandomCircle();
-              [...Array(50).keys()].forEach(() => drawRandomCircle());
-              activateTool(TOOL.CIRCLE);
-            }}
-          >
-            <IconCircle size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
+        <TabNavItem {...tabHandler} id={TOOL.RECTANGLE}>
+          <IconRectangle size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.RECTANGLE}
-            onClick={() => {
-              drawCircle({
-                x: 500,
-                y: 500,
-                // x: (app.current?.screen.width ?? 0) / 2,
-                // y: (app.current?.screen.height ?? 0) / 2,
-                radius: randomInt(10, 50),
-                color: randomInt(0, 0xffffff),
-                strokeWidth: 2,
-                strokeColor: 0xffffff,
-              });
+        <TabNavItem {...tabHandler} id={TOOL.TEXT_ADD}>
+          <IconTypography size={iconSize} stroke={iconStroke} />
+        </TabNavItem>
 
-              activateTool(TOOL.RECTANGLE);
-            }}
-          >
-            <IconRectangle size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.TEXT_ADD}
-            onClick={() => {
-              activateTool(TOOL.TEXT_ADD);
-            }}
-          >
-            <IconTypography size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-        </ToolWrapper>
-
-        {/* <SubTools>
-          <Zoomer />
-          <History />
-        </SubTools> */}
+        <TabNavItem {...tabHandler} id={TOOL.IMAGE}>
+          <IconPhoto
+            size={iconSize}
+            stroke={iconStroke}
+            onClick={drawRandomCircle}
+          />
+        </TabNavItem>
       </Toolbar>
 
-      <ActivityBar>
-        {/* <Header>
-          <Logo />
-        </Header> */}
+      <ToolPropertiesContainer {...sidebarAnim}>
         <AnimatePresence exitBeforeEnter>
           <motion.div
-            key={activeTab}
+            key={activeTool}
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 10, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {TabContent[activeTab]}
+            {TabContent[activeTool]}
           </motion.div>
         </AnimatePresence>
-      </ActivityBar>
+      </ToolPropertiesContainer>
     </Container>
   );
 };

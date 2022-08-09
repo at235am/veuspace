@@ -6,7 +6,7 @@ export const Container = styled(motion.div)`
   /* border: 1px solid pink; */
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 5px;
   /* width: min-content; */
   /* width: 100%; */
 
@@ -34,50 +34,22 @@ export const Header = styled.div`
   align-items: center;
 `;
 
-export const toolBarWidth = 50;
+export const toolBarSize = 50;
 
-export const Toolbar = styled.div`
+export const Toolbar = styled.ul`
   /* border: 2px dashed red; */
-  /* width: 100%; */
 
-  /* width: min-content; */
-  padding: 3px 12px;
+  padding: 4px;
 
   background-color: #303030;
-  background-color: rgba(65, 65, 65, 0.8);
+  background-color: rgba(70, 70, 70, 0.75);
 
   display: flex;
   flex-direction: row;
+  gap: 0px;
 `;
 
-export const ToolWrapper = styled.ul`
-  /* border: 1px dashed orange; */
-
-  min-height: ${toolBarWidth}px;
-  height: ${toolBarWidth}px;
-  max-height: ${toolBarWidth}px;
-
-  max-width: 100vw;
-
-  /* border-left: 12px solid red;
-  border-right: 12px solid red; */
-  /* width: 100%; */
-
-  display: flex;
-  flex-direction: row;
-  gap: 3px;
-`;
-
-export const SubTools = styled.ul`
-  border: 1px solid red;
-
-  padding: 0.5rem;
-  /* margin: 0.25rem; */
-  /* margin-right: 0; */
-  display: flex;
-`;
-
-export const ActivityBar = styled.div`
+export const ToolPropertiesContainer = styled(motion.div)`
   /* border: 1px dashed blue; */
 
   overflow: hidden;

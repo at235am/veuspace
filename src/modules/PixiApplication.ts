@@ -23,6 +23,7 @@ export const TOOL = {
   RECTANGLE: "rectangle", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   TEXT_ADD: "text_add", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   TEXT_EDIT: "text_edit", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  IMAGE: "image", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
 } as const;
 
 export type ReverseMap<T> = T[keyof T];
