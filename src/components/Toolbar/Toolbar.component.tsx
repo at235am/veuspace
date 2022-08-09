@@ -38,6 +38,7 @@ import {
   Header,
   ToggleBarButton,
   ToolPropertiesContainer,
+  FloatContainer,
 } from "./Toolbar.styles";
 import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
@@ -75,13 +76,15 @@ const Toolbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const tabHandler = { activeTool, setActiveTool, setSidebarOpen };
 
-  const sidebarAnim = {
+  const propertiesAnim = {
     variants: {
       open: {
-        height: "auto",
+        y: 0,
+        opacity: 1,
       },
       close: {
-        height: 0,
+        y: -50,
+        opacity: 0,
       },
     },
     initial: "close",
@@ -100,7 +103,7 @@ const Toolbar = () => {
     },
     initial: "close",
     animate: sidebarOpen ? "open" : "close",
-    transition: { type: "tween", duration: 0.25 },
+    transition: { type: "tween", duration: 0 },
   };
 
   const openSidebar = () => setSidebarOpen(true);
@@ -156,9 +159,9 @@ const Toolbar = () => {
         </ToolButton>
       </ToolbarContainer>
 
-      <ToolPropertiesContainer {...sidebarAnim}>
+      <ToolPropertiesContainer {...propertiesAnim}>
         <AnimatePresence exitBeforeEnter>
-          <motion.div
+          <FloatContainer
             key={activeTool}
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -166,7 +169,7 @@ const Toolbar = () => {
             transition={{ duration: 0.2 }}
           >
             {TabContent[activeTool]}
-          </motion.div>
+          </FloatContainer>
         </AnimatePresence>
       </ToolPropertiesContainer>
     </Container>
