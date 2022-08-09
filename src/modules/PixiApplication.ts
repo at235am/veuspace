@@ -109,6 +109,7 @@ export class PixiApplication {
         break;
       case TOOL.FREEHAND:
         const freehand = new FreehandTool(this);
+        freehand.setOptions({ size: 5, color: 0x555555 });
         freehand.activate();
         break;
       case TOOL.CIRCLE:

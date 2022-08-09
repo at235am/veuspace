@@ -41,9 +41,23 @@ export const clamp = (num: number, min: number, max: number) =>
 export const prettyNumber = (num: number) =>
   num.toFixed(2).replace(/[.,]00$/, "");
 
-export const colorToNumber = (color: string | number) => {
-  return new Color(color).rgbNumber();
-};
+export const colorToNumber = (color: string | number) =>
+  new Color(color).rgbNumber();
+
+export const getRandomColor = () =>
+  colorToNumber(getRandomIntInclusive(0, 0xffffff));
+
+export function* generateColors(num_of_colors: number) {
+  const step = num_of_colors < 360 ? 360 / num_of_colors : 1;
+
+  const colors = [...Array(num_of_colors).keys()].map((i) =>
+    new Color(`hsla(${(i * step) % 360}, 100%, 50%, 1)`).rgbNumber()
+  );
+
+  for (let color of colors) {
+    yield color;
+  }
+}
 
 /**
  * Turns an array of item objects with type T into
@@ -86,6 +100,65 @@ export const midpoint = (p1: number[], p2: number[]) => [
   p1[0] + (p2[0] - p1[0]) / 2,
   p1[1] + (p2[1] - p1[1]) / 2,
 ];
+
+export const normalPoint = (a: number[], b: number[], r: number) => {
+  // midpoint between b and a:
+  const px = (b[0] + a[0]) / 2;
+  const py = (b[1] + a[1]) / 2;
+
+  // slope components (rise / run) = (dy / dx):
+  const dx = b[0] - a[0]; // run
+  const dy = b[1] - a[1]; // rise
+
+  // magnitude of slope vector:
+  const V = Math.sqrt(dx * dx + dy * dy);
+
+  // (dx / V) or (dy / V) represents a unit vector
+  // and r represents the scalar for that unit vector
+  const vx = (dy / V) * r; // notice x-comp is dy (see explanation below)
+  const vy = -(dx / V) * r; // notice y-comp is -dx
+
+  // Slope between two points b and a is m = dy / dx
+  // However we want a point PERPENDICULAR aka NORMAL to that slope.
+  // To get the slope normal to another slope is the negative reciprocal:
+  // Let n be the normal slope:
+  // n = -1 / m
+  //   = -1 / (dy / dx)
+  //   = -dx / dy
+  // So for a vector v with components vx and vy where:
+  // vy = rise = -dx (-dx is in the numerator; remember slope is rise OVER run)
+  // vx = run = dy (dy is in the denominator so its run)
+
+  // theres TWO normals to the midpoint of b and a (aka point p)
+  return [
+    [px + vx, py + vy],
+    [px - vx, py - vy],
+  ];
+};
+
+export const extraPoint = (a: number[], b: number[], r: number) => {
+  // point to extend:
+  const px = a[0];
+  const py = a[1];
+
+  // slope components (rise / run) = (dy / dx):
+  const dx = b[0] - a[0]; // run
+  const dy = b[1] - a[1]; // rise
+
+  // magnitude of slope vector:
+  const V = Math.sqrt(dx * dx + dy * dy);
+
+  // (dx / V) or (dy / V) represents a unit vector
+  // and r represents the scalar for that unit vector
+  const vx = (dx / V) * r;
+  const vy = (dy / V) * r;
+
+  // theres TWO normals:
+  return [
+    [px + vx, py + vy],
+    [px - vx, py - vy],
+  ];
+};
 
 /**
  * Calculates an array containing points representing a cardinal spline through given point array.
