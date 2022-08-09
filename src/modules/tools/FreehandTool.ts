@@ -1,14 +1,6 @@
-import {
-  colorToNumber as ctn,
-  generateColors,
-  getRandomIntInclusive,
-} from "../../utils/utils";
-import { MultiPolygon, Ring, union } from "polygon-clipping";
-import {
-  InteractionEvent,
-  InteractionManagerOptions,
-  LINE_CAP,
-} from "pixi.js-legacy";
+import { colorToNumber as ctn } from "../../utils/utils";
+
+import { InteractionEvent, InteractionManagerOptions } from "pixi.js-legacy";
 
 import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
@@ -44,6 +36,8 @@ export class FreehandTool extends BaseTool {
 
     this.interaction?.on("pointerdown", this.drawStart);
     this.interaction?.on("pointerup", this.drawEnd);
+    this.interaction?.on("pointerupoutside", this.drawEnd);
+
     // this.interaction?.on("pointermove", this.storePoints);
 
     const throttleMove = throttle(this.drawMove, 20);
@@ -67,6 +61,9 @@ export class FreehandTool extends BaseTool {
   };
 
   drawStart = (event: InteractionEvent) => {
+    // this handles if the users press down with multiple touches:
+    if (this.touches > 1 && !this.path.destroyed) this.path?.destroy();
+
     // if its not the left click or if multitouching
     if (this.button !== 0 || this.touches > 1) return;
 
@@ -84,7 +81,6 @@ export class FreehandTool extends BaseTool {
   };
 
   drawMove = (event: InteractionEvent) => {
-    if (this.touches > 1) this.path.clear();
     if (!this.dragging || this.longPressed || this.touches > 1) return;
 
     this.storePoints(event);
@@ -92,8 +88,6 @@ export class FreehandTool extends BaseTool {
   };
 
   drawEnd = () => {
-    if (this.touches > 1) this.path.destroy();
-
     // reset the states of the tool:
     this.dragging = false;
     // this.path = null;

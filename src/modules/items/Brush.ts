@@ -123,6 +123,7 @@ export class BrushPath extends Graphics {
     const { color, size } = this.options;
     const points = this.points;
 
+    if (this.destroyed) return;
     this.clear();
 
     if (points.length < 4) {
