@@ -36,6 +36,7 @@ import {
   IconMinus,
   IconBug,
   IconCircle,
+  IconEraser,
 } from "@tabler/icons";
 import Color from "color";
 import { getRandomIntInclusive as randomInt } from "../../utils/utils";
@@ -48,9 +49,12 @@ import {
   ToggleBarButton,
   ToolWrapper,
   ActivityBar,
+  SubTools,
 } from "./Sidebar.styles";
 import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
+import { History } from "./History";
+import { Zoomer } from "./Zoomer";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -94,10 +98,12 @@ const Sidebar = () => {
   const sidebarAnim = {
     variants: {
       open: {
-        width: "auto",
+        // width: "auto",
+        height: "auto",
       },
       close: {
-        width: toolBarWidth,
+        // width: toolBarWidth,
+        height: toolBarWidth,
       },
     },
     initial: "close",
@@ -141,24 +147,24 @@ const Sidebar = () => {
   return (
     <Container {...sidebarAnim}>
       <Toolbar>
-        <Header>
+        {/* <Header>
           <ToggleBarButton
             {...toggleButtonAnim}
             onClick={() => setSidebarOpen((v) => !v)}
           >
             <IconMenu size={16} />
           </ToggleBarButton>
-        </Header>
+        </Header> */}
         <ToolWrapper>
-          <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={openSidebar}>
+          {/* <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={openSidebar}>
             <IconNotebook size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
+          </TabNavItem> */}
 
           <TabNavItem
             {...tabHandler}
             id={TOOL.SELECT}
-            // activeTool={activeTool === TOOL.SELECT.select}
             onClick={() => {
+              // setSidebarOpen((v) => !v);
               console.log("select");
               activateTool(TOOL.SELECT);
             }}
@@ -175,6 +181,18 @@ const Sidebar = () => {
             }}
           >
             <IconPencil size={iconSize} stroke={iconStroke} />
+          </TabNavItem>
+
+          <TabNavItem
+            {...tabHandler}
+            id={TOOL.ERASE}
+            onClick={() => {
+              // setSidebarOpen((v) => !v);
+              console.log("eraser");
+              activateTool(TOOL.ERASE);
+            }}
+          >
+            <IconEraser size={iconSize} stroke={iconStroke} />
           </TabNavItem>
 
           <TabNavItem
@@ -219,43 +237,18 @@ const Sidebar = () => {
           >
             <IconTypography size={iconSize} stroke={iconStroke} />
           </TabNavItem>
-
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.TEXT_EDIT}
-            onClick={() => zoom(-1)}
-          >
-            <IconPlus size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.TEXT_EDIT}
-            onClick={() => zoom(1)}
-          >
-            <IconMinus size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-
-          <TabNavItem
-            {...tabHandler}
-            id={TOOL.TEXT_EDIT}
-            onClick={() => {
-              console.log("current tool", activeTool);
-              activateTool(TOOL.SELECT);
-            }}
-          >
-            <IconBug size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
-
-          <TabNavItem {...tabHandler} id={TOOL.TEXT_EDIT} onClick={() => {}}>
-            <IconShare size={iconSize} stroke={iconStroke} />
-          </TabNavItem>
         </ToolWrapper>
+
+        {/* <SubTools>
+          <Zoomer />
+          <History />
+        </SubTools> */}
       </Toolbar>
 
       <ActivityBar>
-        <Header>
+        {/* <Header>
           <Logo />
-        </Header>
+        </Header> */}
         <AnimatePresence exitBeforeEnter>
           <motion.div
             key={activeTab}

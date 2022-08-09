@@ -3,21 +3,27 @@ import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 
 export const Container = styled(motion.div)`
+  /* border: 1px solid pink; */
   position: relative;
   overflow: hidden;
   border-radius: 10px;
-  height: 100%;
+  /* width: min-content; */
+  /* width: 100%; */
 
   background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+
+  /* box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; */
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
 
   display: flex;
-  flex-direction: row;
+  /* flex-direction: row; */
+  flex-direction: column;
 `;
 
 export const Header = styled.div`
   position: relative;
-  width: 100%;
+  /* width: 100%; */
 
   padding: 0.5rem;
 
@@ -30,34 +36,54 @@ export const Header = styled.div`
 
 export const toolBarWidth = 50;
 
-export const ToolWrapper = styled.ul`
-  min-width: ${toolBarWidth}px;
-  max-width: ${toolBarWidth}px;
-  padding: 2px;
-  height: 100%;
-
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`;
-
 export const Toolbar = styled.div`
-  /* border: 1px solid red; */
+  /* border: 2px dashed red; */
+  /* width: 100%; */
+
+  /* width: min-content; */
+  padding: 3px 12px;
 
   background-color: #303030;
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(65, 65, 65, 0.8);
 
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 `;
 
-export const ActivityBar = styled.ul`
-  /* border: 1px solid blue; */
+export const ToolWrapper = styled.ul`
+  /* border: 1px dashed orange; */
+
+  min-height: ${toolBarWidth}px;
+  height: ${toolBarWidth}px;
+  max-height: ${toolBarWidth}px;
+
+  max-width: 100vw;
+
+  /* border-left: 12px solid red;
+  border-right: 12px solid red; */
+  /* width: 100%; */
+
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+`;
+
+export const SubTools = styled.ul`
+  border: 1px solid red;
+
+  padding: 0.5rem;
+  /* margin: 0.25rem; */
+  /* margin-right: 0; */
+  display: flex;
+`;
+
+export const ActivityBar = styled.div`
+  /* border: 1px dashed blue; */
 
   overflow: hidden;
 
-  width: 18rem;
-  height: 100%;
+  height: 18rem;
+  /* width: 100%; */
 
   display: flex;
   flex-direction: column;

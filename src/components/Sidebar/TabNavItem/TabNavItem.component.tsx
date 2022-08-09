@@ -30,7 +30,9 @@ const TabNavItem = ({
   return (
     <Container active={highlight}>
       {id === activeTab && <Line layoutId="line" />}
-      <Button onClick={action}>{children}</Button>
+      <Button active={highlight} onClick={action}>
+        {children}
+      </Button>
     </Container>
   );
 };
