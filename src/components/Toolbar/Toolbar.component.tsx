@@ -11,7 +11,7 @@ import Image from "next/image";
 import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
-import { TabNavItem } from "./TabNavItem";
+import { ToolButton } from "./ToolButton";
 import { usePaperState } from "../../contexts/PaperContext";
 import { nanoid, random } from "nanoid";
 
@@ -34,11 +34,11 @@ import { getRandomIntInclusive as randomInt } from "../../utils/utils";
 import {
   TC,
   Container,
-  Toolbar,
+  ToolbarContainer,
   Header,
   ToggleBarButton,
   ToolPropertiesContainer,
-} from "./Sidebar.styles";
+} from "./Toolbar.styles";
 import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
 import { History } from "./History";
@@ -64,7 +64,7 @@ const TabContent: Record<Tool, ReactNode> = {
 const iconSize = 22;
 const iconStroke = 2;
 
-const Sidebar = () => {
+const Toolbar = () => {
   const {
     pixim,
     mode: activeTool,
@@ -122,39 +122,39 @@ const Sidebar = () => {
 
   return (
     <Container>
-      <Toolbar>
-        <TabNavItem {...tabHandler} id={TOOL.SELECT}>
+      <ToolbarContainer>
+        <ToolButton {...tabHandler} id={TOOL.SELECT}>
           <IconClick size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.FREEHAND}>
+        <ToolButton {...tabHandler} id={TOOL.FREEHAND}>
           <IconPencil size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.ERASE}>
+        <ToolButton {...tabHandler} id={TOOL.ERASE}>
           <IconEraser size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.CIRCLE}>
+        <ToolButton {...tabHandler} id={TOOL.CIRCLE}>
           <IconCircle size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.RECTANGLE}>
+        <ToolButton {...tabHandler} id={TOOL.RECTANGLE}>
           <IconRectangle size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.TEXT_ADD}>
+        <ToolButton {...tabHandler} id={TOOL.TEXT_ADD}>
           <IconTypography size={iconSize} stroke={iconStroke} />
-        </TabNavItem>
+        </ToolButton>
 
-        <TabNavItem {...tabHandler} id={TOOL.IMAGE}>
+        <ToolButton {...tabHandler} id={TOOL.IMAGE}>
           <IconPhoto
             size={iconSize}
             stroke={iconStroke}
             onClick={drawRandomCircle}
           />
-        </TabNavItem>
-      </Toolbar>
+        </ToolButton>
+      </ToolbarContainer>
 
       <ToolPropertiesContainer {...sidebarAnim}>
         <AnimatePresence exitBeforeEnter>
@@ -173,4 +173,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default Toolbar;

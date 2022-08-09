@@ -1,4 +1,4 @@
-import { Sidebar } from "../../Sidebar";
+import { Toolbar } from "../../Toolbar";
 import { PaperSpace } from "../../PaperSpace";
 
 // contexts:
@@ -22,7 +22,7 @@ export const PaperSpaceArea = () => {
     <PaperStateProvider>
       <Wrapper>
         <Float ref={ref} widthOffset={Math.round(width)}>
-          <Sidebar />
+          <Toolbar />
         </Float>
         <PaperSpace />
       </Wrapper>

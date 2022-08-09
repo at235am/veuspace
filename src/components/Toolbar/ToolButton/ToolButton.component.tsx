@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { Tool } from "../../../modules/PixiApplication";
-import { Container, Line, Button } from "./TabNavItem.styles";
+import { Container, Line, Button } from "./ToolButton.styles";
 
 type Props = {
   id: Tool;
@@ -8,24 +8,18 @@ type Props = {
   setActiveTool: Dispatch<SetStateAction<Tool>>;
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
 
-  // activeTab: Tool;
-  // setActiveTab: Dispatch<SetStateAction<Tool>>;
   onClick?: () => void;
   children: React.ReactNode;
 };
 
-const TabNavItem = ({
+const ToolButton = ({
   id,
   activeTool,
   setActiveTool,
   setSidebarOpen,
-  // activeTab,
-  // setActiveTab,
   onClick,
   children,
 }: Props) => {
-  // const { mode, renderMode, toggleMode } = usePaperSpaceState();
-  // const highlight = id === activeTool || id === activeTab;
   const highlight = id === activeTool;
 
   const toggleMore = (tool: Tool) => {
@@ -48,4 +42,4 @@ const TabNavItem = ({
   );
 };
 
-export default TabNavItem;
+export default ToolButton;

@@ -36,7 +36,7 @@ export const Header = styled.div`
 
 export const toolBarSize = 50;
 
-export const Toolbar = styled.ul`
+export const ToolbarContainer = styled.ul`
   /* border: 2px dashed red; */
 
   padding: 4px;
