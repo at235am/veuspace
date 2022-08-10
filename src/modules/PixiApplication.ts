@@ -33,10 +33,16 @@ export class PixiApplication {
   private static instance: PixiApplication;
   private static initialized = false;
 
+  // main states:
   public readonly app: Application;
   public readonly background: Container;
   public readonly items: Container;
   public readonly viewport: Viewport;
+
+  // tools:
+  public readonly drawTool: FreehandTool;
+  public readonly selectTool: SelectTool;
+
   private _mode: Tool;
   private _cellSize: number;
   public longPressFn?: () => void;
@@ -53,6 +59,11 @@ export class PixiApplication {
       passiveWheel: false,
       disableOnContextMenu: true,
     });
+
+    this.drawTool = new FreehandTool(this);
+    this.selectTool = new SelectTool(this);
+
+    this.drawTool.setOptions({ size: 5, color: 0x555555 });
   }
 
   public static getInstance(): PixiApplication {
@@ -90,8 +101,7 @@ export class PixiApplication {
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
 
-    const select = new SelectTool(this);
-    select.activate();
+    this.selectTool.activate();
   }
 
   public get mode() {
@@ -105,13 +115,10 @@ export class PixiApplication {
 
     switch (value) {
       case TOOL.SELECT:
-        const select = new SelectTool(this);
-        select.activate();
+        this.selectTool.activate();
         break;
       case TOOL.FREEHAND:
-        const freehand = new FreehandTool(this);
-        freehand.setOptions({ size: 5, color: 0x555555 });
-        freehand.activate();
+        this.drawTool.activate();
         break;
       case TOOL.CIRCLE:
         break;

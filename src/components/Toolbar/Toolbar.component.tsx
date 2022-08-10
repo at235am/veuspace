@@ -44,6 +44,7 @@ import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
 import { History } from "./History";
 import { Zoomer } from "./Zoomer";
+import { DrawPicker } from "./DrawPicker";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -52,7 +53,7 @@ const Test = ({ text }: { text: string }) => {
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <Test text="select" />,
   [TOOL.ERASE]: <></>,
-  [TOOL.FREEHAND]: <Test text="draw" />,
+  [TOOL.FREEHAND]: <DrawPicker />,
   [TOOL.TEXT_ADD]: <Test text="text_add" />,
   [TOOL.SHAPE]: <Test text="SHAPE" />,
   [TOOL.CIRCLE]: <Test text="CIRCLE" />,
@@ -88,22 +89,9 @@ const Toolbar = () => {
       },
     },
     initial: "close",
-    animate: sidebarOpen ? "open" : "close",
-    transition: { type: "tween", duration: 0.25 },
-  };
-
-  const toggleButtonAnim = {
-    variants: {
-      open: {
-        rotate: 0,
-      },
-      close: {
-        rotate: 180,
-      },
-    },
-    initial: "close",
-    animate: sidebarOpen ? "open" : "close",
-    transition: { type: "tween", duration: 0 },
+    animate: "open",
+    exit: "close",
+    transition: { type: "tween", duration: 0.3 },
   };
 
   const openSidebar = () => setSidebarOpen(true);
@@ -159,19 +147,21 @@ const Toolbar = () => {
         </ToolButton>
       </ToolbarContainer>
 
-      <ToolPropertiesContainer {...propertiesAnim}>
-        <AnimatePresence exitBeforeEnter>
-          <FloatContainer
-            key={activeTool}
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 10, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {TabContent[activeTool]}
-          </FloatContainer>
-        </AnimatePresence>
-      </ToolPropertiesContainer>
+      <AnimatePresence>
+        {sidebarOpen && (
+          <ToolPropertiesContainer {...propertiesAnim}>
+            <FloatContainer
+              key={activeTool}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 10, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {TabContent[activeTool]}
+            </FloatContainer>
+          </ToolPropertiesContainer>
+        )}
+      </AnimatePresence>
     </Container>
   );
 };

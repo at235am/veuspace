@@ -7,25 +7,15 @@ const borderRadius = 5;
 export const Container = styled(motion.div)`
   /* border: 1px solid pink; */
   position: relative;
-  /* overflow: hidden; */
-  /* border-radius: 5px; */
-  /* width: min-content; */
+
   width: 100%;
 
-  /* background-color: rgba(255, 255, 255, 0.1); */
-  /* backdrop-filter: blur(15px); */
-
-  /* box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; */
-  /* box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px; */
-
   display: flex;
-  /* flex-direction: row; */
   flex-direction: column;
 `;
 
 export const Header = styled.div`
   position: relative;
-  /* width: 100%; */
 
   padding: 0.5rem;
 
@@ -73,11 +63,6 @@ export const FloatContainer = styled(motion.div)`
 
   overflow: hidden;
   border-radius: ${borderRadius}px;
-
-  box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 12px;
-
-  background-color: rgba(70, 70, 70, 0.75);
-  backdrop-filter: blur(15px);
 
   display: flex;
   flex-direction: column;

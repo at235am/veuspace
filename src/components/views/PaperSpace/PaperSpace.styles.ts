@@ -35,7 +35,7 @@ export const Float = styled.div<{ widthOffset: number }>`
   /* margin: 0.5rem; */
   margin-top: 0.5rem;
 
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100vw - 1rem);
 
   /* margin: 0 2rem; */
 
