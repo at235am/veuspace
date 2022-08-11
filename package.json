@@ -32,6 +32,7 @@
     "react-responsive": "*"
   },
   "devDependencies": {
+    "@svgr/webpack": "^6.3.1",
     "@types/color": "^3.0.3",
     "@types/node": "18.0.6",
     "@types/react": "18.0.15",

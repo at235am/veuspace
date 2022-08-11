@@ -46,11 +46,9 @@ import {
   ToolPropertiesContainer,
   FloatContainer,
 } from "./Toolbar.styles";
-import { Graphics, InteractionManager } from "pixi.js-legacy";
 import { TOOL, Tool } from "../../modules/PixiApplication";
-import { History } from "./History";
-import { Zoomer } from "./Zoomer";
-import { DrawPicker } from "./DrawPicker";
+
+import { DrawPicker } from "./DrawPicker/";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -147,13 +145,5 @@ const Toolbar = () => {
     </Container>
   );
 };
-{
-  /* <FloatContainer
-              key={activeTool}
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 10, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            > */
-}
+
 export default Toolbar;

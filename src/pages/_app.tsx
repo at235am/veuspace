@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import { ThemeControllerProvider } from "../styles/theme/Theme.context";
 import { UIStateProvider } from "../contexts/UIContext";
 import { DefaultLayout } from "../components/layouts/DefaultLayout";
+import { Cursor } from "../components/Cursor";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -20,6 +21,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   return (
     <ThemeControllerProvider>
       <UIStateProvider>
+        {/* <Cursor /> */}
         {getLayout(<Component {...pageProps} />)}
       </UIStateProvider>
     </ThemeControllerProvider>

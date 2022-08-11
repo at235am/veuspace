@@ -31,6 +31,8 @@ export const Presets = styled(motion.div)`
 `;
 
 export const StyleEditor = styled(motion.div)`
+  color: blue;
+
   z-index: 1;
   position: relative;
 
@@ -44,7 +46,26 @@ export const StyleEditor = styled(motion.div)`
   backdrop-filter: blur(15px);
 
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
+`;
+
+export const StrokeWrapper = styled.div<{ preset: PresetOptions }>`
+  /* border: 1px solid red; */
+
+  width: min-content;
+  height: min-content;
+
+  display: flex;
+  svg {
+    path {
+      ${({ preset }) => css`
+        stroke: ${preset.color};
+        stroke-width: ${preset.size}px;
+      `}
+    }
+  }
 `;
 
 //--------------------------------------------------------------------------------

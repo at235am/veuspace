@@ -4,6 +4,9 @@ import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
 import { Tool } from "../../../modules/PixiApplication";
 import { clamp } from "../../../utils/utils";
+
+import Stroke from "../../../../public/assets/stroke.svg";
+
 import {
   Circle,
   BrushButton,
@@ -17,6 +20,7 @@ import {
   SmallButton,
   NumInputContainer,
   NumInputLabel,
+  StrokeWrapper,
 } from "./DrawPicker.styles";
 
 const ColorPicker = () => {
@@ -129,6 +133,9 @@ const DrawPicker = ({}: Props) => {
           {styleEditor && isMounted && (
             <StyleEditor key={activePid} {...styleEditorAnim}>
               <NumberInput preset={currentPreset} updatePreset={updatePreset} />
+              <StrokeWrapper preset={currentPreset}>
+                <Stroke />
+              </StrokeWrapper>
             </StyleEditor>
           )}
         </AnimatePresence>

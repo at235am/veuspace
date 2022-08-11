@@ -18,7 +18,6 @@ export class FreehandTool extends BaseTool {
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     super(pixi, longPressCallback);
-    this.cursor = "crosshair";
 
     this.dragging = false;
     this.options = { color: 0x222222, size: 5 };
@@ -28,20 +27,20 @@ export class FreehandTool extends BaseTool {
 
   activate(blank = false, options?: InteractionManagerOptions | undefined) {
     super.start(false, options);
+    if (blank) return;
+    if (!this.interaction) return;
 
     // handle viewport listeners:
 
     // attach listeners:
-    if (blank) return;
-
-    this.interaction?.on("pointerdown", this.drawStart);
-    this.interaction?.on("pointerup", this.drawEnd);
-    this.interaction?.on("pointerupoutside", this.drawEnd);
+    this.interaction.on("pointerdown", this.drawStart);
+    this.interaction.on("pointerup", this.drawEnd);
+    this.interaction.on("pointerupoutside", this.drawEnd);
 
     // this.interaction?.on("pointermove", this.storePoints);
 
     const throttleMove = throttle(this.drawMove, 20);
-    this.interaction?.on("pointermove", throttleMove);
+    this.interaction.on("pointermove", throttleMove);
     // const debounceMove = debounce(this.drawMove, 0);
     // this.interaction?.on("pointermove", debounceMove);
     // this.interaction?.on("pointermove", this.drawMove);
