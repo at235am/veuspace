@@ -11,7 +11,10 @@ export const Container = styled.div`
 
 export const Header = styled.h2``;
 
-export const Presets = styled.div`
+export const Presets = styled(motion.div)`
+  z-index: 2;
+  position: relative;
+
   padding: 0.5rem;
 
   border-radius: 5px;
@@ -27,7 +30,10 @@ export const Presets = styled.div`
   /* gap: 2px; */
 `;
 
-export const Modify = styled.div`
+export const StyleEditor = styled(motion.div)`
+  z-index: 1;
+  position: relative;
+
   padding: 0.5rem;
   background-color: #ffffff20;
   border-radius: 5px;
@@ -39,8 +45,6 @@ export const Modify = styled.div`
 
   display: flex;
   gap: 0.5rem;
-
-  /* flex-direction: column; */
 `;
 
 //--------------------------------------------------------------------------------

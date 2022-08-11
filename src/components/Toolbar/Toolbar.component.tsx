@@ -28,6 +28,12 @@ import {
   IconCircle,
   IconEraser,
   IconPhoto,
+  IconPointer,
+  IconTextResize,
+  IconTextRecognition,
+  IconBrush,
+  IconBrushOff,
+  IconLetterT,
 } from "@tabler/icons";
 import Color from "color";
 import { getRandomIntInclusive as randomInt } from "../../utils/utils";
@@ -77,23 +83,6 @@ const Toolbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const tabHandler = { activeTool, setActiveTool, setSidebarOpen };
 
-  const propertiesAnim = {
-    variants: {
-      open: {
-        y: 0,
-        opacity: 1,
-      },
-      close: {
-        y: -50,
-        opacity: 0,
-      },
-    },
-    initial: "close",
-    animate: "open",
-    exit: "close",
-    transition: { type: "tween", duration: 0.3 },
-  };
-
   const openSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -115,11 +104,12 @@ const Toolbar = () => {
     <Container>
       <ToolbarContainer>
         <ToolButton {...tabHandler} id={TOOL.SELECT}>
-          <IconClick size={iconSize} stroke={iconStroke} />
+          <IconPointer size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.FREEHAND}>
-          <IconPencil size={iconSize} stroke={iconStroke} />
+          {/* <IconPencil size={iconSize} stroke={iconStroke} /> */}
+          <IconBrush size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.ERASE}>
@@ -135,7 +125,7 @@ const Toolbar = () => {
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.TEXT_ADD}>
-          <IconTypography size={iconSize} stroke={iconStroke} />
+          <IconLetterT size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.IMAGE}>
@@ -149,21 +139,21 @@ const Toolbar = () => {
 
       <AnimatePresence>
         {sidebarOpen && (
-          <ToolPropertiesContainer {...propertiesAnim}>
-            <FloatContainer
-              key={activeTool}
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 10, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {TabContent[activeTool]}
-            </FloatContainer>
+          <ToolPropertiesContainer>
+            {TabContent[activeTool]}
           </ToolPropertiesContainer>
         )}
       </AnimatePresence>
     </Container>
   );
 };
-
+{
+  /* <FloatContainer
+              key={activeTool}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 10, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            > */
+}
 export default Toolbar;

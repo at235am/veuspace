@@ -1,4 +1,4 @@
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, useIsPresent } from "framer-motion";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
@@ -9,7 +9,7 @@ import {
   BrushButton,
   Container,
   Header,
-  Modify,
+  StyleEditor,
   Presets,
   Selector,
   NumInput,
@@ -46,8 +46,50 @@ const DrawPicker = ({}: Props) => {
   const { pixim } = usePaperState();
   const [presets, setPresets] = useState<MappedPresetOptions>(default_presets);
   const [activePid, setActivePid] = useState("a");
+  const [styleEditor, setStyleEditor] = useState(false);
+  const isMounted = useIsPresent(); // for animations:
 
+  // derived state:
   const currentPreset = presets[activePid];
+
+  const presetPaletteAnim = {
+    variants: {
+      open: {
+        y: 0,
+        opacity: 1,
+        transition: { type: "tween", duration: 0.25 },
+      },
+      close: {
+        y: -50,
+        opacity: 0,
+        transition: {
+          type: "tween",
+          duration: 0.25,
+          delay: styleEditor ? 0.1 : 0,
+        },
+      },
+    },
+    initial: "close",
+    animate: "open",
+    exit: "close",
+  };
+
+  const styleEditorAnim = {
+    variants: {
+      open: {
+        y: 0,
+        opacity: 1,
+      },
+      close: {
+        y: -50,
+        opacity: 0,
+      },
+    },
+    initial: "close",
+    animate: "open",
+    exit: "close",
+    transition: { type: "tween", duration: 0.2 },
+  };
 
   const updatePreset = (value: PresetOptions) => {
     setPresets((presets) => {
@@ -69,20 +111,28 @@ const DrawPicker = ({}: Props) => {
 
   return (
     <Container>
-      <Presets>
-        {Object.entries(presets).map(([id, options]) => (
-          <BrushPreview
-            key={id}
-            activeId={activePid}
-            options={options}
-            onClick={() => setActivePid(id)}
-          />
-        ))}
-      </Presets>
-      <Modify>
-        <NumberInput preset={currentPreset} updatePreset={updatePreset} />
-        <NumberInput preset={currentPreset} updatePreset={updatePreset} />
-      </Modify>
+      <>
+        <Presets {...presetPaletteAnim}>
+          {Object.entries(presets).map(([id, options]) => (
+            <BrushPreview
+              key={id}
+              activeId={activePid}
+              options={options}
+              onClick={() => {
+                setActivePid(id);
+                setStyleEditor((v) => (v && activePid === id ? false : true));
+              }}
+            />
+          ))}
+        </Presets>
+        <AnimatePresence exitBeforeEnter>
+          {styleEditor && isMounted && (
+            <StyleEditor key={activePid} {...styleEditorAnim}>
+              <NumberInput preset={currentPreset} updatePreset={updatePreset} />
+            </StyleEditor>
+          )}
+        </AnimatePresence>
+      </>
     </Container>
   );
 };

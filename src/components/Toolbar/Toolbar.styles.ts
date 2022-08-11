@@ -50,8 +50,11 @@ export const ToolbarContainer = styled.ul`
 
 export const ToolPropertiesContainer = styled(motion.div)`
   /* border: 1px dashed blue; */
+
   z-index: 1;
   position: relative;
+
+  margin-top: 0.5rem;
 
   display: flex;
   flex-direction: column;
