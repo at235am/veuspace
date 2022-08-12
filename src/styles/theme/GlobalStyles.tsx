@@ -3,12 +3,14 @@ import { css, Global, useTheme } from "@emotion/react";
 import circleImg from "../../../public/assets/cursor-black-circle.png";
 import borderCircleImg from "../../../public/assets/cursor-border-circle.png";
 import pointyCircleImg from "../../../public/assets/cursor-pointy-circle.png";
+import pointerStrokeImg from "../../../public/assets/cursor-pointy-stroke.png";
 
 const d = circleImg.width / 2;
 
 const defaultCursor = `url('${circleImg.src}') ${d} ${d}, auto`;
 const pointerCursor = `url('${pointyCircleImg.src}') ${d} ${d}, auto`;
 const borderCursor = `url('${borderCircleImg.src}') ${d} ${d}, auto`;
+const pointyCursor = `url('${pointerStrokeImg.src}'), auto`;
 
 export const GlobalStyles = () => {
   const theme = useTheme();
@@ -38,7 +40,7 @@ export const GlobalStyles = () => {
         }
 
         html {
-          cursor: ${defaultCursor};
+          cursor: ${pointyCursor};
 
           /* border: 2px dashed red; */
           background-color: ${theme.colors.background.main};
@@ -71,8 +73,7 @@ export const GlobalStyles = () => {
         a:visited,
         a:hover,
         a:active {
-          cursor: ${pointerCursor};
-
+          /* cursor: ${pointerCursor}; */
           text-decoration: none;
         }
 
@@ -82,7 +83,7 @@ export const GlobalStyles = () => {
         }
 
         button {
-          cursor: ${pointerCursor};
+          /* cursor: ${pointerCursor}; */
           border: 0;
         }
 

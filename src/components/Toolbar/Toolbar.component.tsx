@@ -1,13 +1,3 @@
-// libary:
-import styled from "@emotion/styled";
-import { css, keyframes } from "@emotion/react";
-
-// nextjs:
-import type { NextPage } from "next";
-import Link from "next/link";
-import Head from "next/head";
-import Image from "next/image";
-
 import { Logo } from "../Logo";
 import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
 import { ReactElement, ReactNode, useEffect, useState } from "react";
@@ -49,6 +39,7 @@ import {
 import { TOOL, Tool } from "../../modules/PixiApplication";
 
 import { DrawPicker } from "./DrawPicker/";
+import { useToolbarStore } from "../../store/ToolbarState";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -78,11 +69,7 @@ const Toolbar = () => {
     drawCircle,
   } = usePaperState();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const tabHandler = { activeTool, setActiveTool, setSidebarOpen };
-
-  const openSidebar = () => setSidebarOpen(true);
-  const closeSidebar = () => setSidebarOpen(false);
+  const tabHandler = { activeTool, setActiveTool };
 
   const drawRandomCircle = () => {
     const pixi = pixim.current;
@@ -106,8 +93,7 @@ const Toolbar = () => {
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.FREEHAND}>
-          {/* <IconPencil size={iconSize} stroke={iconStroke} /> */}
-          <IconBrush size={iconSize} stroke={iconStroke} />
+          <IconPencil size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.ERASE}>
@@ -135,13 +121,9 @@ const Toolbar = () => {
         </ToolButton>
       </ToolbarContainer>
 
-      <AnimatePresence>
-        {sidebarOpen && (
-          <ToolPropertiesContainer>
-            {TabContent[activeTool]}
-          </ToolPropertiesContainer>
-        )}
-      </AnimatePresence>
+      <ToolPropertiesContainer>
+        {TabContent[activeTool]}
+      </ToolPropertiesContainer>
     </Container>
   );
 };

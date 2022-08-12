@@ -1,12 +1,13 @@
 import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { Tool } from "../../../modules/PixiApplication";
+import { useToolbarStore } from "../../../store/ToolbarState";
 import { Container, Line, Button } from "./ToolButton.styles";
 
 type Props = {
   id: Tool;
   activeTool: Tool;
   setActiveTool: Dispatch<SetStateAction<Tool>>;
-  setSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  // setSidebarOpen: Dispatch<SetStateAction<boolean>>;
 
   onClick?: () => void;
   children: React.ReactNode;
@@ -16,14 +17,15 @@ const ToolButton = ({
   id,
   activeTool,
   setActiveTool,
-  setSidebarOpen,
+  // setSidebarOpen,
   onClick,
   children,
 }: Props) => {
   const highlight = id === activeTool;
+  const togglePalette = useToolbarStore((state) => state.toggle);
 
   const toggleMore = (tool: Tool) => {
-    if (tool === activeTool) setSidebarOpen((v) => !v);
+    if (tool === activeTool) togglePalette();
   };
 
   const action = () => {

@@ -12,6 +12,7 @@
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
     "@pixi-essentials/svg": "^1.1.5",
+    "@rehooks/local-storage": "^2.4.4",
     "@tabler/icons": "^1.78.1",
     "@types/lodash.debounce": "^4.0.7",
     "@types/lodash.throttle": "^4.1.7",
@@ -29,7 +30,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-resize-detector": "^7.1.2",
-    "react-responsive": "*"
+    "react-responsive": "*",
+    "zustand": "^4.0.0"
   },
   "devDependencies": {
     "@svgr/webpack": "^6.3.1",

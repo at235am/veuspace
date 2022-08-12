@@ -1,5 +1,5 @@
-import { AnimatePresence, useIsPresent } from "framer-motion";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
 import { Tool } from "../../../modules/PixiApplication";
@@ -22,10 +22,8 @@ import {
   NumInputLabel,
   StrokeWrapper,
 } from "./DrawPicker.styles";
-
-const ColorPicker = () => {
-  return <div></div>;
-};
+import useLocalStorage from "@rehooks/local-storage";
+import { useToolbarStore } from "../../../store/ToolbarState";
 
 export interface PresetOptions extends BrushOptions {
   id: string;
@@ -46,12 +44,24 @@ const default_presets: MappedPresetOptions = {
 
 type Props = {};
 
+// ***NOTE:
+// We handle animations per Palette component rather than in the parent(Toolbar)
+// so that the Palette component can have its useEffects fired regardless of whether
+// we want to immediately show the UI of the Palette component.
+// This is to make sure the user's customization settings are loaded in to PixiApplication.
+// Otherwise we would have to move all the customization state into Toolbar per Palette component.
 const DrawPicker = ({}: Props) => {
   const { pixim } = usePaperState();
-  const [presets, setPresets] = useState<MappedPresetOptions>(default_presets);
+
+  const showPalette = useToolbarStore((state) => state.showPalette);
+
+  const [presets, setPresets] = useLocalStorage(
+    "draw-palette",
+    default_presets
+  );
+
   const [activePid, setActivePid] = useState("a");
   const [styleEditor, setStyleEditor] = useState(false);
-  const isMounted = useIsPresent(); // for animations:
 
   // derived state:
   const currentPreset = presets[activePid];
@@ -74,7 +84,7 @@ const DrawPicker = ({}: Props) => {
       },
     },
     initial: "close",
-    animate: "open",
+    animate: showPalette ? "open" : "close",
     exit: "close",
   };
 
@@ -96,50 +106,46 @@ const DrawPicker = ({}: Props) => {
   };
 
   const updatePreset = (value: PresetOptions) => {
-    setPresets((presets) => {
-      if (!presets[value.id]) return presets;
-
-      pixim.current.drawTool.setOptions(value);
-
-      const copy = { ...presets };
-      copy[value.id] = value;
-      return copy;
-    });
+    if (!presets[value.id]) return;
+    const copy = { ...presets };
+    copy[value.id] = value;
+    setPresets(copy);
   };
 
   useEffect(() => {
     const opt = presets[activePid];
-
     if (opt) pixim.current.drawTool.setOptions(opt);
-  }, [activePid]);
+  }, [activePid, presets]);
 
   return (
     <Container>
-      <>
-        <Presets {...presetPaletteAnim}>
-          {Object.entries(presets).map(([id, options]) => (
-            <BrushPreview
-              key={id}
-              activeId={activePid}
-              options={options}
-              onClick={() => {
-                setActivePid(id);
-                setStyleEditor((v) => (v && activePid === id ? false : true));
-              }}
-            />
-          ))}
-        </Presets>
-        <AnimatePresence exitBeforeEnter>
-          {styleEditor && isMounted && (
-            <StyleEditor key={activePid} {...styleEditorAnim}>
-              <NumberInput preset={currentPreset} updatePreset={updatePreset} />
-              <StrokeWrapper preset={currentPreset}>
-                <Stroke />
-              </StrokeWrapper>
-            </StyleEditor>
-          )}
-        </AnimatePresence>
-      </>
+      <AnimatePresence>
+        {showPalette && (
+          <Presets {...presetPaletteAnim}>
+            {Object.entries(presets).map(([id, options]) => (
+              <BrushPreview
+                key={id}
+                activeId={activePid}
+                options={options}
+                onClick={() => {
+                  setActivePid(id);
+                  setStyleEditor((v) => (v && activePid === id ? false : true));
+                }}
+              />
+            ))}
+          </Presets>
+        )}
+      </AnimatePresence>
+      <AnimatePresence exitBeforeEnter>
+        {showPalette && styleEditor && (
+          <StyleEditor key={activePid} {...styleEditorAnim}>
+            <NumberInput preset={currentPreset} updatePreset={updatePreset} />
+            <StrokeWrapper preset={currentPreset}>
+              <Stroke />
+            </StrokeWrapper>
+          </StyleEditor>
+        )}
+      </AnimatePresence>
     </Container>
   );
 };
