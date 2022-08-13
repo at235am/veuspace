@@ -4,7 +4,7 @@ import { contentCenter } from "../../styles/content-centerer";
 export const Container = styled.footer`
   height: 5rem;
   /* padding: 1rem 0; */
-  background-color: ${({ theme }) => theme.colors.background.dark};
+  background-color: ${({ theme }) => theme.colors.background.D10};
   /* background-color: transparent; */
 
   display: flex;

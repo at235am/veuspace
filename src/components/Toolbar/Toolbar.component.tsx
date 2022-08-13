@@ -40,6 +40,7 @@ import { TOOL, Tool } from "../../modules/PixiApplication";
 
 import { DrawPicker } from "./DrawPicker/";
 import { useToolbarStore } from "../../store/ToolbarState";
+import { useThemeController } from "../../styles/theme/Theme.context";
 
 const Test = ({ text }: { text: string }) => {
   return <TC>{text}</TC>;
@@ -68,6 +69,8 @@ const Toolbar = () => {
     setMode: setActiveTool,
     drawCircle,
   } = usePaperState();
+
+  const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
 
   const tabHandler = { activeTool, setActiveTool };
 
@@ -112,12 +115,8 @@ const Toolbar = () => {
           <IconLetterT size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.IMAGE}>
-          <IconPhoto
-            size={iconSize}
-            stroke={iconStroke}
-            onClick={drawRandomCircle}
-          />
+        <ToolButton {...tabHandler} id={TOOL.IMAGE} onClick={drawRandomCircle}>
+          <IconPhoto size={iconSize} stroke={iconStroke} />
         </ToolButton>
       </ToolbarContainer>
 

@@ -8,7 +8,7 @@ import { contentCenter } from "../../styles/content-centerer";
 export const Container = styled.nav`
   height: 5rem;
 
-  background-color: ${({ theme }) => theme.colors.background.dark};
+  background-color: ${({ theme }) => theme.colors.background.D20};
   background-color: transparent;
 
   display: flex;

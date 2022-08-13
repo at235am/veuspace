@@ -37,7 +37,7 @@ const ToolButton = ({
   return (
     <Container active={highlight}>
       {highlight && <Line layoutId="line" />}
-      <Button active={highlight} onClick={action}>
+      <Button type="button" active={highlight} onClick={action}>
         {children}
       </Button>
     </Container>

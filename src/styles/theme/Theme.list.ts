@@ -13,37 +13,40 @@ export const themeList: Theme[] = [
     dimensions: DEFAULT_DIMENSIONS,
     font: DEFAULT_FONT,
     breakpoints: DEFAULT_BREAKPOINTS,
+
     colors: {
-      primary: ccs({ main: "#49d0b0", darker: "#007258" }),
-      secondary: ccs({ main: "#2dc3e9" }),
+      primary: ccs({ B00: "#49d0b0", D10: "#007258" }),
+      secondary: ccs({ B00: "#2dc3e9" }),
+
+      onPrimary: ccs({ B00: "#ffffff" }),
+      onSecondary: ccs({ B00: "#ffffff" }),
+
       background: ccs({
-        lighter: "#383838",
-        light: "#272727",
-        main: "#222222",
-        dark: "#1a1a1a",
-        darker: "#000000",
-      }),
-      surface: ccs({
-        lighter: "#505050",
-        light: "#3e3e3e",
-        main: "#383838",
-        darker: "#222222",
+        L20: "#383838",
+        L10: "#272727",
+        B00: "#222222",
+        D10: "#1a1a1a",
+        D20: "#000000",
       }),
 
-      onPrimary: ccs({ main: "#ffffff" }),
-      onSecondary: ccs({ main: "#ffffff" }),
+      surface: ccs({
+        L20: "#ffffff20", // used for on top of L10
+        L10: "rgba(70, 70, 70, 0.75)", // used for toolbar bg
+        B00: "#333333", // used for paper bg
+        D10: "#ffffff20",
+      }),
 
       onBackground: ccs({
-        main: "#ffffff",
-        dark: "#e6e6e7",
-        darker: "#e0e0e0",
+        B00: "#ffffff",
+        D10: "#e6e6e7",
+        D20: "#e0e0e0",
       }),
-      onSurface: ccs({ main: "#ffffff", dark: "#e6e6e7", darker: "#e0e0e0" }),
+      onSurface: ccs({ B00: "#ffffff", D10: "#e6e6e7", D20: "#e0e0e0" }),
 
-      info: ccs({ main: "#51acfe" }),
-      success: ccs({ main: "#37d7b2", light: "#00ffb1" }),
-      caution: ccs({ main: "#ffcd4a" }),
-      danger: ccs({ main: "#fb494a" }),
+      info: ccs({ B00: "#51acfe" }),
+      success: ccs({ B00: "#37d7b2", L10: "#00ffb1" }),
+      caution: ccs({ B00: "#ffcd4a" }),
+      danger: ccs({ B00: "#fb494a" }),
     },
   },
   {
@@ -52,22 +55,37 @@ export const themeList: Theme[] = [
     font: DEFAULT_FONT,
     breakpoints: DEFAULT_BREAKPOINTS,
     colors: {
-      primary: ccs({ main: "#49d0b0", light: "#bbf3fb", darker: "#007258" }),
-      secondary: ccs({ main: "#6c63ff" }),
+      primary: ccs({ B00: "#49d0b0", L10: "#bbf3fb", D20: "#007258" }),
+      secondary: ccs({ B00: "#6c63ff" }),
 
-      background: ccs({ main: "#f7f7f7", dark: "#e9eef8", darker: "#f6f6f6" }),
-      surface: ccs({ main: "#ffffff", dark: "#e0e0e0", darker: "#e6e6e7" }),
+      onPrimary: ccs({ B00: "#ffffff" }),
+      onSecondary: ccs({ B00: "#000000" }),
 
-      onPrimary: ccs({ main: "#ffffff" }),
-      onSecondary: ccs({ main: "#000000" }),
+      background: ccs({
+        B00: "#f7f7f7",
 
-      onBackground: ccs({ main: "#2d4665" }),
-      onSurface: ccs({ main: "#222222" }),
+        D10: "#e9eef8",
+        D20: "#f6f6f6",
+      }),
+      surface: ccs({
+        L30: "#ffffff",
+        // L20: "rgba(70, 70, 70, 0.10)",
+        L20: "rgba(195, 195, 195, 0.2)",
+        // L10: "rgba(255, 255, 255, 0.80)", // used for toolbar bg
+        L10: "rgba(255, 255, 255, 0.90)", // used for toolbar bg
+        // B00: "#ffffff", // used for paper bg
+        B00: "#f5f5f5", // used for paper bg
+        D10: "rgba(195, 195, 195, 0.3)",
+        D20: "#e6e6e7",
+      }),
 
-      info: ccs({ main: "#217aff" }),
-      success: ccs({ main: "#37d7b2" }),
-      caution: ccs({ main: "#fee257" }),
-      danger: ccs({ main: "#ff3939", light: "#fd5050" }),
+      onBackground: ccs({ B00: "#2d4665" }),
+      onSurface: ccs({ B00: "#222222" }),
+
+      info: ccs({ B00: "#217aff" }),
+      success: ccs({ B00: "#37d7b2" }),
+      caution: ccs({ B00: "#fee257" }),
+      danger: ccs({ B00: "#ff3939", L10: "#fd5050" }),
     },
   },
 ];

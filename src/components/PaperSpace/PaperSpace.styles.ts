@@ -8,6 +8,7 @@ export const Container = styled.div`
   position: relative;
   touch-action: none;
   background-color: #333;
+  background-color: ${({ theme }) => theme.colors.surface.B00};
 
   /* max-width: 100vw; */
   /* max-height: 100vh; */

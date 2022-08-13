@@ -1,4 +1,5 @@
 // libary:
+import { css } from "@emotion/react";
 import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 
@@ -29,23 +30,28 @@ export const Header = styled.div`
 export const toolBarSize = 50;
 
 export const ToolbarContainer = styled.ul`
-  /* border: 2px dashed red; */
+  ${({ theme }) => css`
+    /* border: 2px dashed red; */
+    z-index: 2;
+    position: relative;
 
-  z-index: 2;
-  position: relative;
+    overflow: hidden;
+    border-radius: ${borderRadius}px;
+    padding: 4px;
 
-  overflow: hidden;
-  border-radius: ${borderRadius}px;
-  padding: 4px;
+    box-shadow: rgba(0, 0, 0, ${theme.id === "dark" ? 0.2 : 0.05}) 0px 0px 12px;
+    box-shadow: ${theme.id === "dark"
+      ? "rgba(0, 0, 0, 0.2) 0 0 12px"
+      : "rgb(0 0 0 / 5%) 0px 0px 10px 0px"};
 
-  box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 12px;
+    background-color: rgba(70, 70, 70, 0.75);
+    background-color: ${theme.colors.surface.L10};
+    backdrop-filter: blur(15px);
 
-  background-color: rgba(70, 70, 70, 0.75);
-  backdrop-filter: blur(15px);
-
-  display: flex;
-  flex-direction: row;
-  gap: 2px;
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+  `}
 `;
 
 export const ToolPropertiesContainer = styled(motion.div)`

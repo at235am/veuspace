@@ -62,7 +62,6 @@ export const Text = styled.span`
   /* border: 1px solid blue; */
   padding-right: 0.5rem;
 
-  /* color: ${({ theme }) => theme.colors.background.main}; */
   white-space: nowrap;
   font-weight: 600;
 

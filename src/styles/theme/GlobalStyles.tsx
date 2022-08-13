@@ -30,12 +30,12 @@ export const GlobalStyles = () => {
           font-family: ${theme.font.family};
           font-size: ${theme.font.size}px;
           font-weight: ${theme.font.weight};
-          color: ${theme.colors.onSurface.main};
+          color: ${theme.colors.onSurface.B00};
           -webkit-tap-highlight-color: transparent;
 
           &::selection {
-            background: ${theme.colors.background.darker};
-            color: ${theme.colors.onBackground.main};
+            background: ${theme.colors.background.D20};
+            color: ${theme.colors.onBackground.B00};
           }
         }
 
@@ -43,7 +43,7 @@ export const GlobalStyles = () => {
           cursor: ${pointyCursor};
 
           /* border: 2px dashed red; */
-          background-color: ${theme.colors.background.main};
+          background-color: ${theme.colors.background.B00};
 
           overflow: hidden scroll;
           /* overflow: visible visible; */

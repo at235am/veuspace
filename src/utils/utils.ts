@@ -41,6 +41,17 @@ export const clamp = (num: number, min: number, max: number) =>
 export const prettyNumber = (num: number) =>
   num.toFixed(2).replace(/[.,]00$/, "");
 
+export const isColorCloseMatch = (x: Color, y: Color, threshold = 50) => {
+  const A = x.rgb();
+  const B = y.rgb();
+
+  const r = A.red() - B.red();
+  const g = A.green() - B.green();
+  const b = A.blue() - B.blue();
+
+  return r * r + g * g + b * b <= threshold * threshold;
+};
+
 export const colorToNumber = (color: string | number) =>
   new Color(color).rgbNumber();
 

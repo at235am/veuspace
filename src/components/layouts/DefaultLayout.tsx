@@ -34,7 +34,6 @@ const NotificationContainer = styled.div`
   top: ${({ theme }) => theme.dimensions.mainNav.maxHeight}px;
 
   width: 100%;
-  /* background-color: ${({ theme }) => theme.colors.primary.main}; */
 `;
 
 const PageContainer = styled.main`
@@ -54,7 +53,7 @@ const T = styled.div`
   width: 100%;
   padding: 8px;
 
-  background-color: ${({ theme }) => theme.colors.background.darker};
+  background-color: ${({ theme }) => theme.colors.background.D20};
 
   display: flex;
   justify-content: center;

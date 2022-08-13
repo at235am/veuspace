@@ -28,6 +28,6 @@ export const Star = styled(motion.span)`
 
   &:hover {
     cursor: pointer;
-    background-color: ${({ theme }) => theme.colors.caution.main};
+    background-color: ${({ theme }) => theme.colors.caution.B00};
   }
 `;

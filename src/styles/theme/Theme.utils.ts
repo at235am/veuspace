@@ -15,14 +15,16 @@ import ColorString from "color";
  * @returns Returns a Color object
  */
 export const createColorSpread = (color: MainColor): Color => {
-  const mainColor = ColorString(color.main);
+  const mainColor = ColorString(color.B00);
 
   return {
-    lighter: color.lighter ? color.lighter : mainColor.lighten(0.2).hex(),
-    light: color.light ? color.light : mainColor.lighten(0.1).hex(),
-    main: color.main,
-    dark: color.dark ? color.dark : mainColor.darken(0.1).hex(),
-    darker: color.darker ? color.darker : mainColor.darken(0.2).hex(),
+    L30: color.L30 ?? mainColor.lighten(0.3).hex(),
+    L20: color.L20 ?? mainColor.lighten(0.2).hex(),
+    L10: color.L10 ?? mainColor.lighten(0.1).hex(),
+    B00: color.B00,
+    D10: color.D10 ?? mainColor.darken(0.1).hex(),
+    D20: color.D20 ?? mainColor.darken(0.2).hex(),
+    D30: color.D30 ?? mainColor.darken(0.3).hex(),
   };
 };
 

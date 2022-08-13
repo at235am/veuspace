@@ -18,6 +18,7 @@ import { Graphics } from "pixi.js-legacy";
 import { PixiApplication, TOOL, Tool } from "../modules/PixiApplication";
 import getStroke from "perfect-freehand";
 import { Ring, union } from "polygon-clipping";
+import { useThemeController } from "../styles/theme/Theme.context";
 
 export type CircleOptions = {
   name?: string;
@@ -59,6 +60,7 @@ type Props = {
 const PaperStateContext = createContext<State | undefined>(undefined);
 
 const PaperStateProvider = ({ children }: Props) => {
+  const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
   const pixim = useRef<PixiApplication>(PixiApplication.getInstance());
 
   // gui states:
@@ -152,6 +154,7 @@ const PaperStateProvider = ({ children }: Props) => {
 
         pixim.current.items.addChild(path);
       }
+      if (event.key === "t") toggleTheme();
     };
     window.addEventListener("keydown", test);
     return () => {

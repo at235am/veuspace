@@ -28,15 +28,17 @@ declare module "@emotion/react" {
   }
 
   export interface Color {
-    main: string;
-    light: string;
-    lighter: string;
-    dark: string;
-    darker: string;
+    L30: string;
+    L20: string;
+    L10: string;
+    B00: string;
+    D10: string;
+    D20: string;
+    D30: string;
   }
 
   /** MainColor is a type that says you must provide atleast a "main" property for your color */
-  export type MainColor = Partial<Color> & Pick<Color, "main">;
+  export type MainColor = Partial<Color> & Pick<Color, "B00">;
 
   export interface Theme {
     id: string;
@@ -53,10 +55,6 @@ declare module "@emotion/react" {
       onSecondary: Color;
       onBackground: Color;
       onSurface: Color;
-
-      // error: Color;
-      // correct: Color;
-      // warning: Color;
 
       info: Color;
       success: Color;

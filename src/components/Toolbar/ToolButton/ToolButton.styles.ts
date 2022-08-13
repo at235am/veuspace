@@ -15,11 +15,6 @@ export const Container = styled.li<{ active: boolean }>`
   /* aspect-ratio: 1 / 1; */
   border-radius: 3px;
 
-  /* background-color: ${({ active }) =>
-    active ? "#00000020" : "transparent"};
-  background-color: ${({ active, theme }) =>
-    active ? theme.colors.primary.main : "transparent"}; */
-
   &:hover {
     background-color: #ffffff20;
   }
@@ -40,7 +35,7 @@ export const Button = styled.button<{ active: boolean }>`
   svg {
     /* fill: red; */
     stroke: ${({ theme, active }) =>
-      active ? theme.colors.primary.main : "auto"};
+      active ? theme.colors.primary.B00 : "auto"};
     path {
       /* fill: blue; */
     }
@@ -59,5 +54,5 @@ export const Line = styled(motion.span)`
   width: 40px;
   border-radius: 5px;
 
-  background-color: ${({ theme }) => theme.colors.primary.main};
+  background-color: ${({ theme }) => theme.colors.primary.B00};
 `;

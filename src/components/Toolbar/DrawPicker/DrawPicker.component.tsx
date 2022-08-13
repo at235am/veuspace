@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
 import { Tool } from "../../../modules/PixiApplication";
-import { clamp } from "../../../utils/utils";
+import { clamp, isColorCloseMatch } from "../../../utils/utils";
 
 import Stroke from "../../../../public/assets/stroke.svg";
 
@@ -16,14 +16,18 @@ import {
   Presets,
   Selector,
   NumInput,
-  StrokeContainer,
+  StrokeSizeContainer,
   SmallButton,
   NumInputContainer,
   NumInputLabel,
   StrokeWrapper,
+  darkShadow,
+  lightShadow,
 } from "./DrawPicker.styles";
 import useLocalStorage from "@rehooks/local-storage";
 import { useToolbarStore } from "../../../store/ToolbarState";
+import Color from "color";
+import { useTheme } from "@emotion/react";
 
 export interface PresetOptions extends BrushOptions {
   id: string;
@@ -32,12 +36,12 @@ export interface PresetOptions extends BrushOptions {
 export type MappedPresetOptions = { [id: string]: PresetOptions };
 
 const default_presets: MappedPresetOptions = {
-  a: { id: "a", size: 3, color: "#d2fab5" },
-  b: { id: "b", size: 6, color: "#7050cc" },
-  c: { id: "c", size: 9, color: "#ffffff" },
-  d: { id: "d", size: 12, color: "#c544b0" },
-  e: { id: "e", size: 17, color: "#2e8df9" },
-  f: { id: "f", size: 18, color: "#ecdf2e" },
+  a: { id: "a", size: 3, color: "#2e8df9" },
+  b: { id: "b", size: 6, color: "#c544b0" },
+  c: { id: "c", size: 9, color: "#ecdf2e" },
+  d: { id: "d", size: 12, color: "#ffffff" },
+  e: { id: "e", size: 17, color: "#7050cc" },
+  f: { id: "f", size: 18, color: "#222222" },
   g: { id: "g", size: 22, color: "#cb5151" },
   h: { id: "h", size: 25, color: "#3dc973" },
 };
@@ -126,7 +130,7 @@ const DrawPicker = ({}: Props) => {
               <BrushPreview
                 key={id}
                 activeId={activePid}
-                options={options}
+                preset={options}
                 onClick={() => {
                   setActivePid(id);
                   setStyleEditor((v) => (v && activePid === id ? false : true));
@@ -139,10 +143,7 @@ const DrawPicker = ({}: Props) => {
       <AnimatePresence exitBeforeEnter>
         {showPalette && styleEditor && (
           <StyleEditor key={activePid} {...styleEditorAnim}>
-            <NumberInput preset={currentPreset} updatePreset={updatePreset} />
-            <StrokeWrapper preset={currentPreset}>
-              <Stroke />
-            </StrokeWrapper>
+            <StrokePreview preset={currentPreset} updatePreset={updatePreset} />
           </StyleEditor>
         )}
       </AnimatePresence>
@@ -153,19 +154,55 @@ const DrawPicker = ({}: Props) => {
 //--------------------------------------------------------------------------------
 type BrushPreviewProps = {
   activeId: string;
-  options: PresetOptions;
+  preset: PresetOptions;
   onClick: any;
 };
 
-const BrushPreview = ({ activeId, options, onClick }: BrushPreviewProps) => {
-  const highlight = activeId === options.id;
+const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
+  const highlight = activeId === preset.id;
+
+  const theme = useTheme();
+  const brushColor = Color(preset.color);
+  const bgColor = Color(theme.colors.surface.L10);
+  const isSameColor = isColorCloseMatch(brushColor, bgColor);
+
+  let shadow = "none";
+  if (!isSameColor) shadow = "none";
+  else if (brushColor.isDark()) shadow = darkShadow;
+  else shadow = lightShadow;
 
   return (
     <BrushButton onClick={onClick}>
       {highlight && <Selector layoutId="brush-selected" />}
-
-      <Circle presetOptions={options}></Circle>
+      <Circle presetOptions={preset} shadow={shadow}></Circle>
     </BrushButton>
+  );
+};
+
+//--------------------------------------------------------------------------------
+
+type StrokePreviewProps = {
+  preset: PresetOptions;
+  updatePreset: (value: PresetOptions) => void;
+};
+
+const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
+  const theme = useTheme();
+  const brushColor = Color(preset.color);
+  const bgColor = Color(theme.colors.surface.L10);
+  const isSameColor = isColorCloseMatch(brushColor, bgColor);
+
+  let shadow = "none";
+  if (!isSameColor) shadow = "none";
+  else if (brushColor.isDark()) shadow = darkShadow;
+  else shadow = lightShadow;
+  return (
+    <>
+      <NumberInput preset={preset} updatePreset={updatePreset} />
+      <StrokeWrapper preset={preset} shadow={shadow}>
+        <Stroke />
+      </StrokeWrapper>
+    </>
   );
 };
 
@@ -197,7 +234,7 @@ const NumberInput = ({
   return (
     <NumInputContainer>
       <NumInputLabel htmlFor={htmlId}>SIZE</NumInputLabel>
-      <StrokeContainer>
+      <StrokeSizeContainer>
         <SmallButton type="button" onClick={decrement}>
           -
         </SmallButton>
@@ -205,7 +242,7 @@ const NumberInput = ({
         <SmallButton type="button" onClick={increment}>
           +
         </SmallButton>
-      </StrokeContainer>
+      </StrokeSizeContainer>
     </NumInputContainer>
   );
 };
