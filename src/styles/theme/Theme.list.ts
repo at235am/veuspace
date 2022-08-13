@@ -14,6 +14,14 @@ export const themeList: Theme[] = [
     font: DEFAULT_FONT,
     breakpoints: DEFAULT_BREAKPOINTS,
 
+    shadows: {
+      _00: "rgb(0 0 0 / 20%) 0 0 12px", // toolbar shadow
+      _10: "rgb(0 0 0 / 50%) 0 0 1px", // color preview shadow
+      _20: "rgb(0 0 0 / 50%) 0 0 5px 0",
+      _30: "rgb(0 0 0 / 15%) 0 0 5px 0",
+      _50: "rgb(0 0 0 / 50%) 0 0 5px 0",
+    },
+
     colors: {
       primary: ccs({ B00: "#49d0b0", D10: "#007258" }),
       secondary: ccs({ B00: "#2dc3e9" }),
@@ -54,6 +62,15 @@ export const themeList: Theme[] = [
     dimensions: DEFAULT_DIMENSIONS,
     font: DEFAULT_FONT,
     breakpoints: DEFAULT_BREAKPOINTS,
+
+    shadows: {
+      _00: "rgb(0 0 0 / 5%) 0 0 10px", // toolbar shadow
+      _10: "rgb(0 0 0 / 25%) 0 0 1px", // color preview shadow
+      _20: "rgb(0 0 0 / 50%) 0 0 5px 0",
+      _30: "rgb(0 0 0 / 15%) 0 0 5px 0",
+      _50: "rgb(0 0 0 / 50%) 0 0 5px 0",
+    },
+
     colors: {
       primary: ccs({ B00: "#49d0b0", L10: "#bbf3fb", D20: "#007258" }),
       secondary: ccs({ B00: "#6c63ff" }),
@@ -63,17 +80,13 @@ export const themeList: Theme[] = [
 
       background: ccs({
         B00: "#f7f7f7",
-
         D10: "#e9eef8",
         D20: "#f6f6f6",
       }),
       surface: ccs({
         L30: "#ffffff",
-        // L20: "rgba(70, 70, 70, 0.10)",
         L20: "rgba(195, 195, 195, 0.2)",
-        // L10: "rgba(255, 255, 255, 0.80)", // used for toolbar bg
         L10: "rgba(255, 255, 255, 0.90)", // used for toolbar bg
-        // B00: "#ffffff", // used for paper bg
         B00: "#f5f5f5", // used for paper bg
         D10: "rgba(195, 195, 195, 0.3)",
         D20: "#e6e6e7",

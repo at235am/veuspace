@@ -37,6 +37,14 @@ declare module "@emotion/react" {
     D30: string;
   }
 
+  export interface Shadow {
+    _00: string;
+    _10: string;
+    _20: string;
+    _30: string;
+    _50: string;
+  }
+
   /** MainColor is a type that says you must provide atleast a "main" property for your color */
   export type MainColor = Partial<Color> & Pick<Color, "B00">;
 
@@ -61,5 +69,6 @@ declare module "@emotion/react" {
       caution: Color;
       danger: Color;
     };
+    shadows: Shadow;
   }
 }

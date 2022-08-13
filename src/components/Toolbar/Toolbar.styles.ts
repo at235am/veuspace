@@ -39,10 +39,7 @@ export const ToolbarContainer = styled.ul`
     border-radius: ${borderRadius}px;
     padding: 4px;
 
-    box-shadow: rgba(0, 0, 0, ${theme.id === "dark" ? 0.2 : 0.05}) 0px 0px 12px;
-    box-shadow: ${theme.id === "dark"
-      ? "rgba(0, 0, 0, 0.2) 0 0 12px"
-      : "rgb(0 0 0 / 5%) 0px 0px 10px 0px"};
+    box-shadow: ${theme.shadows._00};
 
     background-color: rgba(70, 70, 70, 0.75);
     background-color: ${theme.colors.surface.L10};

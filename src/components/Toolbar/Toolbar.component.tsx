@@ -115,7 +115,7 @@ const Toolbar = () => {
           <IconLetterT size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.IMAGE} onClick={drawRandomCircle}>
+        <ToolButton {...tabHandler} id={TOOL.IMAGE} onClick={toggleTheme}>
           <IconPhoto size={iconSize} stroke={iconStroke} />
         </ToolButton>
       </ToolbarContainer>

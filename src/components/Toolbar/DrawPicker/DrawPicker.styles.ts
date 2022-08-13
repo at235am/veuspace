@@ -1,11 +1,8 @@
 import { css } from "@emotion/react";
 import styled from "@emotion/styled";
-import Color from "color";
+
 import { motion } from "framer-motion";
 import { PresetOptions } from "./DrawPicker.component";
-
-export const darkShadow = "rgba(0, 0, 0, 0.5) 0 0 5px";
-export const lightShadow = "rgba(0, 0, 0, 0.15) 0 0 5px";
 
 export const Container = styled.div`
   display: flex;
@@ -15,8 +12,6 @@ export const Container = styled.div`
 
 export const Header = styled.h2``;
 
-// rgb(0 0 0 / 5%) 0px 20px 40px 0px,
-
 export const Presets = styled(motion.div)`
   ${({ theme }) => css`
     z-index: 2;
@@ -25,12 +20,7 @@ export const Presets = styled(motion.div)`
     padding: 0.5rem;
     border-radius: 5px;
 
-    /* box-shadow: rgba(0, 0, 0, ${theme.id === "dark"
-      ? 0.2
-      : 0.05}) 0px 0px 12px; */
-    box-shadow: ${theme.id === "dark"
-      ? "rgba(0, 0, 0, 0.2) 0 0 12px"
-      : "rgb(0 0 0 / 5%) 0px 0px 10px 0px"};
+    box-shadow: ${theme.shadows._00};
 
     background-color: ${theme.colors.surface.L10};
     backdrop-filter: blur(15px);
@@ -50,11 +40,7 @@ export const StyleEditor = styled(motion.div)`
     padding: 0.5rem;
     border-radius: 5px;
 
-    box-shadow: rgba(0, 0, 0, ${theme.id === "dark" ? 0.2 : 0.05}) 0px 0px 12px;
-
-    box-shadow: ${theme.id === "dark"
-      ? "rgba(0, 0, 0, 0.2) 0 0 12px"
-      : "rgb(0 0 0 / 5%) 0px 0px 10px 0px"};
+    box-shadow: ${theme.shadows._00};
 
     background-color: ${theme.colors.surface.L10};
     backdrop-filter: blur(15px);
@@ -68,9 +54,9 @@ export const StyleEditor = styled(motion.div)`
 
 export const StrokeWrapper = styled.div<{
   preset: PresetOptions;
-  shadow: string;
+  shadow: boolean;
 }>`
-  ${({ preset, shadow }) => css`
+  ${({ preset, shadow, theme }) => css`
     /* border: 1px solid red; */
     width: min-content;
     height: min-content;
@@ -78,7 +64,7 @@ export const StrokeWrapper = styled.div<{
 
     svg {
       path {
-        filter: drop-shadow(${shadow});
+        filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
         stroke: ${preset.color};
         stroke-width: ${preset.size}px;
       }
@@ -119,12 +105,12 @@ export const Selector = styled(motion.span)`
 
 export const Circle = styled.div<{
   presetOptions: PresetOptions;
-  shadow: string;
+  shadow: boolean;
 }>`
-  ${({ presetOptions, shadow }) => css`
+  ${({ presetOptions, shadow, theme }) => css`
     border-radius: 50%;
 
-    box-shadow: ${shadow};
+    filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
 
     background-color: ${presetOptions.color};
     width: ${presetOptions.size}px;
@@ -155,8 +141,6 @@ export const StrokeSizeContainer = styled.div`
   overflow: hidden;
   border-radius: 5px;
 
-  /* background-color: #ffffff20; */
-  /* background-color: ${({ theme }) => theme.colors.surface.L20}; */
   border: 1px solid ${({ theme }) => theme.colors.surface.D10};
 
   display: flex;
@@ -167,7 +151,7 @@ export const StrokeSizeContainer = styled.div`
 export const SmallButton = styled.button`
   background-color: transparent;
   color: ${({ theme }) => theme.colors.onSurface.B00};
-  padding: 10px 6px;
+  padding: 6px 6px;
 `;
 
 export const NumInput = styled.input`
@@ -179,6 +163,7 @@ export const NumInput = styled.input`
   height: 2rem;
 
   background-color: ${({ theme }) => theme.colors.surface.D10};
+  background-color: transparent;
 
   color: ${({ theme }) => theme.colors.onSurface.B00};
 

@@ -2,7 +2,6 @@ import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
-import { Tool } from "../../../modules/PixiApplication";
 import { clamp, isColorCloseMatch } from "../../../utils/utils";
 
 import Stroke from "../../../../public/assets/stroke.svg";
@@ -11,7 +10,6 @@ import {
   Circle,
   BrushButton,
   Container,
-  Header,
   StyleEditor,
   Presets,
   Selector,
@@ -21,8 +19,6 @@ import {
   NumInputContainer,
   NumInputLabel,
   StrokeWrapper,
-  darkShadow,
-  lightShadow,
 } from "./DrawPicker.styles";
 import useLocalStorage from "@rehooks/local-storage";
 import { useToolbarStore } from "../../../store/ToolbarState";
@@ -41,7 +37,7 @@ const default_presets: MappedPresetOptions = {
   c: { id: "c", size: 9, color: "#ecdf2e" },
   d: { id: "d", size: 12, color: "#ffffff" },
   e: { id: "e", size: 17, color: "#7050cc" },
-  f: { id: "f", size: 18, color: "#222222" },
+  f: { id: "f", size: 18, color: "#414141" },
   g: { id: "g", size: 22, color: "#cb5151" },
   h: { id: "h", size: 25, color: "#3dc973" },
 };
@@ -166,15 +162,10 @@ const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(brushColor, bgColor);
 
-  let shadow = "none";
-  if (!isSameColor) shadow = "none";
-  else if (brushColor.isDark()) shadow = darkShadow;
-  else shadow = lightShadow;
-
   return (
     <BrushButton onClick={onClick}>
       {highlight && <Selector layoutId="brush-selected" />}
-      <Circle presetOptions={preset} shadow={shadow}></Circle>
+      <Circle presetOptions={preset} shadow={isSameColor}></Circle>
     </BrushButton>
   );
 };
@@ -192,14 +183,10 @@ const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(brushColor, bgColor);
 
-  let shadow = "none";
-  if (!isSameColor) shadow = "none";
-  else if (brushColor.isDark()) shadow = darkShadow;
-  else shadow = lightShadow;
   return (
     <>
       <NumberInput preset={preset} updatePreset={updatePreset} />
-      <StrokeWrapper preset={preset} shadow={shadow}>
+      <StrokeWrapper preset={preset} shadow={isSameColor}>
         <Stroke />
       </StrokeWrapper>
     </>
