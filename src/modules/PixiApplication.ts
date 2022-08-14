@@ -17,14 +17,12 @@ export const TOOL = {
   //                         DESKTOP                     | MOBILE
   SELECT: "select", //       L=tool M=pan R=pan   W=zoom | L1=pan   L2=zoom L3=pan
   ERASE: "erase", //         L=tool M=pan R=erase W=zoom | L1=erase L2=zoom L3=pan
-  DRAW: "draw", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
-  FORM: "form", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  DRAW: "draw", //           L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  FORM: "form", //           L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   ARROW: "arrow", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
-  CIRCLE: "circle", //       L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
-  RECTANGLE: "rectangle", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   TEXT_ADD: "text_add", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   TEXT_EDIT: "text_edit", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
-  IMAGE: "image", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  IMAGE: "image", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
 } as const;
 
 export type ReverseMap<T> = T[keyof T];
@@ -120,10 +118,6 @@ export class PixiApplication {
         break;
       case TOOL.DRAW:
         this.drawTool.activate();
-        break;
-      case TOOL.CIRCLE:
-        break;
-      case TOOL.RECTANGLE:
         break;
       default:
         break;

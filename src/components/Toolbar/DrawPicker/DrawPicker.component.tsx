@@ -20,10 +20,10 @@ import {
   NumInputLabel,
   StrokeWrapper,
 } from "./DrawPicker.styles";
-import useLocalStorage from "@rehooks/local-storage";
 import { useToolbarStore } from "../../../store/ToolbarState";
 import Color from "color";
 import { useTheme } from "@emotion/react";
+import { useDrawPaletteStore } from "../../../store/PaletteStore";
 
 export interface PresetOptions extends BrushOptions {
   id: string;
@@ -31,36 +31,22 @@ export interface PresetOptions extends BrushOptions {
 
 export type MappedPresetOptions = { [id: string]: PresetOptions };
 
-const default_presets: MappedPresetOptions = {
-  a: { id: "a", size: 3, color: "#2e8df9" },
-  b: { id: "b", size: 6, color: "#c544b0" },
-  c: { id: "c", size: 9, color: "#ecdf2e" },
-  d: { id: "d", size: 12, color: "#ffffff" },
-  e: { id: "e", size: 17, color: "#7050cc" },
-  f: { id: "f", size: 18, color: "#414141" },
-  g: { id: "g", size: 22, color: "#cb5151" },
-  h: { id: "h", size: 25, color: "#3dc973" },
-};
-
-type Props = {};
-
 // ***NOTE:
 // We handle animations per Palette component rather than in the parent(Toolbar)
 // so that the Palette component can have its useEffects fired regardless of whether
 // we want to immediately show the UI of the Palette component.
 // This is to make sure the user's customization settings are loaded in to PixiApplication.
 // Otherwise we would have to move all the customization state into Toolbar per Palette component.
+type Props = {};
 const DrawPicker = ({}: Props) => {
   const { pixim } = usePaperState();
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
-  const [presets, setPresets] = useLocalStorage(
-    "draw-palette",
-    default_presets
-  );
+  const presets = useDrawPaletteStore((state) => state.presets);
+  const updatePreset = useDrawPaletteStore((state) => state.setPreset);
 
-  const [activePid, setActivePid] = useState("a");
+  const [activePid, setActivePid] = useState("1");
   const [styleEditor, setStyleEditor] = useState(false);
 
   // derived state:
@@ -103,13 +89,6 @@ const DrawPicker = ({}: Props) => {
     animate: "open",
     exit: "close",
     transition: { type: "tween", duration: 0.2 },
-  };
-
-  const updatePreset = (value: PresetOptions) => {
-    if (!presets[value.id]) return;
-    const copy = { ...presets };
-    copy[value.id] = value;
-    setPresets(copy);
   };
 
   useEffect(() => {

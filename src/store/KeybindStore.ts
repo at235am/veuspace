@@ -1,6 +1,7 @@
 import create from "zustand";
 import { persist } from "zustand/middleware";
 import { Keybind } from "../hooks/useHotkeys";
+import { LocalStorage } from "./_LocalStorageKeys";
 
 export const KEY_ACTION = {
   SELECT: "select",
@@ -104,6 +105,6 @@ export const useKeybindStore = create<KeybindState>()(
         });
       },
     }),
-    { name: "zus-keybind", version: 0 }
+    { name: LocalStorage.KEYBINDS, version: 0 }
   )
 );

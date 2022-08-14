@@ -49,17 +49,13 @@ import { useHotkeys } from "../../hooks/useHotkeys";
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <> select </>,
-  [TOOL.ERASE]: <></>,
   [TOOL.DRAW]: <DrawPicker />,
-  [TOOL.TEXT_ADD]: <> text_add </>,
+  [TOOL.ERASE]: <></>,
   [TOOL.FORM]: <> SHAPE </>,
-  [TOOL.CIRCLE]: <> CIRCLE </>,
-  [TOOL.RECTANGLE]: <> RECTANGLE </>,
+  [TOOL.ARROW]: <> arrow </>,
   [TOOL.TEXT_ADD]: <> TEXT_ADD </>,
   [TOOL.TEXT_EDIT]: <> TEXT_EDIT </>,
   [TOOL.IMAGE]: <> IMAGE </>,
-  [TOOL.FORM]: <> form </>,
-  [TOOL.ARROW]: <> arrow </>,
 };
 
 const iconSize = 22;
