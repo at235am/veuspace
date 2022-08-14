@@ -2,7 +2,7 @@ import { css } from "@emotion/react";
 import styled from "@emotion/styled";
 
 import { motion } from "framer-motion";
-import { PresetOptions } from "./DrawPicker.component";
+import { DrawPresetOptions } from "./DrawPalette.component";
 
 export const Container = styled.div`
   display: flex;
@@ -53,7 +53,7 @@ export const StyleEditor = styled(motion.div)`
 `;
 
 export const StrokeWrapper = styled.div<{
-  preset: PresetOptions;
+  preset: DrawPresetOptions;
   shadow: boolean;
 }>`
   ${({ preset, shadow, theme }) => css`
@@ -104,7 +104,7 @@ export const Selector = styled(motion.span)`
 `;
 
 export const Circle = styled.div<{
-  presetOptions: PresetOptions;
+  presetOptions: DrawPresetOptions;
   shadow: boolean;
 }>`
   ${({ presetOptions, shadow, theme }) => css`

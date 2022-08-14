@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
 import { BrushOptions } from "../../../modules/items/Brush";
 import { clamp, isColorCloseMatch } from "../../../utils/utils";
-
 import Stroke from "../../../../public/assets/stroke.svg";
 
 import {
@@ -19,17 +18,17 @@ import {
   NumInputContainer,
   NumInputLabel,
   StrokeWrapper,
-} from "./DrawPicker.styles";
+} from "./DrawPalette.styles";
 import { useToolbarStore } from "../../../store/ToolbarState";
 import Color from "color";
 import { useTheme } from "@emotion/react";
 import { useUserSettingStore } from "../../../store/UserSettingStore";
 
-export interface PresetOptions extends BrushOptions {
+export interface DrawPresetOptions extends BrushOptions {
   id: string;
 }
 
-export type MappedPresetOptions = { [id: string]: PresetOptions };
+export type MappedPresetOptions = { [id: string]: DrawPresetOptions };
 
 // ***NOTE:
 // We handle animations per Palette component rather than in the parent(Toolbar)
@@ -38,15 +37,13 @@ export type MappedPresetOptions = { [id: string]: PresetOptions };
 // This is to make sure the user's customization settings are loaded in to PixiApplication.
 // Otherwise we would have to move all the customization state into Toolbar per Palette component.
 type Props = {};
-const DrawPicker = ({}: Props) => {
+const DrawPalette = ({}: Props) => {
   const { pixim } = usePaperState();
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
   const presets = useUserSettingStore((state) => state.drawPresets);
   const updatePreset = useUserSettingStore((state) => state.setDrawPresets);
-  // const presets = useDrawPaletteStore((state) => state.presets);
-  // const updatePreset = useDrawPaletteStore((state) => state.setPreset);
 
   const [activePid, setActivePid] = useState("1");
   const [styleEditor, setStyleEditor] = useState(false);
@@ -131,7 +128,7 @@ const DrawPicker = ({}: Props) => {
 //--------------------------------------------------------------------------------
 type BrushPreviewProps = {
   activeId: string;
-  preset: PresetOptions;
+  preset: DrawPresetOptions;
   onClick: any;
 };
 
@@ -154,8 +151,8 @@ const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
 //--------------------------------------------------------------------------------
 
 type StrokePreviewProps = {
-  preset: PresetOptions;
-  updatePreset: (value: PresetOptions) => void;
+  preset: DrawPresetOptions;
+  updatePreset: (value: DrawPresetOptions) => void;
 };
 
 const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
@@ -176,8 +173,8 @@ const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
 
 //--------------------------------------------------------------------------------
 type NumberInputProps = {
-  preset: PresetOptions;
-  updatePreset: (value: PresetOptions) => void;
+  preset: DrawPresetOptions;
+  updatePreset: (value: DrawPresetOptions) => void;
   min?: number;
   max?: number;
 };
@@ -215,4 +212,4 @@ const NumberInput = ({
   );
 };
 
-export default DrawPicker;
+export default DrawPalette;

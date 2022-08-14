@@ -10,24 +10,11 @@ import {
 // icons:
 import {
   IconPencil,
-  IconClick,
-  IconTypography,
-  IconShape,
-  IconShape2,
-  IconShape3,
   IconRectangle,
-  IconCircleRectangle,
-  IconRotateRectangle,
-  IconCircle,
   IconEraser,
   IconPhoto,
   IconPointer,
-  IconTextResize,
-  IconTextRecognition,
-  IconBrush,
-  IconBrushOff,
   IconLetterT,
-  IconArrowBigTop,
   IconArrowTopCircle,
 } from "@tabler/icons";
 
@@ -38,16 +25,13 @@ import { TOOL, Tool } from "../../modules/PixiApplication";
 import { useToolbarStore } from "../../store/ToolbarState";
 import { useThemeController } from "../../styles/theme/Theme.context";
 import { usePaperState } from "../../contexts/PaperContext";
+import { useUserSettingStore } from "../../store/UserSettingStore";
 
 // custom components:
 import { ToolButton } from "./ToolButton";
 
 // palette components:
-import { DrawPicker } from "./DrawPicker/";
-// import { KEY_ACTION } from "../../store/KeybindStore";
-
-import { useHotkeys } from "../../hooks/useHotkeys";
-import { KEY_ACTION, useUserSettingStore } from "../../store/UserSettingStore";
+import { DrawPicker } from "./DrawPalette";
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <> select </>,
@@ -75,67 +59,10 @@ const Toolbar = () => {
 
   const tabHandler = { activeTool, setActiveTool };
 
-  const toggleHotkeys = useUserSettingStore((state) => state.toggleHotkeys);
-
-  const keyActions = useMemo(
-    () => [
-      {
-        actionId: KEY_ACTION.SELECT,
-        action: () => {
-          setActiveTool(TOOL.SELECT);
-        },
-      },
-      {
-        actionId: KEY_ACTION.DRAW,
-        action: () => {
-          setActiveTool(TOOL.DRAW);
-        },
-      },
-      {
-        actionId: KEY_ACTION.ERASE,
-        action: () => {
-          setActiveTool(TOOL.ERASE);
-        },
-      },
-      {
-        actionId: KEY_ACTION.FORM,
-        action: () => {
-          setActiveTool(TOOL.FORM);
-        },
-      },
-      {
-        actionId: KEY_ACTION.ARROW,
-        action: () => {
-          setActiveTool(TOOL.ARROW);
-        },
-      },
-      {
-        actionId: KEY_ACTION.TEXT,
-        action: () => {
-          setActiveTool(TOOL.TEXT_ADD);
-        },
-      },
-      {
-        actionId: KEY_ACTION.TOGGLE_GRID,
-        action: () => {
-          console.log("toggle grid");
-        },
-      },
-      {
-        actionId: KEY_ACTION.TOGGLE_HOTKEYS,
-        action: () => {
-          toggleHotkeys();
-        },
-      },
-    ],
-    []
-  );
-
-  // set up keybinds:
+  // get keybind map:
   const keybinds = useUserSettingStore((state) => state.keybinds);
   const getKeybindsMap = useUserSettingStore((state) => state.getKeybindsMap);
   const keybindMap = useMemo(() => getKeybindsMap(), [keybinds]);
-  const { setHotkeyPaused } = useHotkeys(keybinds, keyActions);
 
   const kbMap: Record<Tool, string> = {
     [TOOL.SELECT]: keybindMap["select"]?.keys[0] ?? "_",

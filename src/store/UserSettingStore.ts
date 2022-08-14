@@ -2,8 +2,8 @@ import create from "zustand";
 import { persist } from "zustand/middleware";
 import {
   MappedPresetOptions,
-  PresetOptions,
-} from "../components/Toolbar/DrawPicker/DrawPicker.component";
+  DrawPresetOptions,
+} from "../components/Toolbar/DrawPalette/DrawPalette.component";
 import { Keybind } from "../hooks/useHotkeys";
 import { LocalStorage } from "./_LocalStorageKeys";
 
@@ -17,6 +17,7 @@ export const KEY_ACTION = {
   PASTE_IMAGE: "paste-image",
   TOGGLE_GRID: "toggle-grid",
   TOGGLE_HOTKEYS: "toggle-hotkeys",
+  THEME_TOGGLE: "theme-toggle",
 } as const;
 
 const default_keybinds: Keybind[] = [
@@ -68,6 +69,12 @@ const default_keybinds: Keybind[] = [
     keys: ["h"],
     actionId: KEY_ACTION.TOGGLE_HOTKEYS,
   },
+  {
+    id: "theme-toggle",
+    description: "",
+    keys: ["p"],
+    actionId: KEY_ACTION.THEME_TOGGLE,
+  },
 ];
 
 const default_draw_presets: MappedPresetOptions = {
@@ -100,7 +107,7 @@ interface UserSettingState {
 
   // DRAW PALETTE:
   drawPresets: MappedPresetOptions;
-  setDrawPresets: (value: PresetOptions) => void;
+  setDrawPresets: (value: DrawPresetOptions) => void;
 }
 
 export const useUserSettingStore = create<UserSettingState>()(
@@ -137,7 +144,6 @@ export const useUserSettingStore = create<UserSettingState>()(
           if (index === -1) return state;
 
           return {
-            // ...state,
             keybinds: [
               ...keybinds.slice(0, index),
               kb,
@@ -155,7 +161,6 @@ export const useUserSettingStore = create<UserSettingState>()(
           if (index === -1) return state;
 
           return {
-            // ...state,
             keybinds: [
               ...keybinds.slice(0, index),
               ...keybinds.slice(index + 1),
@@ -167,15 +172,14 @@ export const useUserSettingStore = create<UserSettingState>()(
       // DRAW PALETTE -------------------------------------------------------------
       drawPresets: default_draw_presets,
 
-      setDrawPresets: (value: PresetOptions) => {
+      setDrawPresets: (value: DrawPresetOptions) => {
         set((state) => {
-          const { drawPresets: presets } = state;
+          const { drawPresets } = state;
 
-          if (!presets[value.id]) return state;
+          if (!drawPresets[value.id]) return state;
 
-          const copy = { ...presets };
+          const copy = { ...drawPresets };
           copy[value.id] = value;
-          // return { state, drawPresets: copy };
           return { drawPresets: copy };
         });
       },

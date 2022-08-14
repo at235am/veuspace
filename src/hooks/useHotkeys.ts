@@ -85,14 +85,21 @@ export const useHotkeys = (keybinds: Keybind[], keyActions: KeyAction[]) => {
     [keybindsMap]
   );
 
-  const setHotkeyPaused = (value: boolean) => (paused.current = value);
+  const setHotkeyPaused = useCallback((value: boolean) => {
+    paused.current = value;
+  }, []);
+
+  const toggleHotkeyPaused = useCallback(() => {
+    paused.current = !paused.current;
+  }, []);
 
   useEffect(() => {
+    // console.log("handler in useHotkeys()");
     window.addEventListener("keypress", handler);
     return () => {
       window.removeEventListener("keypress", handler);
     };
   }, [handler]);
 
-  return { setHotkeyPaused };
+  return { setHotkeyPaused, toggleHotkeyPaused };
 };
