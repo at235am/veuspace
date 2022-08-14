@@ -1,10 +1,13 @@
-import { Logo } from "../Logo";
-import { AnimatePresence, AnimateSharedLayout, motion } from "framer-motion";
-import { ReactElement, ReactNode, useEffect, useState } from "react";
-import { ToolButton } from "./ToolButton";
-import { usePaperState } from "../../contexts/PaperContext";
-import { nanoid, random } from "nanoid";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 
+// styles:
+import {
+  Container,
+  ToolbarContainer,
+  ToolPropertiesContainer,
+} from "./Toolbar.styles";
+
+// icons:
 import {
   IconPencil,
   IconClick,
@@ -24,39 +27,39 @@ import {
   IconBrush,
   IconBrushOff,
   IconLetterT,
+  IconArrowBigTop,
 } from "@tabler/icons";
-import Color from "color";
+
 import { getRandomIntInclusive as randomInt } from "../../utils/utils";
-import {
-  TC,
-  Container,
-  ToolbarContainer,
-  Header,
-  ToggleBarButton,
-  ToolPropertiesContainer,
-  FloatContainer,
-} from "./Toolbar.styles";
 import { TOOL, Tool } from "../../modules/PixiApplication";
 
-import { DrawPicker } from "./DrawPicker/";
+// hooks:
 import { useToolbarStore } from "../../store/ToolbarState";
 import { useThemeController } from "../../styles/theme/Theme.context";
+import { usePaperState } from "../../contexts/PaperContext";
 
-const Test = ({ text }: { text: string }) => {
-  return <TC>{text}</TC>;
-};
+// custom components:
+import { ToolButton } from "./ToolButton";
+
+// palette components:
+import { DrawPicker } from "./DrawPicker/";
+import { KEY_ACTION, useKeybindStore } from "../../store/KeybindStore";
+
+import { useHotkeys } from "../../hooks/useHotkeys";
 
 const TabContent: Record<Tool, ReactNode> = {
-  [TOOL.SELECT]: <Test text="select" />,
+  [TOOL.SELECT]: <> select </>,
   [TOOL.ERASE]: <></>,
-  [TOOL.FREEHAND]: <DrawPicker />,
-  [TOOL.TEXT_ADD]: <Test text="text_add" />,
-  [TOOL.SHAPE]: <Test text="SHAPE" />,
-  [TOOL.CIRCLE]: <Test text="CIRCLE" />,
-  [TOOL.RECTANGLE]: <Test text="RECTANGLE" />,
-  [TOOL.TEXT_ADD]: <Test text="TEXT_ADD" />,
-  [TOOL.TEXT_EDIT]: <Test text="TEXT_EDIT" />,
-  [TOOL.IMAGE]: <Test text="IMAGE" />,
+  [TOOL.DRAW]: <DrawPicker />,
+  [TOOL.TEXT_ADD]: <> text_add </>,
+  [TOOL.FORM]: <> SHAPE </>,
+  [TOOL.CIRCLE]: <> CIRCLE </>,
+  [TOOL.RECTANGLE]: <> RECTANGLE </>,
+  [TOOL.TEXT_ADD]: <> TEXT_ADD </>,
+  [TOOL.TEXT_EDIT]: <> TEXT_EDIT </>,
+  [TOOL.IMAGE]: <> IMAGE </>,
+  [TOOL.FORM]: <> form </>,
+  [TOOL.ARROW]: <> arrow </>,
 };
 
 const iconSize = 22;
@@ -73,6 +76,57 @@ const Toolbar = () => {
   const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
 
   const tabHandler = { activeTool, setActiveTool };
+
+  const keyActions = useMemo(
+    () => [
+      {
+        actionId: KEY_ACTION.SELECT,
+        action: () => {
+          setActiveTool(TOOL.SELECT);
+        },
+      },
+      {
+        actionId: KEY_ACTION.DRAW,
+        action: () => {
+          setActiveTool(TOOL.DRAW);
+        },
+      },
+      {
+        actionId: KEY_ACTION.ERASE,
+        action: () => {
+          setActiveTool(TOOL.ERASE);
+        },
+      },
+      {
+        actionId: KEY_ACTION.FORM,
+        action: () => {
+          setActiveTool(TOOL.FORM);
+        },
+      },
+      {
+        actionId: KEY_ACTION.ARROW,
+        action: () => {
+          setActiveTool(TOOL.ARROW);
+        },
+      },
+      {
+        actionId: KEY_ACTION.TEXT,
+        action: () => {
+          setActiveTool(TOOL.TEXT_ADD);
+        },
+      },
+      {
+        actionId: KEY_ACTION.TOGGLE_GRID,
+        action: () => {
+          console.log("toggle grid");
+        },
+      },
+    ],
+    []
+  );
+
+  const keybinds = useKeybindStore((state) => state.keybinds);
+  const { setHotkeyPaused } = useHotkeys(keybinds, keyActions);
 
   const drawRandomCircle = () => {
     const pixi = pixim.current;
@@ -95,7 +149,7 @@ const Toolbar = () => {
           <IconPointer size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.FREEHAND}>
+        <ToolButton {...tabHandler} id={TOOL.DRAW}>
           <IconPencil size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
@@ -103,12 +157,12 @@ const Toolbar = () => {
           <IconEraser size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.CIRCLE}>
-          <IconCircle size={iconSize} stroke={iconStroke} />
+        <ToolButton {...tabHandler} id={TOOL.FORM}>
+          <IconRectangle size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.RECTANGLE}>
-          <IconRectangle size={iconSize} stroke={iconStroke} />
+        <ToolButton {...tabHandler} id={TOOL.ARROW}>
+          <IconArrowBigTop size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.TEXT_ADD}>

@@ -8,6 +8,7 @@ import React, {
   useState,
   MutableRefObject,
   ReactNode,
+  useMemo,
 } from "react";
 
 import { colorToNumber as ctn } from "../utils/utils";
@@ -19,6 +20,7 @@ import { PixiApplication, TOOL, Tool } from "../modules/PixiApplication";
 import getStroke from "perfect-freehand";
 import { Ring, union } from "polygon-clipping";
 import { useThemeController } from "../styles/theme/Theme.context";
+import { KeyAction, Keybind, useHotkeys } from "../hooks/useHotkeys";
 
 export type CircleOptions = {
   name?: string;
@@ -49,8 +51,6 @@ type State = {
 
   // drawing functions:
   drawCircle: (options: CircleOptions) => void;
-
-  text: {};
 };
 
 type Props = {
@@ -66,7 +66,6 @@ const PaperStateProvider = ({ children }: Props) => {
   // gui states:
   const [mode, setMode] = useState<Tool>(TOOL.SELECT);
   const [cellSize, setCellSize] = useState(60);
-  const [text, setText] = useState({});
 
   const setup = (canvas: HTMLCanvasElement, container: HTMLElement) => {
     pixim.current.setup(canvas, container);
@@ -103,63 +102,59 @@ const PaperStateProvider = ({ children }: Props) => {
   const drawRectangle = (options: RectangleOptions) => {};
 
   useEffect(() => {
-    const test = (event: KeyboardEvent) => {
-      if (event.key === "d") {
-        console.log("--------------DEBUG------------------------");
-        console.log(">> FPS:", pixim.current?.app.ticker.FPS);
-        console.log("-------------END DEBUG----------------------");
-      }
-      if (event.key === "r") {
-        if (!pixim.current) return;
-        const color = randomInt(0, 0xffffff);
-        const bounds = pixim.current.viewport.getVisibleBounds();
-        drawRectangle({
-          x: bounds.x,
-          y: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-          strokeWidth: 2,
-          strokeColor: color,
-        });
-      }
-      if (event.key === "c") pixim.current?.items.removeChildren();
-      if (event.key === "f") setCellSize((v) => v + 10);
-      if (event.key === "a")
-        console.log(">> ITEMS:", pixim.current?.items.children.length);
-      if (event.key === "w") {
-        console.log("--------------------");
-        console.log("drawing poly");
-        const stroke = [
-          [200, 200],
-          [300, 300],
-          [400, 300],
-          [500, 300],
-        ];
-
-        const outlinePoints = getStroke(stroke);
-        const flattened = union([outlinePoints as Ring]);
-        // const draw = outlinePoints.flatMap((item) => item);
-        const draw = outlinePoints.flatMap((item) => item);
-
-        console.log({ stroke });
-        console.log({ flattened });
-        console.log({ outlinePoints });
-        console.log({ draw });
-
-        const path = new Graphics();
-        path.beginFill(0x458158, 1);
-        path.lineStyle({ width: 1, color: 0xffffff });
-        path.drawPolygon(draw);
-        path.endFill();
-
-        pixim.current.items.addChild(path);
-      }
-      if (event.key === "t") toggleTheme();
-    };
-    window.addEventListener("keydown", test);
-    return () => {
-      window.removeEventListener("keydown", test);
-    };
+    // const test = (event: KeyboardEvent) => {
+    //   if (event.key === "d") {
+    //     console.log("--------------DEBUG------------------------");
+    //     console.log(">> FPS:", pixim.current?.app.ticker.FPS);
+    //     console.log("-------------END DEBUG----------------------");
+    //   }
+    //   if (event.key === "r") {
+    //     if (!pixim.current) return;
+    //     const color = randomInt(0, 0xffffff);
+    //     const bounds = pixim.current.viewport.getVisibleBounds();
+    //     drawRectangle({
+    //       x: bounds.x,
+    //       y: bounds.y,
+    //       width: bounds.width,
+    //       height: bounds.height,
+    //       strokeWidth: 2,
+    //       strokeColor: color,
+    //     });
+    //   }
+    //   if (event.key === "c") pixim.current?.items.removeChildren();
+    //   if (event.key === "f") setCellSize((v) => v + 10);
+    //   if (event.key === "a")
+    //     console.log(">> ITEMS:", pixim.current?.items.children.length);
+    //   if (event.key === "w") {
+    //     console.log("--------------------");
+    //     console.log("drawing poly");
+    //     const stroke = [
+    //       [200, 200],
+    //       [300, 300],
+    //       [400, 300],
+    //       [500, 300],
+    //     ];
+    //     const outlinePoints = getStroke(stroke);
+    //     const flattened = union([outlinePoints as Ring]);
+    //     // const draw = outlinePoints.flatMap((item) => item);
+    //     const draw = outlinePoints.flatMap((item) => item);
+    //     console.log({ stroke });
+    //     console.log({ flattened });
+    //     console.log({ outlinePoints });
+    //     console.log({ draw });
+    //     const path = new Graphics();
+    //     path.beginFill(0x458158, 1);
+    //     path.lineStyle({ width: 1, color: 0xffffff });
+    //     path.drawPolygon(draw);
+    //     path.endFill();
+    //     pixim.current.items.addChild(path);
+    //   }
+    //   if (event.key === "t") toggleTheme();
+    // };
+    // window.addEventListener("keydown", test);
+    // return () => {
+    //   window.removeEventListener("keydown", test);
+    // };
   }, []);
 
   useEffect(() => {
@@ -180,7 +175,6 @@ const PaperStateProvider = ({ children }: Props) => {
         cellSize,
         setCellSize,
         drawCircle,
-        text,
       }}
     >
       {children}

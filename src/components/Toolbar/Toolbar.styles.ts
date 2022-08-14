@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 
 const borderRadius = 5;
+export const toolBarSize = 50;
 
 export const Container = styled(motion.div)`
   /* border: 1px solid pink; */
@@ -26,8 +27,6 @@ export const Header = styled.div`
   justify-content: center;
   align-items: center;
 `;
-
-export const toolBarSize = 50;
 
 export const ToolbarContainer = styled.ul`
   ${({ theme }) => css`
@@ -72,25 +71,4 @@ export const FloatContainer = styled(motion.div)`
 
   display: flex;
   flex-direction: column;
-`;
-
-export const ToggleBarButton = styled(motion.button)`
-  background-color: transparent;
-  border-radius: 50%;
-
-  width: 2rem;
-  height: 2rem;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:hover {
-    background-color: #333;
-  }
-`;
-
-export const TC = styled.div`
-  /* background-color: #111; */
-  padding: 1rem;
 `;

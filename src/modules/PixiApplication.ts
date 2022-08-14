@@ -17,8 +17,9 @@ export const TOOL = {
   //                         DESKTOP                     | MOBILE
   SELECT: "select", //       L=tool M=pan R=pan   W=zoom | L1=pan   L2=zoom L3=pan
   ERASE: "erase", //         L=tool M=pan R=erase W=zoom | L1=erase L2=zoom L3=pan
-  FREEHAND: "freehand", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
-  SHAPE: "shape", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  DRAW: "draw", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  FORM: "form", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
+  ARROW: "arrow", //         L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   CIRCLE: "circle", //       L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   RECTANGLE: "rectangle", // L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
   TEXT_ADD: "text_add", //   L=tool M=pan R=erase W=zoom | L1=tool  L2=zoom L3=pan
@@ -117,7 +118,7 @@ export class PixiApplication {
       case TOOL.SELECT:
         this.selectTool.activate();
         break;
-      case TOOL.FREEHAND:
+      case TOOL.DRAW:
         this.drawTool.activate();
         break;
       case TOOL.CIRCLE:
