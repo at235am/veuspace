@@ -28,6 +28,7 @@ import {
   IconBrushOff,
   IconLetterT,
   IconArrowBigTop,
+  IconArrowTopCircle,
 } from "@tabler/icons";
 
 import { getRandomIntInclusive as randomInt } from "../../utils/utils";
@@ -122,6 +123,7 @@ const Toolbar = () => {
   );
 
   const keybinds = useKeybindStore((state) => state.keybinds);
+
   const { setHotkeyPaused } = useHotkeys(keybinds, keyActions);
 
   const drawRandomCircle = () => {
@@ -158,7 +160,7 @@ const Toolbar = () => {
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.ARROW}>
-          <IconArrowBigTop size={iconSize} stroke={iconStroke} />
+          <IconArrowTopCircle size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
         <ToolButton {...tabHandler} id={TOOL.TEXT_ADD}>

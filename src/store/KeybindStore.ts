@@ -59,16 +59,27 @@ const default_keybinds: Keybind[] = [
   },
 ];
 
+type KeybindMap = { [id: string]: Keybind };
+
 interface KeybindState {
   keybinds: Keybind[];
+  getKeybindsMap: () => KeybindMap;
   updateKeybind: (kb: Keybind) => void;
   removeKeybind: (kb: Keybind) => void;
 }
 
 export const useKeybindStore = create<KeybindState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       keybinds: default_keybinds,
+      getKeybindsMap: () => {
+        const { keybinds } = get();
+        const map: KeybindMap = {};
+        keybinds.forEach((keybind) => {
+          map[keybind.id] = keybind;
+        });
+        return map;
+      },
 
       updateKeybind: (kb: Keybind) => {
         set((state) => {

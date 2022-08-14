@@ -1,13 +1,14 @@
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from "react";
+import { Keybind } from "../../../hooks/useHotkeys";
 import { Tool } from "../../../modules/PixiApplication";
+import { useKeybindStore } from "../../../store/KeybindStore";
 import { useToolbarStore } from "../../../store/ToolbarState";
-import { Container, Line, Button } from "./ToolButton.styles";
+import { Container, Line, Button, KeybindLabel } from "./ToolButton.styles";
 
 type Props = {
   id: Tool;
   activeTool: Tool;
   setActiveTool: Dispatch<SetStateAction<Tool>>;
-  // setSidebarOpen: Dispatch<SetStateAction<boolean>>;
 
   onClick?: () => void;
   children: React.ReactNode;
@@ -17,12 +18,19 @@ const ToolButton = ({
   id,
   activeTool,
   setActiveTool,
-  // setSidebarOpen,
+
   onClick,
   children,
 }: Props) => {
   const highlight = id === activeTool;
   const togglePalette = useToolbarStore((state) => state.toggle);
+
+  const keybinds = useKeybindStore((state) => state.keybinds);
+  const getKeybindsMap = useKeybindStore((state) => state.getKeybindsMap);
+  const keybindMap = useMemo(() => getKeybindsMap(), [keybinds]);
+
+  const keybind = keybindMap[id];
+  const key = keybind ? keybind.keys[0] : "\\";
 
   const toggleMore = (tool: Tool) => {
     if (tool === activeTool) togglePalette();
@@ -36,6 +44,7 @@ const ToolButton = ({
 
   return (
     <Container active={highlight}>
+      <KeybindLabel>{key}</KeybindLabel>
       {highlight && <Line layoutId="line" />}
       <Button type="button" active={highlight} onClick={action}>
         {children}

@@ -13,7 +13,7 @@ export const Container = styled.li<{ active: boolean }>`
   min-height: ${size}px;
   max-height: ${size}px;
   /* aspect-ratio: 1 / 1; */
-  border-radius: 3px;
+  border-radius: 7px;
 
   &:hover {
     background-color: #ffffff20;
@@ -55,4 +55,38 @@ export const Line = styled(motion.span)`
   border-radius: 5px;
 
   background-color: ${({ theme }) => theme.colors.primary.B00};
+`;
+
+export const KeybindLabel = styled.span`
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* top: -2px; */
+  /* right: 0; */
+  /* margin: 0 auto; */
+
+  background-color: ${({ theme }) => theme.colors.surface.D10};
+  width: 12px;
+  height: 12px;
+
+  border-radius: 2px;
+  /* width: 100%; */
+
+  /* border-radius: 50%; */
+  /* border-bottom-right-radius: 0; */
+  /* border-top-right-radius: 0; */
+
+  /* border-top: 1px solid gray; */
+  /* border-left: 1px solid gray; */
+
+  /* color: ${({ theme }) => theme.colors.onBackground.B00}; */
+  color: lightgrey;
+  font-size: 9px;
+  font-weight: 500;
+
+  text-transform: uppercase;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
