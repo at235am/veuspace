@@ -1,5 +1,9 @@
 import create from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  MappedPresetOptions,
+  PresetOptions,
+} from "../components/Toolbar/DrawPicker/DrawPicker.component";
 import { Keybind } from "../hooks/useHotkeys";
 import { LocalStorage } from "./_LocalStorageKeys";
 
@@ -12,6 +16,7 @@ export const KEY_ACTION = {
   TEXT: "text",
   PASTE_IMAGE: "paste-image",
   TOGGLE_GRID: "toggle-grid",
+  TOGGLE_HOTKEYS: "toggle-hotkeys",
 } as const;
 
 const default_keybinds: Keybind[] = [
@@ -57,20 +62,63 @@ const default_keybinds: Keybind[] = [
     keys: ["g"],
     actionId: KEY_ACTION.TOGGLE_GRID,
   },
+  {
+    id: "hotkeys",
+    description: "",
+    keys: ["h"],
+    actionId: KEY_ACTION.TOGGLE_HOTKEYS,
+  },
 ];
+
+const default_draw_presets: MappedPresetOptions = {
+  1: { id: "1", size: 3, color: "#2e8df9" },
+  2: { id: "2", size: 6, color: "#c544b0" },
+  3: { id: "3", size: 9, color: "#ecdf2e" },
+  4: { id: "4", size: 12, color: "#ffffff" },
+  5: { id: "5", size: 17, color: "#7050cc" },
+  6: { id: "6", size: 18, color: "#414141" },
+  7: { id: "7", size: 22, color: "#cb5151" },
+  8: { id: "8", size: 25, color: "#3dc973" },
+};
 
 type KeybindMap = { [id: string]: Keybind };
 
-interface KeybindState {
+interface UserSettingState {
+  // TOOLBAR STATE:
+  showHotkeys: boolean;
+  autoClosePresets: boolean;
+  autoCloseEditor: boolean;
+  toggleHotkeys: () => void;
+  toggleAutoClosePresets: () => void;
+  toggleAutoCloseEditor: () => void;
+
+  // KEYBINDS:
   keybinds: Keybind[];
   getKeybindsMap: () => KeybindMap;
   updateKeybind: (kb: Keybind) => void;
   removeKeybind: (kb: Keybind) => void;
+
+  // DRAW PALETTE:
+  drawPresets: MappedPresetOptions;
+  setDrawPresets: (value: PresetOptions) => void;
 }
 
-export const useKeybindStore = create<KeybindState>()(
+export const useUserSettingStore = create<UserSettingState>()(
   persist(
     (set, get) => ({
+      // TOOLBAR STATE --------------------------------------------------------
+      showHotkeys: true,
+      autoClosePresets: false,
+      autoCloseEditor: true,
+
+      toggleHotkeys: () =>
+        set((state) => ({ showHotkeys: !state.showHotkeys })),
+      toggleAutoClosePresets: () =>
+        set((state) => ({ autoClosePresets: !state.autoClosePresets })),
+      toggleAutoCloseEditor: () =>
+        set((state) => ({ autoCloseEditor: !state.autoCloseEditor })),
+
+      // KEYBINDS -------------------------------------------------------------
       keybinds: default_keybinds,
       getKeybindsMap: () => {
         const { keybinds } = get();
@@ -89,7 +137,7 @@ export const useKeybindStore = create<KeybindState>()(
           if (index === -1) return state;
 
           return {
-            ...state,
+            // ...state,
             keybinds: [
               ...keybinds.slice(0, index),
               kb,
@@ -107,7 +155,7 @@ export const useKeybindStore = create<KeybindState>()(
           if (index === -1) return state;
 
           return {
-            ...state,
+            // ...state,
             keybinds: [
               ...keybinds.slice(0, index),
               ...keybinds.slice(index + 1),
@@ -115,7 +163,23 @@ export const useKeybindStore = create<KeybindState>()(
           };
         });
       },
+
+      // DRAW PALETTE -------------------------------------------------------------
+      drawPresets: default_draw_presets,
+
+      setDrawPresets: (value: PresetOptions) => {
+        set((state) => {
+          const { drawPresets: presets } = state;
+
+          if (!presets[value.id]) return state;
+
+          const copy = { ...presets };
+          copy[value.id] = value;
+          // return { state, drawPresets: copy };
+          return { drawPresets: copy };
+        });
+      },
     }),
-    { name: LocalStorage.KEYBINDS, version: 0 }
+    { name: LocalStorage.USER_SETTINGS, version: 0 }
   )
 );

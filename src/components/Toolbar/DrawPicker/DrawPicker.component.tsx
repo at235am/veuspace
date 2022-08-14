@@ -23,7 +23,7 @@ import {
 import { useToolbarStore } from "../../../store/ToolbarState";
 import Color from "color";
 import { useTheme } from "@emotion/react";
-import { useDrawPaletteStore } from "../../../store/PaletteStore";
+import { useUserSettingStore } from "../../../store/UserSettingStore";
 
 export interface PresetOptions extends BrushOptions {
   id: string;
@@ -43,8 +43,10 @@ const DrawPicker = ({}: Props) => {
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
-  const presets = useDrawPaletteStore((state) => state.presets);
-  const updatePreset = useDrawPaletteStore((state) => state.setPreset);
+  const presets = useUserSettingStore((state) => state.drawPresets);
+  const updatePreset = useUserSettingStore((state) => state.setDrawPresets);
+  // const presets = useDrawPaletteStore((state) => state.presets);
+  // const updatePreset = useDrawPaletteStore((state) => state.setPreset);
 
   const [activePid, setActivePid] = useState("1");
   const [styleEditor, setStyleEditor] = useState(false);

@@ -1,4 +1,3 @@
 export const LocalStorage = {
-  DRAW_PALETTE: "draw-palette",
-  KEYBINDS: "keybinds",
+  USER_SETTINGS: "user-settings",
 } as const;

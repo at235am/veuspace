@@ -61,25 +61,15 @@ export const KeybindLabel = styled.span`
   position: absolute;
   top: 0;
   left: 0;
-  /* top: -2px; */
-  /* right: 0; */
-  /* margin: 0 auto; */
+  right: 0;
+  margin: 0 auto;
 
-  background-color: ${({ theme }) => theme.colors.surface.D10};
+  /* background-color: ${({ theme }) => theme.colors.surface.D10}; */
   width: 12px;
   height: 12px;
 
   border-radius: 2px;
-  /* width: 100%; */
 
-  /* border-radius: 50%; */
-  /* border-bottom-right-radius: 0; */
-  /* border-top-right-radius: 0; */
-
-  /* border-top: 1px solid gray; */
-  /* border-left: 1px solid gray; */
-
-  /* color: ${({ theme }) => theme.colors.onBackground.B00}; */
   color: lightgrey;
   font-size: 9px;
   font-weight: 500;

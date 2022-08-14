@@ -44,9 +44,10 @@ import { ToolButton } from "./ToolButton";
 
 // palette components:
 import { DrawPicker } from "./DrawPicker/";
-import { KEY_ACTION, useKeybindStore } from "../../store/KeybindStore";
+// import { KEY_ACTION } from "../../store/KeybindStore";
 
 import { useHotkeys } from "../../hooks/useHotkeys";
+import { KEY_ACTION, useUserSettingStore } from "../../store/UserSettingStore";
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <> select </>,
@@ -73,6 +74,8 @@ const Toolbar = () => {
   const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
 
   const tabHandler = { activeTool, setActiveTool };
+
+  const toggleHotkeys = useUserSettingStore((state) => state.toggleHotkeys);
 
   const keyActions = useMemo(
     () => [
@@ -118,13 +121,32 @@ const Toolbar = () => {
           console.log("toggle grid");
         },
       },
+      {
+        actionId: KEY_ACTION.TOGGLE_HOTKEYS,
+        action: () => {
+          toggleHotkeys();
+        },
+      },
     ],
     []
   );
 
-  const keybinds = useKeybindStore((state) => state.keybinds);
-
+  // set up keybinds:
+  const keybinds = useUserSettingStore((state) => state.keybinds);
+  const getKeybindsMap = useUserSettingStore((state) => state.getKeybindsMap);
+  const keybindMap = useMemo(() => getKeybindsMap(), [keybinds]);
   const { setHotkeyPaused } = useHotkeys(keybinds, keyActions);
+
+  const kbMap: Record<Tool, string> = {
+    [TOOL.SELECT]: keybindMap["select"]?.keys[0] ?? "_",
+    [TOOL.DRAW]: keybindMap["draw"]?.keys[0] ?? "_",
+    [TOOL.ERASE]: keybindMap["erase"]?.keys[0] ?? "_",
+    [TOOL.FORM]: keybindMap["form"]?.keys[0] ?? "_",
+    [TOOL.ARROW]: keybindMap["arrow"]?.keys[0] ?? "_",
+    [TOOL.TEXT_ADD]: keybindMap["text"]?.keys[0] ?? "_",
+    [TOOL.TEXT_EDIT]: "",
+    [TOOL.IMAGE]: "",
+  };
 
   const drawRandomCircle = () => {
     const pixi = pixim.current;
@@ -143,31 +165,44 @@ const Toolbar = () => {
   return (
     <Container>
       <ToolbarContainer>
-        <ToolButton {...tabHandler} id={TOOL.SELECT}>
+        <ToolButton
+          {...tabHandler}
+          id={TOOL.SELECT}
+          keybind={kbMap[TOOL.SELECT]}
+        >
           <IconPointer size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.DRAW}>
+        <ToolButton {...tabHandler} id={TOOL.DRAW} keybind={kbMap[TOOL.DRAW]}>
           <IconPencil size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.ERASE}>
+        <ToolButton {...tabHandler} id={TOOL.ERASE} keybind={kbMap[TOOL.ERASE]}>
           <IconEraser size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.FORM}>
+        <ToolButton {...tabHandler} id={TOOL.FORM} keybind={kbMap[TOOL.FORM]}>
           <IconRectangle size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.ARROW}>
+        <ToolButton {...tabHandler} id={TOOL.ARROW} keybind={kbMap[TOOL.ARROW]}>
           <IconArrowTopCircle size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.TEXT_ADD}>
+        <ToolButton
+          {...tabHandler}
+          id={TOOL.TEXT_ADD}
+          keybind={kbMap[TOOL.TEXT_ADD]}
+        >
           <IconLetterT size={iconSize} stroke={iconStroke} />
         </ToolButton>
 
-        <ToolButton {...tabHandler} id={TOOL.IMAGE} onClick={toggleTheme}>
+        <ToolButton
+          {...tabHandler}
+          id={TOOL.IMAGE}
+          keybind={kbMap[TOOL.IMAGE]}
+          onClick={toggleTheme}
+        >
           <IconPhoto size={iconSize} stroke={iconStroke} />
         </ToolButton>
       </ToolbarContainer>
