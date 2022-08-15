@@ -78,37 +78,37 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.SELECT,
         action: () => {
-          setMode(TOOL.SELECT);
+          setModeProtected(TOOL.SELECT);
         },
       },
       {
         actionId: KEY_ACTION.DRAW,
         action: () => {
-          setMode(TOOL.DRAW);
+          setModeProtected(TOOL.DRAW);
         },
       },
       {
         actionId: KEY_ACTION.ERASE,
         action: () => {
-          setMode(TOOL.ERASE);
+          setModeProtected(TOOL.ERASE);
         },
       },
       {
         actionId: KEY_ACTION.FORM,
         action: () => {
-          setMode(TOOL.FORM);
+          setModeProtected(TOOL.FORM);
         },
       },
       {
         actionId: KEY_ACTION.ARROW,
         action: () => {
-          setMode(TOOL.ARROW);
+          setModeProtected(TOOL.ARROW);
         },
       },
       {
         actionId: KEY_ACTION.TEXT,
         action: () => {
-          setMode(TOOL.TEXT_ADD);
+          setModeProtected(TOOL.TEXT_ADD);
         },
       },
       {
@@ -140,6 +140,11 @@ const PaperStateProvider = ({ children }: Props) => {
 
   const setup = (canvas: HTMLCanvasElement, container: HTMLElement) => {
     pixim.current.setup(canvas, container);
+  };
+
+  const setModeProtected = (mode: Tool) => {
+    if (pixim.current.activeTool.isUsing) return;
+    setMode(mode);
   };
 
   const drawCircle = (options: CircleOptions) => {

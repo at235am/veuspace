@@ -10,7 +10,9 @@ import {
   colorToNumber as ctn,
   roundIntToNearestMultiple,
 } from "../utils/utils";
-import { FreehandTool } from "./tools/FreehandTool";
+import { BaseTool } from "./tools/BaseTool";
+import { EraserTool } from "./tools/EraserTool";
+import { DrawTool } from "./tools/DrawTool";
 import { SelectTool } from "./tools/SelectTool";
 
 export const TOOL = {
@@ -39,8 +41,10 @@ export class PixiApplication {
   public readonly viewport: Viewport;
 
   // tools:
-  public readonly drawTool: FreehandTool;
+  public readonly drawTool: DrawTool;
   public readonly selectTool: SelectTool;
+  public readonly eraserTool: EraserTool;
+  public activeTool: BaseTool;
 
   private _mode: Tool;
   private _cellSize: number;
@@ -59,8 +63,11 @@ export class PixiApplication {
       disableOnContextMenu: true,
     });
 
-    this.drawTool = new FreehandTool(this);
+    this.drawTool = new DrawTool(this);
     this.selectTool = new SelectTool(this);
+    this.eraserTool = new EraserTool(this);
+
+    this.activeTool = this.selectTool;
 
     this.drawTool.setOptions({ size: 5, color: 0x555555 });
   }
@@ -115,9 +122,15 @@ export class PixiApplication {
     switch (value) {
       case TOOL.SELECT:
         this.selectTool.activate();
+        // this.activeTool = this.selectTool;
         break;
       case TOOL.DRAW:
         this.drawTool.activate();
+        // this.activeTool = this.drawTool;
+        break;
+      case TOOL.ERASE:
+        this.eraserTool.activate();
+        // this.activeTool = this.eraserTool;
         break;
       default:
         break;

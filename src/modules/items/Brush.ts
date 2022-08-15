@@ -9,6 +9,7 @@ import {
 } from "../../utils/utils";
 import { MultiPolygon, Ring, union } from "polygon-clipping";
 import { Graphics, LINE_CAP, Polygon } from "pixi.js-legacy";
+import { BaseItem } from "./BaseItem";
 
 export type BrushOptions = {
   color: string | number;
@@ -20,10 +21,10 @@ const DefaultBrushOptions: BrushOptions = {
   size: 10,
 };
 
-export class BrushPath extends Graphics {
-  private type: string = "brush-path";
-  protected options: BrushOptions;
+export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
+  public type: string = "brush-path";
   public points: number[][];
+  protected options: BrushOptions;
 
   constructor(points?: number[][], options?: Partial<BrushOptions>) {
     super();
@@ -43,6 +44,10 @@ export class BrushPath extends Graphics {
     this.options = this.fillOptions(options);
     this.draw();
     this.computeHitArea();
+  };
+
+  public getData = () => {
+    return this.options;
   };
 
   public computeHitArea = () => {

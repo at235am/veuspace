@@ -11,7 +11,7 @@ export type FreehandToolOptions = {
   color: number | string;
 };
 
-export class FreehandTool extends BaseTool {
+export class DrawTool extends BaseTool {
   private dragging: boolean;
   private path: BrushPath;
   private options: BrushOptions;

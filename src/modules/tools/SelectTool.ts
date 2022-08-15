@@ -41,7 +41,6 @@ export class SelectTool extends BaseTool {
   }
 
   moveStart = (event: InteractionEvent) => {
-    console.log("select:pointerdown:onDragStart");
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
     this.gfx = im.hitTest(event.data.global, this.pixi.items);
 

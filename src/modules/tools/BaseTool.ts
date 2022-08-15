@@ -15,10 +15,13 @@ export class BaseTool {
   private timer?: NodeJS.Timeout;
   protected cursor: string;
 
+  public isUsing: boolean;
+
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     this.pixi = pixi;
     this.longPressCallback = longPressCallback;
     this.cursor = "default";
+    this.isUsing = false;
 
     // important for classes that extend this BaseTool class:
     this.longPressed = false;
@@ -60,12 +63,16 @@ export class BaseTool {
     this.interaction?.on("pointerdown", this.setTouchesAndButton);
     this.interaction?.on("pointerdown", this.startLongPressCount);
     this.interaction?.on("pointerup", this.reset);
+    this.interaction?.on("pointerupoutside", this.reset);
     this.interaction?.on("pointermove", this.determineLongPressAction);
+
+    this.pixi.activeTool = this;
   }
 
   private setTouchesAndButton = (event: InteractionEvent) => {
     // console.log("base:pointerdown");
 
+    this.isUsing = true;
     this.touches = 1;
     this.button = event.data.button;
 
@@ -115,6 +122,9 @@ export class BaseTool {
 
   private reset = (event: InteractionEvent) => {
     // console.log("base:pointerup");
+
+    if (this.touches === 1) this.isUsing = false;
+
     this.button = null;
     this.longPressed = false;
     clearTimeout(this.timer);
