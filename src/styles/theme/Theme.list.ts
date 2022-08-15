@@ -49,7 +49,12 @@ export const themeList: Theme[] = [
         D10: "#e6e6e7",
         D20: "#e0e0e0",
       }),
-      onSurface: ccs({ B00: "#ffffff", D10: "#e6e6e7", D20: "#e0e0e0" }),
+
+      onSurface: ccs({
+        B00: "#ffffff", // pattern color for paper background pattern
+        D10: "#e6e6e7",
+        D20: "#e0e0e0",
+      }),
 
       info: ccs({ B00: "#51acfe" }),
       success: ccs({ B00: "#37d7b2", L10: "#00ffb1" }),
@@ -83,6 +88,7 @@ export const themeList: Theme[] = [
         D10: "#e9eef8",
         D20: "#f6f6f6",
       }),
+
       surface: ccs({
         L30: "#ffffff",
         L20: "rgba(195, 195, 195, 0.2)",
@@ -93,7 +99,10 @@ export const themeList: Theme[] = [
       }),
 
       onBackground: ccs({ B00: "#2d4665" }),
-      onSurface: ccs({ B00: "#222222" }),
+      onSurface: ccs({
+        // B00: "#a0a0a6", // pattern color for paper background pattern
+        B00: "#505050", // pattern color for paper background pattern
+      }),
 
       info: ccs({ B00: "#217aff" }),
       success: ccs({ B00: "#37d7b2" }),

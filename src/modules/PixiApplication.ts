@@ -41,24 +41,27 @@ export class PixiApplication {
   public readonly viewport: Viewport;
 
   // tools:
+  public activeTool: BaseTool;
   public readonly drawTool: DrawTool;
   public readonly selectTool: SelectTool;
   public readonly eraserTool: EraserTool;
-  public activeTool: BaseTool;
 
   private _mode: Tool;
+  private _grid: boolean;
   private _cellSize: number;
+  private _backgroundPattern: { type: string; color: string };
   public longPressFn?: () => void;
 
   private constructor() {
     this._mode = "select";
     this._cellSize = 60;
+    this._grid = true;
+    this._backgroundPattern = { type: "dot", color: "#000000" };
 
     this.app = new Application();
     this.background = new Container();
     this.items = new Container();
     this.viewport = new Viewport({
-      // interaction: this.app.renderer.plugins.interaction,
       passiveWheel: false,
       disableOnContextMenu: true,
     });
@@ -110,6 +113,38 @@ export class PixiApplication {
     this.selectTool.activate();
   }
 
+  public get grid() {
+    return this._grid;
+  }
+
+  public set grid(value: boolean) {
+    this._grid = value;
+    if (value) this.drawBackgroundPattern();
+    else this.background.removeChildren();
+  }
+
+  public get cellSize() {
+    return this._cellSize;
+  }
+
+  public set cellSize(value: number) {
+    if (value === this._cellSize) return;
+
+    this._cellSize = value;
+    this.drawBackgroundPattern();
+  }
+
+  public get backgroundPattern() {
+    return this._backgroundPattern;
+  }
+
+  public set backgroundPattern(
+    value: Partial<{ type: string; color: string }>
+  ) {
+    this._backgroundPattern = { ...this._backgroundPattern, ...value };
+    this.drawBackgroundPattern();
+  }
+
   public get mode() {
     return this._mode;
   }
@@ -137,17 +172,6 @@ export class PixiApplication {
     }
   }
 
-  public get cellSize() {
-    return this._cellSize;
-  }
-
-  public set cellSize(value: number) {
-    if (value === this._cellSize) return;
-
-    this._cellSize = value;
-    this.drawBackgroundPattern();
-  }
-
   public resize(width: number, height: number) {
     this.app.renderer.resize(width, height);
     this.app.view.style.width = `${width}px`;
@@ -166,8 +190,11 @@ export class PixiApplication {
     this.viewport.drag({ pressDrag: true, mouseButtons: "middle" });
   }
 
-  public drawBackgroundPattern() {
+  public drawBackgroundPattern(force = false) {
+    if (!this._grid && !force) return;
+
     this.background.removeChildren();
+    const { color, type } = this._backgroundPattern;
     const cell = this._cellSize; // the gap between each cell of the grid ;
     const pattern = new Graphics();
     // measurements
@@ -176,7 +203,7 @@ export class PixiApplication {
     const hboxes = Math.round(gridbox.width / cell);
     const vboxes = Math.round(gridbox.height / cell);
     // for circle:
-    pattern.beginFill(ctn(0xffffff), 1);
+    pattern.beginFill(ctn(color), 1);
     pattern.lineStyle({ width: 0 });
     // for rect:
     // pattern.beginFill(0, 0);

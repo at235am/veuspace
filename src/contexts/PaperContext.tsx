@@ -21,6 +21,7 @@ import { PixiApplication, TOOL, Tool } from "../modules/PixiApplication";
 import { useThemeController } from "../styles/theme/Theme.context";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { KEY_ACTION, useUserSettingStore } from "../store/UserSettingStore";
+import { useTheme } from "@emotion/react";
 
 export type CircleOptions = {
   name?: string;
@@ -63,7 +64,9 @@ type Props = {
 const PaperStateContext = createContext<State | undefined>(undefined);
 
 const PaperStateProvider = ({ children }: Props) => {
-  const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
+  const { toggleBetweenLightAndDarkMode: toggleTheme, selectedTheme } =
+    useThemeController();
+  const theme = useTheme();
   const pixim = useRef<PixiApplication>(PixiApplication.getInstance());
 
   // gui states:
@@ -114,7 +117,7 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.TOGGLE_GRID,
         action: () => {
-          console.log("toggle grid");
+          pixim.current.grid = !pixim.current.grid;
         },
       },
       {
@@ -126,6 +129,7 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.THEME_TOGGLE,
         action: () => {
+          console.log("hello chaing theme");
           toggleTheme();
         },
       },
@@ -178,6 +182,10 @@ const PaperStateProvider = ({ children }: Props) => {
   useEffect(() => {
     pixim.current.mode = mode;
   }, [mode]);
+
+  useEffect(() => {
+    pixim.current.backgroundPattern = { color: theme.colors.onSurface.B00 };
+  }, [theme]);
 
   return (
     <PaperStateContext.Provider
