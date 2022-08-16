@@ -5,8 +5,14 @@ import {
   autoDetectRenderer,
   Container,
   Graphics,
+  ParticleContainer,
+  Point,
+  RenderTexture,
+  SCALE_MODES,
+  Sprite,
 } from "pixi.js-legacy";
 import {
+  clamp,
   colorToNumber as ctn,
   roundIntToNearestMultiple,
 } from "../utils/utils";
@@ -14,6 +20,7 @@ import { BaseTool } from "./tools/BaseTool";
 import { EraserTool } from "./tools/EraserTool";
 import { DrawTool } from "./tools/DrawTool";
 import { SelectTool } from "./tools/SelectTool";
+import throttle from "lodash.throttle";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -36,7 +43,8 @@ export class PixiApplication {
 
   // main states:
   public readonly app: Application;
-  public readonly background: Container;
+  public readonly background: ParticleContainer;
+  // public readonly background: Container;
   public readonly items: Container;
   public readonly viewport: Viewport;
 
@@ -50,24 +58,31 @@ export class PixiApplication {
   private _grid: boolean;
   private _cellSize: number;
   private _backgroundPattern: { type: string; color: string };
+  private _patterns?: { [type: string]: RenderTexture };
   public longPressFn?: () => void;
 
   private constructor() {
     this._mode = "select";
-    this._cellSize = 60;
+    this._cellSize = 50;
     this._grid = true;
     this._backgroundPattern = { type: "dot", color: "#000000" };
 
+    // this._patternDot = new Sprite();
+
     this.app = new Application();
-    this.background = new Container();
+    // this.background = new Container();
+    this.background = new ParticleContainer(20000, {
+      position: true,
+      tint: true,
+    });
     this.items = new Container();
     this.viewport = new Viewport({
       passiveWheel: false,
       disableOnContextMenu: true,
     });
 
-    this.drawTool = new DrawTool(this);
     this.selectTool = new SelectTool(this);
+    this.drawTool = new DrawTool(this);
     this.eraserTool = new EraserTool(this);
 
     this.activeTool = this.selectTool;
@@ -111,6 +126,49 @@ export class PixiApplication {
     this.app.stage.addChild(this.viewport);
 
     this.selectTool.activate();
+
+    const dotPattern = new Graphics();
+    dotPattern.beginFill(0xffffff, 1);
+    dotPattern.lineStyle({ width: 0 });
+    dotPattern.drawCircle(0, 0, 1);
+    dotPattern.endFill();
+
+    const gridPattern = new Graphics();
+    gridPattern.beginFill(0xffffff, 1);
+    gridPattern.lineStyle({ width: 0 });
+    gridPattern.drawRect(0, 0, this._cellSize, 1);
+    gridPattern.drawRect(0, 0, 1, this._cellSize);
+    gridPattern.endFill();
+    // gridPattern.alpha = 0.1;
+
+    this._patterns = {
+      dot: this.app.renderer.generateTexture(dotPattern),
+      grid: this.app.renderer.generateTexture(gridPattern),
+    };
+
+    this._patterns.dot.baseTexture.scaleMode = SCALE_MODES.NEAREST;
+    this._patterns.grid.baseTexture.scaleMode = SCALE_MODES.NEAREST;
+
+    // handle viewport listeners (DO NOT MOVE THIS TO ANY OF THE TOOLS):
+    this.viewport.drag({
+      mouseButtons: "middle", // can specify combos of "left" | "right" | "middle" clicks
+    });
+    this.viewport.wheel({
+      trackpadPinch: true,
+      // percent: 0.1,
+      wheelZoom: true, // zooms with mouse wheel
+      center: null, //    makes it zoom at the pointer position instead of the center
+    });
+
+    this.viewport.clampZoom({
+      minScale: 0.2, // how far in  the zoom can be
+      maxScale: 10, //  how far out the zoom can be
+    });
+    this.viewport.pinch({ noDrag: false }); // "noDrag: false" means enabling two finger drag
+    // "moved" is a pixi-viewport only event
+    // when theres a "zoomed" pixi-viewport event, there will always be a "moved" event
+    // so we can redraw the bg for both zooming and moving the viewport in this one event
+    this.viewport.on("moved", () => this.throttledDrawBG());
   }
 
   public get grid() {
@@ -129,7 +187,6 @@ export class PixiApplication {
 
   public set cellSize(value: number) {
     if (value === this._cellSize) return;
-
     this._cellSize = value;
     this.drawBackgroundPattern();
   }
@@ -157,15 +214,12 @@ export class PixiApplication {
     switch (value) {
       case TOOL.SELECT:
         this.selectTool.activate();
-        // this.activeTool = this.selectTool;
         break;
       case TOOL.DRAW:
         this.drawTool.activate();
-        // this.activeTool = this.drawTool;
         break;
       case TOOL.ERASE:
         this.eraserTool.activate();
-        // this.activeTool = this.eraserTool;
         break;
       default:
         break;
@@ -196,29 +250,35 @@ export class PixiApplication {
     this.background.removeChildren();
     const { color, type } = this._backgroundPattern;
     const cell = this._cellSize; // the gap between each cell of the grid ;
-    const pattern = new Graphics();
-    // measurements
-    const vp_bounds = this.viewport.getVisibleBounds();
-    const gridbox = vp_bounds.pad(cell);
-    const hboxes = Math.round(gridbox.width / cell);
-    const vboxes = Math.round(gridbox.height / cell);
-    // for circle:
-    pattern.beginFill(ctn(color), 1);
-    pattern.lineStyle({ width: 0 });
-    // for rect:
-    // pattern.beginFill(0, 0);
-    // pattern.lineStyle({ width: 1, color: 0xffffff });
+
+    const bounds = this.viewport.getVisibleBounds().pad(cell * 2);
+    const hboxes = Math.round(bounds.width / cell);
+    const vboxes = Math.round(bounds.height / cell);
+
+    const pattern = this._patterns ? this._patterns[type] : undefined;
+    if (pattern) {
+    }
+
+    const zoomscale = this.viewport.scaled;
+    const scale = Math.round(clamp(1 / zoomscale, 1, 2) * 100) / 100;
+
     for (let x = 0; x < hboxes; x++) {
       for (let y = 0; y < vboxes; y++) {
-        const offsetX = roundIntToNearestMultiple(vp_bounds.x, cell);
-        const offsetY = roundIntToNearestMultiple(vp_bounds.y, cell);
+        const offsetX = roundIntToNearestMultiple(bounds.x, cell);
+        const offsetY = roundIntToNearestMultiple(bounds.y, cell);
         const X = offsetX + x * cell;
         const Y = offsetY + y * cell;
-        pattern.drawCircle(X, Y, 1); // for circle
-        // pattern.drawRect(X, Y, cell, cell); // for rect
+
+        const sprite = new Sprite(pattern);
+        sprite.position.set(X, Y);
+        sprite.scale.set(scale, scale);
+
+        this.background.addChild(sprite);
       }
     }
-    pattern.endFill();
-    this.background.addChild(pattern);
+    this.background.tint = ctn(color);
+    // this.background.scale = new Point(zoomscale, zoomscale);
   }
+
+  public throttledDrawBG = throttle(this.drawBackgroundPattern, 100);
 }

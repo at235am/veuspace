@@ -37,9 +37,8 @@ export class DrawTool extends BaseTool {
     this.interaction.on("pointerup", this.drawEnd);
     this.interaction.on("pointerupoutside", this.drawEnd);
 
-    // this.interaction?.on("pointermove", this.storePoints);
-
-    const throttleMove = throttle(this.drawMove, 20);
+    // this.interaction.on("pointermove", this.drawMove);
+    const throttleMove = throttle(this.drawMove, 10);
     this.interaction.on("pointermove", throttleMove);
     // const debounceMove = debounce(this.drawMove, 0);
     // this.interaction?.on("pointermove", debounceMove);

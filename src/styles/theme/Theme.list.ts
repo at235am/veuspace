@@ -51,8 +51,9 @@ export const themeList: Theme[] = [
       }),
 
       onSurface: ccs({
-        B00: "#ffffff", // pattern color for paper background pattern
-        D10: "#e6e6e7",
+        B00: "#ffffff",
+        D10: "#888888", // pattern color for paper background pattern
+        // D10: "#404040", // pattern color for paper background pattern
         D20: "#e0e0e0",
       }),
 
@@ -100,8 +101,9 @@ export const themeList: Theme[] = [
 
       onBackground: ccs({ B00: "#2d4665" }),
       onSurface: ccs({
-        // B00: "#a0a0a6", // pattern color for paper background pattern
-        B00: "#505050", // pattern color for paper background pattern
+        B00: "#505050",
+        // D10: "#dddddd", // pattern color for paper background pattern
+        D10: "#a0a0a6", // pattern color for paper background pattern
       }),
 
       info: ccs({ B00: "#217aff" }),

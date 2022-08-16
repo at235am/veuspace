@@ -71,7 +71,7 @@ const PaperStateProvider = ({ children }: Props) => {
 
   // gui states:
   const [mode, setMode] = useState<Tool>(TOOL.SELECT);
-  const [cellSize, setCellSize] = useState(60);
+  const [cellSize, setCellSize] = useState(50);
 
   // zustand / local storage states:
   const toggleHotkeys = useUserSettingStore((state) => state.toggleHotkeys);
@@ -184,7 +184,7 @@ const PaperStateProvider = ({ children }: Props) => {
   }, [mode]);
 
   useEffect(() => {
-    pixim.current.backgroundPattern = { color: theme.colors.onSurface.B00 };
+    pixim.current.backgroundPattern = { color: theme.colors.onSurface.D10 };
   }, [theme]);
 
   return (
