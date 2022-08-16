@@ -117,7 +117,7 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.TOGGLE_GRID,
         action: () => {
-          pixim.current.grid = !pixim.current.grid;
+          pixim.current.background.grid = !pixim.current.background.grid;
         },
       },
       {
@@ -129,7 +129,6 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.THEME_TOGGLE,
         action: () => {
-          console.log("hello chaing theme");
           toggleTheme();
         },
       },
@@ -176,7 +175,8 @@ const PaperStateProvider = ({ children }: Props) => {
   };
 
   useEffect(() => {
-    pixim.current.cellSize = cellSize;
+    // pixim.current.cellSize = cellSize;
+    pixim.current.background.cellSize = cellSize;
   }, [cellSize]);
 
   useEffect(() => {
@@ -184,7 +184,14 @@ const PaperStateProvider = ({ children }: Props) => {
   }, [mode]);
 
   useEffect(() => {
-    pixim.current.backgroundPattern = { color: theme.colors.onSurface.D10 };
+    pixim.current.background.setPatternsColors([
+      { type: "dot", color: theme.colors.onSurface.D10 },
+      { type: "grid", color: theme.colors.onSurface.D20 },
+    ]);
+    // pixim.current.background.activePattern = ""
+    // pixim.current.background.activePattern = {
+    //   color: theme.colors.onSurface.D10,
+    // };
   }, [theme]);
 
   return (

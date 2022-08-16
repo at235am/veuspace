@@ -51,10 +51,9 @@ export const themeList: Theme[] = [
       }),
 
       onSurface: ccs({
-        B00: "#ffffff",
-        D10: "#888888", // pattern color for paper background pattern
-        // D10: "#404040", // pattern color for paper background pattern
-        D20: "#e0e0e0",
+        B00: "#ffffff", // text
+        D10: "#888888", // dot pattern color
+        D20: "#3b3b3b", // grid pattern color
       }),
 
       info: ccs({ B00: "#51acfe" }),
@@ -93,17 +92,17 @@ export const themeList: Theme[] = [
       surface: ccs({
         L30: "#ffffff",
         L20: "rgba(195, 195, 195, 0.2)",
-        L10: "rgba(255, 255, 255, 0.90)", // used for toolbar bg
-        B00: "#f5f5f5", // used for paper bg
+        L10: "rgba(255, 255, 255, 0.85)", // used for toolbar bg
+        B00: "#fafafa", // used for paper bg
         D10: "rgba(195, 195, 195, 0.3)",
         D20: "#e6e6e7",
       }),
 
       onBackground: ccs({ B00: "#2d4665" }),
       onSurface: ccs({
-        B00: "#505050",
-        // D10: "#dddddd", // pattern color for paper background pattern
-        D10: "#a0a0a6", // pattern color for paper background pattern
+        B00: "#505050", // text
+        D10: "#aaaaaa", // dot pattern color
+        D20: "#eaeaea", // grid pattern color
       }),
 
       info: ccs({ B00: "#217aff" }),
