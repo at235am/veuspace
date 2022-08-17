@@ -120,7 +120,7 @@ export class DrawTool extends BaseTool {
     this.path.generateHitArea();
 
     // debug stuff:
-    // this.path.drawPoints(true);
+    // this.path.drawPoints();
     // this.path.drawHitArea();
   };
 }

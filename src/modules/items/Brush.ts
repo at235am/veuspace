@@ -8,7 +8,7 @@ import {
   normalPoint,
 } from "../../utils/utils";
 import { MultiPolygon, Ring, union } from "polygon-clipping";
-import { Graphics, LINE_CAP, Polygon } from "pixi.js-legacy";
+import { Graphics, LINE_CAP, LINE_JOIN, Polygon } from "pixi.js-legacy";
 import { BaseItem } from "./BaseItem";
 import getStroke from "perfect-freehand";
 
@@ -52,6 +52,8 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
   };
 
   public computeHitArea = () => {
+    if (this.points.length === 0) return [];
+
     const { size } = this.options;
     const w = Math.max(5, size);
     const p = this.points;
@@ -64,8 +66,8 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
         bot.unshift(p2); // push in reverse so we dont have to reverse this list after
       }
 
-      const [, first] = extraPoint(p[0], p[1], size);
-      const [, last] = extraPoint(p[p.length - 1], p[p.length - 2], size);
+      const first = extraPoint(p[1], p[0], size);
+      const last = extraPoint(p[p.length - 2], p[p.length - 1], size);
 
       return [first, ...top, last, ...bot];
     }
@@ -76,7 +78,9 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
   public generateHitArea = () => {
     const polyorder = this.computeHitArea();
     const polypoints = polyorder.flatMap((p) => p);
-    this.hitArea = new Polygon(polypoints);
+
+    if (polypoints.length !== 0) this.hitArea = new Polygon(polypoints);
+    // this.interactive = true;
   };
 
   public drawPerfectFreehand = () => {
@@ -133,6 +137,7 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
       width: size,
       color: ctn(color),
       cap: LINE_CAP.ROUND,
+      join: LINE_JOIN.ROUND,
     });
     this.moveTo(c[0], c[1]);
 
@@ -151,6 +156,7 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
    */
   public drawPoints = (line = false, rainbow = false) => {
     if (this.points.length === 0) return;
+    console.log("drawPoints");
     const points = this.points;
     const path = this.addChild(new Graphics());
     const lineClrs = generateColors(points.length);
@@ -167,6 +173,8 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
       path.drawCircle(x, y, 1);
     });
     path.endFill();
+
+    console.log("drawPoints done");
   };
 
   /**
@@ -174,6 +182,8 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
    */
   public drawHitArea = () => {
     const points = this.computeHitArea();
+    if (points.length === 0) return;
+
     // draw the entire boundary
     const outline = new Graphics();
     this.addChild(outline);

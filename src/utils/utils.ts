@@ -147,10 +147,28 @@ export const normalPoint = (a: number[], b: number[], r: number) => {
   ];
 };
 
+/**
+ * Given two points a and b, we create a third point that extends the line segment ab by r.
+ * This means that we extend off of point b so provide your arguments approriately.
+ * For example (trivial case),
+ * if a=[0,0] b=[2,0] r=3
+ * then 3rd point = [5, 0]
+ * however
+ * if a=[2,0] b=[0,0] r=3
+ * then 3rd point = [3,0]
+ * The order of a and b matters because it indicates what direction you want the line segment to extend.
+ * Uses the slope between points a and b to determine how to extend the line segment
+ * in non-trivial cases.
+ *
+ * @param a first point
+ * @param b second point; and also the point we extend from
+ * @param r the distance away from point b
+ * @returns
+ */
 export const extraPoint = (a: number[], b: number[], r: number) => {
   // point to extend:
-  const px = a[0];
-  const py = a[1];
+  const px = b[0];
+  const py = b[1];
 
   // slope components (rise / run) = (dy / dx):
   const dx = b[0] - a[0]; // run
@@ -164,11 +182,7 @@ export const extraPoint = (a: number[], b: number[], r: number) => {
   const vx = (dx / V) * r;
   const vy = (dy / V) * r;
 
-  // theres TWO normals:
-  return [
-    [px + vx, py + vy],
-    [px - vx, py - vy],
-  ];
+  return [px + vx, py + vy];
 };
 
 /**
