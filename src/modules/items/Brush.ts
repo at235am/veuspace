@@ -10,6 +10,7 @@ import {
 import { MultiPolygon, Ring, union } from "polygon-clipping";
 import { Graphics, LINE_CAP, Polygon } from "pixi.js-legacy";
 import { BaseItem } from "./BaseItem";
+import getStroke from "perfect-freehand";
 
 export type BrushOptions = {
   color: string | number;
@@ -66,62 +67,47 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
       const [, first] = extraPoint(p[0], p[1], size);
       const [, last] = extraPoint(p[p.length - 1], p[p.length - 2], size);
 
-      const polyorder = [first, ...top, last, ...bot];
-      const polypoints = polyorder.flatMap((p) => p);
-
-      this.hitArea = new Polygon(polypoints);
-
-      // // -----------------------------------------------------------------------------
-      // const u = union([polyorder as Ring]);
-
-      // u.forEach((face, id) => {
-      //   const c = face.forEach((ring, j) => {});
-      // });
-      // // -----------------------------------------------------------------------------
-      // // draw the top boundary:
-      // const p_top = new Graphics();
-      // this.pixi.items.addChild(p_top);
-      // p_top.beginFill(0xff0000, 0);
-      // p_top.moveTo(top[0][0], top[0][1]);
-      // p_top.lineStyle({ color: 0xff0000, width: 1 });
-      // top.forEach(([x, y]) => {
-      //   // p_top.lineStyle({ color: getRandomIntInclusive(0, 0xffffff), width: 1 });
-      //   p_top.lineTo(x, y);
-      //   p_top.drawCircle(x, y, 2);
-      // });
-      // p_top.endFill();
-
-      // // draw the entire boundary
-      // const outline = new Graphics();
-      // this.addChild(outline);
-      // const clr = generateColors(polyorder.length);
-      // outline.beginFill(0, 0);
-      // outline.moveTo(polyorder[0][0], polyorder[0][1]);
-      // polyorder.forEach(([x, y]) => {
-      //   const c = clr.next().value ?? 0;
-      //   outline.lineStyle({ color: c, width: 1 });
-      //   outline.lineTo(x, y);
-      //   outline.drawCircle(x, y, 1);
-      // });
-      // outline.lineTo(polyorder[0][0], polyorder[0][1]);
-      // outline.endFill();
-
-      // // draw the original line:
-      // const ogLine = new Graphics();
-      // this.addChild(ogLine);
-      // // const lineClrs = generateColors(p.length);
-      // const ogLineColor = 0x00ffff;
-
-      // ogLine.beginFill(0, 0);
-      // ogLine.moveTo(p[0][0], p[0][1]);
-      // p.forEach(([x, y]) => {
-      //   // const c = lineClrs.next().value ?? 0;
-      //   ogLine.lineStyle({ width: 1, color: ogLineColor });
-      //   ogLine.lineTo(x, y);
-      //   ogLine.drawCircle(x, y, 2);
-      // });
-      // ogLine.endFill();
+      return [first, ...top, last, ...bot];
     }
+
+    return [];
+  };
+
+  public generateHitArea = () => {
+    const polyorder = this.computeHitArea();
+    const polypoints = polyorder.flatMap((p) => p);
+    this.hitArea = new Polygon(polypoints);
+  };
+
+  public drawPerfectFreehand = () => {
+    // perfect-freehand implementation with the default fill rule on Graphics:
+    // This implementation is slow and because of the fill rule on Graphics objects,
+    // we get weird fills that are not accurate.
+    const { color, size } = this.options;
+    const points = this.points;
+
+    const outlinePoints = getStroke(points, {
+      size,
+      smoothing: 0.5,
+      thinning: 0.7,
+      streamline: 0.34,
+      easing: (t) => t,
+      start: {
+        taper: 0,
+        cap: true,
+      },
+      end: {
+        taper: 0,
+        cap: true,
+      },
+    });
+
+    this.clear();
+    this.beginFill(ctn(color), 1);
+    this.drawPolygon(outlinePoints.flatMap((p) => p));
+    this.endFill();
+
+    this.drawStrokePolygonPath(outlinePoints);
   };
 
   public draw = () => {
@@ -158,6 +144,72 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
     }
     this.lineTo(c[0], c[1]);
     this.endFill();
+  };
+
+  /**
+   * Good for debugging.
+   */
+  public drawPoints = (line = false, rainbow = false) => {
+    if (this.points.length === 0) return;
+    const points = this.points;
+    const path = this.addChild(new Graphics());
+    const lineClrs = generateColors(points.length);
+    const pointColor = 0x00ffff;
+
+    path.beginFill(0, 0);
+    path.moveTo(points[0][0], points[0][1]);
+    points.forEach(([x, y]) => {
+      const c = lineClrs.next().value ?? 0;
+      console.log(c);
+      const color = rainbow ? c : pointColor;
+      path.lineStyle({ width: 1, color });
+      if (line) path.lineTo(x, y);
+      path.drawCircle(x, y, 1);
+    });
+    path.endFill();
+  };
+
+  /**
+   * To visualize the hit area we generated:
+   */
+  public drawHitArea = () => {
+    const points = this.computeHitArea();
+    // draw the entire boundary
+    const outline = new Graphics();
+    this.addChild(outline);
+    const clr = generateColors(points.length);
+    outline.beginFill(0, 0);
+    outline.moveTo(points[0][0], points[0][1]);
+    points.forEach(([x, y]) => {
+      const c = clr.next().value ?? 0;
+      outline.lineStyle({ color: c, width: 1 });
+      outline.lineTo(x, y);
+      outline.drawCircle(x, y, 1);
+    });
+    outline.lineTo(points[0][0], points[0][1]);
+    outline.endFill();
+  };
+
+  /**
+   * Good for debugging perfect-freehand.
+   */
+  public drawStrokePolygonPath = (points: number[][]) => {
+    if (points.length === 0) return;
+
+    // const points = this.points;
+    const path = this.addChild(new Graphics());
+    // const lineClrs = generateColors(p.length);
+    const ogLineColor = 0x00ffff;
+
+    path.beginFill(0, 0);
+    path.moveTo(points[0][0], points[0][1]);
+    points.forEach(([x, y]) => {
+      // const c = lineClrs.next().value ?? 0;
+      path.lineStyle({ width: 1, color: ogLineColor });
+      // ogLine.lineTo(x, y);
+      path.drawCircle(x, y, 1);
+    });
+    path.endFill();
   };
 }
 

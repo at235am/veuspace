@@ -114,7 +114,7 @@ export const useUserSettingStore = create<UserSettingState>()(
   persist(
     (set, get) => ({
       // TOOLBAR STATE --------------------------------------------------------
-      showHotkeys: true,
+      showHotkeys: false,
       autoClosePresets: false,
       autoCloseEditor: true,
 
