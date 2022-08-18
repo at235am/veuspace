@@ -1,11 +1,11 @@
-import { colorToNumber as ctn } from "../../utils/utils";
+import { colorToNumber as ctn, round10 } from "../../utils/utils";
 
 import { InteractionEvent, InteractionManagerOptions } from "pixi.js-legacy";
 
 import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
-import { BrushPath, BrushOptions } from "../items/Brush";
+import { BrushPath, BrushStyle } from "../items/Brush";
 
 export type FreehandToolOptions = {
   color: number | string;
@@ -14,7 +14,7 @@ export type FreehandToolOptions = {
 export class DrawTool extends BaseTool {
   private dragging: boolean;
   private path: BrushPath;
-  private options: BrushOptions;
+  private options: BrushStyle;
   private checkpointIndex: number;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
@@ -38,16 +38,12 @@ export class DrawTool extends BaseTool {
     this.interaction.on("pointerdown", this.drawStart);
     this.interaction.on("pointerup", this.drawEnd);
     this.interaction.on("pointerupoutside", this.drawEnd);
-
     // this.interaction.on("pointermove", this.drawMove);
     const throttleMove = throttle(this.drawMove, 20, { leading: true });
     this.interaction.on("pointermove", throttleMove);
-    // const debounceMove = debounce(this.drawMove, 0);
-    // this.interaction?.on("pointermove", debounceMove);
-    // this.interaction?.on("pointermove", this.drawMove);
   }
 
-  setOptions = (options: Partial<BrushOptions>) => {
+  setOptions = (options: Partial<BrushStyle>) => {
     this.options = { ...this.options, ...options };
   };
 
@@ -55,9 +51,15 @@ export class DrawTool extends BaseTool {
    * Incase there is a need to separate out the when we record each point on pointermove
    * and then rendering it.
    */
-  storePoints = (event: InteractionEvent) => {
+  storePointsRaw = (event: InteractionEvent) => {
     const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
     this.path.points.push([x, y]);
+  };
+
+  storePointsNormalized = (event: InteractionEvent) => {
+    const { x: dx, y: dy } = this.path.position;
+    const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
+    this.path.points.push([round10(x - dx), round10(y - dy)]);
   };
 
   storePointsWithEpsilon = (event: InteractionEvent) => {
@@ -94,11 +96,15 @@ export class DrawTool extends BaseTool {
     const { color, size } = this.options;
 
     // object:
-    this.path = new BrushPath([], { color, size });
-    this.pixi.items.addChild(this.path);
+    this.path = this.pixi.items.addChild(
+      new BrushPath({ fillColor: color, size })
+    );
 
     // get and add first points:
-    this.storePoints(event);
+    const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
+    this.path.position.set(round10(x), round10(y));
+    this.path.points.push([0, 0]);
+
     this.path.draw();
 
     // this.checkpointIndex = 0;
@@ -106,8 +112,7 @@ export class DrawTool extends BaseTool {
 
   drawMove = (event: InteractionEvent) => {
     if (!this.dragging || this.longPressed || this.touches > 1) return;
-    this.storePoints(event);
-
+    this.storePointsNormalized(event);
     this.path.draw();
   };
 
@@ -115,9 +120,13 @@ export class DrawTool extends BaseTool {
     // reset the states of the tool:
     this.dragging = false;
 
+    if (this.path.destroyed) return;
+
+    this.path.syncWithStore();
+
     // we set interactive to true here instead of earlier for a little bit of performance:
-    this.path.interactive = true;
     this.path.generateHitArea();
+    this.path.interactive = true;
 
     // debug stuff:
     // this.path.drawPoints();

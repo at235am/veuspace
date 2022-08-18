@@ -11,7 +11,7 @@ const PaperSpace = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { pixim, setup } = usePaperState();
+  const { pixim, setup, loadFromStorage } = usePaperState();
   const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
     targetRef: containerRef,
   });
@@ -19,8 +19,8 @@ const PaperSpace = () => {
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
     setup(canvasRef.current, containerRef.current);
-    return () => {};
-  }, [setup]);
+    loadFromStorage();
+  }, []);
 
   useEffect(() => {
     if (width === 0 || height === 0) return;

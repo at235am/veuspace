@@ -1,60 +1,126 @@
 import {
   colorToNumber as ctn,
+  deepCopy,
   extraPoint,
   generateColors,
-  getRandomIntInclusive,
-  getSvgPathFromStroke,
   midpoint,
   normalPoint,
 } from "../../utils/utils";
 import { MultiPolygon, Ring, union } from "polygon-clipping";
 import { Graphics, LINE_CAP, LINE_JOIN, Polygon } from "pixi.js-legacy";
-import { BaseItem } from "./BaseItem";
+import { BaseItem, ItemProps } from "./BaseItem";
 import getStroke from "perfect-freehand";
+import { nanoid } from "nanoid";
+import { usePaperStore } from "../../store/PaperStore";
 
-export type BrushOptions = {
+export type BrushStyle = {
   color: string | number;
   size: number;
 };
 
-const DefaultBrushOptions: BrushOptions = {
-  color: 0x222222,
-  size: 10,
+export interface BrushPathProps extends ItemProps {
+  points: number[][];
+
+  size: number;
+  fillColor: number | string;
+  strokeColor: number | string;
+}
+
+const default_brush_props: BrushPathProps = {
+  id: "",
+  type: "brush-path",
+  points: [],
+
+  position: { x: 0, y: 0 },
+  scale: { x: 1, y: 1 },
+  angle: 0,
+
+  size: 1,
+  strokeColor: "#000000",
+  fillColor: "#000000",
 };
 
-export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
-  public type: string = "brush-path";
+export class BrushPath extends Graphics implements BaseItem<BrushPathProps> {
+  public readonly uid: string;
+  public readonly type: string;
   public points: number[][];
-  protected options: BrushOptions;
+  protected style: BrushStyle;
 
-  constructor(points?: number[][], options?: Partial<BrushOptions>) {
+  constructor(options?: Partial<BrushPathProps>) {
     super();
-    this.points = points || [];
-    this.options = { ...DefaultBrushOptions, ...options };
+
+    // MUST DEEP COPY the default options or risk changing default values:
+    const defaultOptions = deepCopy(default_brush_props);
+
+    const {
+      id,
+      type,
+      angle,
+      fillColor,
+      points,
+      position,
+      scale,
+      size,
+      strokeColor,
+    } = Object.assign(defaultOptions, options);
+
+    this.type = type;
+    this.uid = id || nanoid();
+    this.points = points;
+    this.position = position;
+    this.scale = scale;
+
+    this.angle = angle;
+
+    this.style = { color: fillColor, size };
 
     this.draw();
-    this.computeHitArea();
+    this.generateHitArea();
+    this.interactive = true;
   }
 
-  private fillOptions = (options: Partial<BrushOptions>): BrushOptions => ({
-    ...this.options,
-    ...options,
-  });
+  public getProps = () => {
+    const { x: px, y: py } = this.position;
+    const { x: sx, y: sy } = this.scale;
 
-  public setOptions = (options: Partial<BrushOptions>) => {
-    this.options = this.fillOptions(options);
-    this.draw();
-    this.computeHitArea();
+    const props: BrushPathProps = {
+      id: this.uid,
+      type: this.type,
+      points: this.points,
+      position: { x: px, y: py },
+      scale: { x: sx, y: sy },
+      angle: this.angle,
+      size: this.style.size,
+      fillColor: this.style.color,
+      strokeColor: 0,
+    };
+
+    return props;
   };
 
-  public getData = () => {
-    return this.options;
+  public setProps = (props: Partial<BrushPathProps>) => {
+    const defaultOptions = deepCopy(default_brush_props);
+
+    const { id, angle, fillColor, points, position, scale, size, strokeColor } =
+      Object.assign(defaultOptions, props);
+
+    this.points = points;
+    this.position.set(position.x, position.y);
+    this.scale.set(scale.x, scale.y);
+    this.angle = angle;
+    this.style = { color: fillColor, size };
   };
+
+  public syncWithStore() {
+    const { removeItem, setItem } = usePaperStore.getState();
+    if (this.destroyed) removeItem(this.getProps());
+    else setItem(this.getProps());
+  }
 
   public computeHitArea = () => {
     if (this.points.length === 0) return [];
 
-    const { size } = this.options;
+    const { size } = this.style;
     const w = Math.max(5, size);
     const p = this.points;
     if (p.length > 3) {
@@ -80,14 +146,13 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
     const polypoints = polyorder.flatMap((p) => p);
 
     if (polypoints.length !== 0) this.hitArea = new Polygon(polypoints);
-    // this.interactive = true;
   };
 
   public drawPerfectFreehand = () => {
     // perfect-freehand implementation with the default fill rule on Graphics:
     // This implementation is slow and because of the fill rule on Graphics objects,
     // we get weird fills that are not accurate.
-    const { color, size } = this.options;
+    const { color, size } = this.style;
     const points = this.points;
 
     const outlinePoints = getStroke(points, {
@@ -115,7 +180,7 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
   };
 
   public draw = () => {
-    const { color, size } = this.options;
+    const { color, size } = this.style;
     const points = this.points;
 
     if (this.destroyed) return;
@@ -156,7 +221,7 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
    */
   public drawPoints = (line = false, rainbow = false) => {
     if (this.points.length === 0) return;
-    console.log("drawPoints");
+
     const points = this.points;
     const path = this.addChild(new Graphics());
     const lineClrs = generateColors(points.length);
@@ -166,15 +231,12 @@ export class BrushPath extends Graphics implements BaseItem<BrushOptions> {
     path.moveTo(points[0][0], points[0][1]);
     points.forEach(([x, y]) => {
       const c = lineClrs.next().value ?? 0;
-      console.log(c);
       const color = rainbow ? c : pointColor;
       path.lineStyle({ width: 1, color });
       if (line) path.lineTo(x, y);
       path.drawCircle(x, y, 1);
     });
     path.endFill();
-
-    console.log("drawPoints done");
   };
 
   /**

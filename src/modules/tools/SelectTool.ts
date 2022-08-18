@@ -1,19 +1,18 @@
 import {
-  DisplayObject,
   InteractionData,
   InteractionEvent,
   InteractionManager,
   InteractionManagerOptions,
-  Point,
 } from "pixi.js-legacy";
-import { PixiApplication, TOOL } from "../PixiApplication";
+import { BaseItem } from "../items/BaseItem";
+import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 
 export class SelectTool extends BaseTool {
   private dragging: boolean;
   private mousedowndata: InteractionData | null;
   private offset: { x: number; y: number };
-  private gfx: DisplayObject | null;
+  private item: BaseItem | null;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     super(pixi, longPressCallback);
@@ -21,7 +20,7 @@ export class SelectTool extends BaseTool {
     this.dragging = false;
     this.mousedowndata = null;
     this.offset = { x: 0, y: 0 };
-    this.gfx = null;
+    this.item = null;
   }
 
   activate(options?: InteractionManagerOptions | undefined) {
@@ -31,9 +30,6 @@ export class SelectTool extends BaseTool {
     this.pixi.enablePanning();
 
     // attach global listeners:
-    // this.interaction?.on("pointerdown", this.onPointerDown);
-    // this.interaction?.on("pointerup", this.onPointerUp);
-
     this.interaction?.on("pointerdown", this.moveStart);
     this.interaction?.on("pointerup", this.moveEnd);
     this.interaction?.on("pointerupoutside", this.moveEnd);
@@ -42,31 +38,35 @@ export class SelectTool extends BaseTool {
 
   moveStart = (event: InteractionEvent) => {
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
-    this.gfx = im.hitTest(event.data.global, this.pixi.items);
+    this.item = im.hitTest(event.data.global, this.pixi.items) as BaseItem;
 
     if (this.button === 1) return;
-    if (!this.gfx) return;
+    if (!this.item) return;
 
     this.pixi.disablePanning();
     this.dragging = true;
-    this.gfx.alpha = 0.8;
+    this.item.alpha = 0.8;
     this.mousedowndata = event.data;
-    const lp = event.data.getLocalPosition(this.gfx.parent);
-    this.offset = { x: this.gfx.x - lp.x, y: this.gfx.y - lp.y };
+    const lp = event.data.getLocalPosition(this.item.parent);
+    this.offset = { x: this.item.x - lp.x, y: this.item.y - lp.y };
   };
 
   moveEnd = (event: InteractionEvent) => {
-    // this.pixi.enablePanning();
-
-    if (this.gfx) this.gfx.alpha = 1;
+    if (this.item) {
+      this.item.alpha = 1;
+      this.item.syncWithStore();
+    }
     this.dragging = false;
     this.mousedowndata = null;
-    this.gfx = null;
+    this.item = null;
   };
 
   moveMove = (event: InteractionEvent) => {
-    if (!(this.dragging && this.gfx && this.mousedowndata)) return;
-    const new_pos = this.mousedowndata.getLocalPosition(this.gfx.parent);
-    this.gfx.position.set(new_pos.x + this.offset.x, new_pos.y + this.offset.y);
+    if (!(this.dragging && this.item && this.mousedowndata)) return;
+    const new_pos = this.mousedowndata.getLocalPosition(this.item.parent);
+    this.item.position.set(
+      new_pos.x + this.offset.x,
+      new_pos.y + this.offset.y
+    );
   };
 }

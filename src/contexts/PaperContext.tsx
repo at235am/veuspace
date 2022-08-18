@@ -22,6 +22,7 @@ import { useThemeController } from "../styles/theme/Theme.context";
 import { useHotkeys } from "../hooks/useHotkeys";
 import { KEY_ACTION, useUserSettingStore } from "../store/UserSettingStore";
 import { useTheme } from "@emotion/react";
+import { usePaperStore } from "../store/PaperStore";
 
 export type CircleOptions = {
   name?: string;
@@ -53,6 +54,9 @@ type State = {
   setHotkeyPaused: (value: boolean) => void;
   toggleHotkeyPaused: () => void;
 
+  loadFromStorage: () => void;
+  switchToPaper: (id: string) => void;
+
   // drawing functions:
   drawCircle: (options: CircleOptions) => void;
 };
@@ -74,6 +78,8 @@ const PaperStateProvider = ({ children }: Props) => {
   const [cellSize, setCellSize] = useState(50);
 
   // zustand / local storage states:
+  const activePaper = usePaperStore((state) => state.activePaper);
+  const activatePaper = usePaperStore((state) => state.activatePaper);
   const toggleHotkeys = useUserSettingStore((state) => state.toggleHotkeys);
   const keybinds = useUserSettingStore((state) => state.keybinds);
   const keyActions = useMemo(
@@ -145,9 +151,22 @@ const PaperStateProvider = ({ children }: Props) => {
     pixim.current.setup(canvas, container);
   };
 
+  const loadFromStorage = () => {
+    pixim.current.items.removeChildren();
+    pixim.current.loadObjects(activePaper.items);
+  };
+
   const setModeProtected = (mode: Tool) => {
     if (pixim.current.activeTool.isUsing) return;
     setMode(mode);
+  };
+
+  const switchToPaper = (id: string) => {
+    const paper = activatePaper(id);
+
+    if (!paper) return;
+    pixim.current.items.removeChildren();
+    pixim.current.loadObjects(paper.items);
   };
 
   const drawCircle = (options: CircleOptions) => {
@@ -175,7 +194,6 @@ const PaperStateProvider = ({ children }: Props) => {
   };
 
   useEffect(() => {
-    // pixim.current.cellSize = cellSize;
     pixim.current.background.cellSize = cellSize;
   }, [cellSize]);
 
@@ -188,10 +206,6 @@ const PaperStateProvider = ({ children }: Props) => {
       { type: "dot", color: theme.colors.onSurface.D10 },
       { type: "grid", color: theme.colors.onSurface.D20 },
     ]);
-    // pixim.current.background.activePattern = ""
-    // pixim.current.background.activePattern = {
-    //   color: theme.colors.onSurface.D10,
-    // };
   }, [theme]);
 
   return (
@@ -206,6 +220,8 @@ const PaperStateProvider = ({ children }: Props) => {
         drawCircle,
         setHotkeyPaused,
         toggleHotkeyPaused,
+        loadFromStorage,
+        switchToPaper,
       }}
     >
       {children}

@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
-import { BrushOptions } from "../../../modules/items/Brush";
+import { BrushStyle } from "../../../modules/items/Brush";
 import { clamp, isColorCloseMatch } from "../../../utils/utils";
 import Stroke from "../../../../public/assets/stroke.svg";
 
@@ -24,7 +24,7 @@ import Color from "color";
 import { useTheme } from "@emotion/react";
 import { useUserSettingStore } from "../../../store/UserSettingStore";
 
-export interface DrawPresetOptions extends BrushOptions {
+export interface DrawPresetOptions extends BrushStyle {
   id: string;
 }
 

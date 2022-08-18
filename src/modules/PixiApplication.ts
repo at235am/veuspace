@@ -6,6 +6,9 @@ import { EraserTool } from "./tools/EraserTool";
 import { DrawTool } from "./tools/DrawTool";
 import { SelectTool } from "./tools/SelectTool";
 import { Background } from "./Background";
+import { BrushPath } from "./items/Brush";
+
+import { BaseItem, ItemProps } from "./items/BaseItem";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -30,6 +33,7 @@ export class PixiApplication {
   public readonly app: Application;
   public readonly background: Background;
   public readonly items: Container;
+  // public readonly items: Items;
   public readonly viewport: Viewport;
 
   // tools:
@@ -46,6 +50,7 @@ export class PixiApplication {
 
     this.app = new Application();
     this.items = new Container();
+    // this.items = new Items();
     this.background = new Background(this, 20000, {
       position: true,
       tint: true,
@@ -124,6 +129,22 @@ export class PixiApplication {
     // so we can redraw the bg for both zooming and moving the viewport in this one event
     this.viewport.on("moved", () => this.background.throttledDrawBG());
   }
+
+  public loadObjects = (items: { [id: string]: ItemProps }) => {
+    Object.entries(items).forEach(([id, item]) => {
+      let obj: BaseItem | null = null;
+      switch (item.type) {
+        case "brush-path":
+          obj = new BrushPath(item);
+          break;
+
+        default:
+          break;
+      }
+
+      if (obj) this.items.addChild(obj);
+    });
+  };
 
   public get mode() {
     return this._mode;

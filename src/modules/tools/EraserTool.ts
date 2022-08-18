@@ -1,7 +1,4 @@
-import { colorToNumber as ctn } from "../../utils/utils";
-
 import {
-  DisplayObject,
   InteractionEvent,
   InteractionManager,
   InteractionManagerOptions,
@@ -10,6 +7,8 @@ import {
 import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
+import { usePaperStore } from "../../store/PaperStore";
+import { BaseItem, ItemProps } from "../items/BaseItem";
 
 export type EraserToolOptions = {
   color: number | string;
@@ -18,7 +17,7 @@ export type EraserToolOptions = {
 export class EraserTool extends BaseTool {
   private dragging: boolean;
 
-  private deleteQueue: DisplayObject[];
+  private deleteQueue: BaseItem[];
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     super(pixi, longPressCallback);
@@ -40,7 +39,7 @@ export class EraserTool extends BaseTool {
     this.interaction.on("pointerup", this.endErase);
     this.interaction.on("pointerupoutside", this.endErase);
 
-    const throttledMoveErase = throttle(this.moveErase, 10);
+    const throttledMoveErase = throttle(this.moveErase, 5);
     this.interaction.on("pointermove", throttledMoveErase);
   }
 
@@ -50,7 +49,8 @@ export class EraserTool extends BaseTool {
 
     if (hit) {
       hit.alpha = 0.2;
-      this.deleteQueue.push(hit);
+      hit.interactive = false;
+      this.deleteQueue.push(hit as BaseItem);
     }
   };
 
@@ -74,8 +74,19 @@ export class EraserTool extends BaseTool {
     // reset the states of the tool:
     this.dragging = false;
 
+    const statelist: ItemProps[] = [];
+
     this.deleteQueue.forEach((item) => {
-      if (!item.destroyed) item.destroy();
+      if (!item.destroyed) {
+        statelist.push(item.getProps());
+        item.destroy();
+      }
     });
+
+    usePaperStore.getState().removeItem(...statelist);
+    // ^^^^ Sync all the removes with the store in one state change
+    // rather than syncing each remove one by one by calling item.syncWithStore()
+    // we DO NOT call syncWithStore() on each item so that we can delete all of them
+    // in the same state change. This will be useful for undo and redo.
   };
 }
