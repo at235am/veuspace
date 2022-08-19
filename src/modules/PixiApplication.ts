@@ -9,6 +9,7 @@ import { Background } from "./Background";
 import { BrushPath } from "./items/Brush";
 
 import { BaseItem, ItemProps } from "./items/BaseItem";
+import { FormShapeTool } from "./tools/FormShapeTool";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -41,6 +42,7 @@ export class PixiApplication {
   public readonly drawTool: DrawTool;
   public readonly selectTool: SelectTool;
   public readonly eraserTool: EraserTool;
+  public readonly formShapeTool: FormShapeTool;
 
   private _mode: Tool;
   public longPressFn?: () => void;
@@ -64,6 +66,7 @@ export class PixiApplication {
     this.selectTool = new SelectTool(this);
     this.drawTool = new DrawTool(this);
     this.eraserTool = new EraserTool(this);
+    this.formShapeTool = new FormShapeTool(this);
 
     this.activeTool = this.selectTool;
   }
@@ -164,6 +167,9 @@ export class PixiApplication {
         break;
       case TOOL.ERASE:
         this.eraserTool.activate();
+        break;
+      case TOOL.FORM:
+        this.formShapeTool.activate();
         break;
       default:
         break;

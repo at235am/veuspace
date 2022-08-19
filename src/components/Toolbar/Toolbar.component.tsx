@@ -31,13 +31,15 @@ import { useUserSettingStore } from "../../store/UserSettingStore";
 import { ToolButton } from "./ToolButton";
 
 // palette components:
-import { DrawPicker } from "./DrawPalette";
+import { DrawPalette } from "./DrawPalette";
+import { FormShapePalette } from "./ShapePalette";
 
 const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <> select </>,
-  [TOOL.DRAW]: <DrawPicker />,
+  [TOOL.DRAW]: <DrawPalette />,
   [TOOL.ERASE]: <></>,
-  [TOOL.FORM]: <> SHAPE </>,
+  // [TOOL.FORM]: <> SHAPE </>,
+  [TOOL.FORM]: <FormShapePalette />,
   [TOOL.ARROW]: <> arrow </>,
   [TOOL.TEXT_ADD]: <> TEXT_ADD </>,
   [TOOL.TEXT_EDIT]: <> TEXT_EDIT </>,

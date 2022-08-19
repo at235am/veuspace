@@ -1,7 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
-import { BrushStyle } from "../../../modules/items/Brush";
 import { clamp, isColorCloseMatch } from "../../../utils/utils";
 import Stroke from "../../../../public/assets/stroke.svg";
 
@@ -18,17 +17,19 @@ import {
   NumInputContainer,
   NumInputLabel,
   StrokeWrapper,
-} from "./DrawPalette.styles";
+  Rectangle,
+} from "./FormShapePalette.styles";
 import { useToolbarStore } from "../../../store/ToolbarState";
 import Color from "color";
 import { useTheme } from "@emotion/react";
 import { useUserSettingStore } from "../../../store/UserSettingStore";
+import { RectangleStyleProps } from "../../../modules/items/Rectangle";
 
-export interface DrawPresetOptions extends BrushStyle {
+export interface FormShapePresetOptions extends RectangleStyleProps {
   id: string;
 }
 
-export type DrawPresetMap = { [id: string]: DrawPresetOptions };
+export type FormShapePresetMap = { [id: string]: FormShapePresetOptions };
 
 // ***NOTE:
 // We handle animations per Palette component rather than in the parent(Toolbar)
@@ -37,13 +38,15 @@ export type DrawPresetMap = { [id: string]: DrawPresetOptions };
 // This is to make sure the user's customization settings are loaded in to PixiApplication.
 // Otherwise we would have to move all the customization state into Toolbar per Palette component.
 type Props = {};
-const DrawPalette = ({}: Props) => {
+const FormShapePalette = ({}: Props) => {
   const { pixim } = usePaperState();
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
-  const presets = useUserSettingStore((state) => state.drawPresets);
-  const updatePreset = useUserSettingStore((state) => state.setDrawPresets);
+  const presets = useUserSettingStore((state) => state.formShapePresets);
+  const updatePreset = useUserSettingStore(
+    (state) => state.setFormShapePresets
+  );
 
   const [activePid, setActivePid] = useState("1");
   const [styleEditor, setStyleEditor] = useState(false);
@@ -92,7 +95,7 @@ const DrawPalette = ({}: Props) => {
 
   useEffect(() => {
     const opt = presets[activePid];
-    if (opt) pixim.current.drawTool.setOptions(opt);
+    if (opt) pixim.current.formShapeTool.setStyles(opt);
   }, [activePid, presets]);
 
   return (
@@ -128,22 +131,29 @@ const DrawPalette = ({}: Props) => {
 //--------------------------------------------------------------------------------
 type BrushPreviewProps = {
   activeId: string;
-  preset: DrawPresetOptions;
+  preset: FormShapePresetOptions;
   onClick: any;
 };
 
 const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
   const highlight = activeId === preset.id;
 
+  const { shape } = preset;
+
   const theme = useTheme();
-  const brushColor = Color(preset.color);
+  const fillColor = Color(preset.fillColor);
   const bgColor = Color(theme.colors.surface.L10);
-  const isSameColor = isColorCloseMatch(brushColor, bgColor);
+  const isSameColor = isColorCloseMatch(fillColor, bgColor);
 
   return (
     <BrushButton onClick={onClick}>
       {highlight && <Selector layoutId="brush-selected" />}
-      <Circle presetOptions={preset} shadow={isSameColor}></Circle>
+      {shape === "circle" && (
+        <Circle presetOptions={preset} shadow={isSameColor}></Circle>
+      )}
+      {shape === "rectangle" && (
+        <Rectangle presetOptions={preset} shadow={isSameColor}></Rectangle>
+      )}
     </BrushButton>
   );
 };
@@ -151,19 +161,19 @@ const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
 //--------------------------------------------------------------------------------
 
 type StrokePreviewProps = {
-  preset: DrawPresetOptions;
-  updatePreset: (value: DrawPresetOptions) => void;
+  preset: FormShapePresetOptions;
+  updatePreset: (value: FormShapePresetOptions) => void;
 };
 
 const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
   const theme = useTheme();
-  const brushColor = Color(preset.color);
+  const fillColor = Color(preset.fillColor);
   const bgColor = Color(theme.colors.surface.L10);
-  const isSameColor = isColorCloseMatch(brushColor, bgColor);
+  const isSameColor = isColorCloseMatch(fillColor, bgColor);
 
   return (
     <>
-      <NumberInput preset={preset} updatePreset={updatePreset} />
+      {/* <NumberInput preset={preset} updatePreset={updatePreset} /> */}
       <StrokeWrapper preset={preset} shadow={isSameColor}>
         <Stroke />
       </StrokeWrapper>
@@ -172,44 +182,44 @@ const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
 };
 
 //--------------------------------------------------------------------------------
-type NumberInputProps = {
-  preset: DrawPresetOptions;
-  updatePreset: (value: DrawPresetOptions) => void;
-  min?: number;
-  max?: number;
-};
+// type NumberInputProps = {
+//   preset: FormShapePresetOptions;
+//   updatePreset: (value: FormShapePresetOptions) => void;
+//   min?: number;
+//   max?: number;
+// };
 
-const NumberInput = ({
-  preset,
-  updatePreset,
-  min = 1,
-  max = 25,
-}: NumberInputProps) => {
-  const { id, size } = preset;
+// const NumberInput = ({
+//   preset,
+//   updatePreset,
+//   min = 1,
+//   max = 25,
+// }: NumberInputProps) => {
+//   const { id, size } = preset;
 
-  const stepper = (step = 1) => {
-    updatePreset({ ...preset, size: clamp(size + step, min, max) });
-  };
+//   const stepper = (step = 1) => {
+//     updatePreset({ ...preset, size: clamp(size + step, min, max) });
+//   };
 
-  const increment = () => stepper(1);
-  const decrement = () => stepper(-1);
+//   const increment = () => stepper(1);
+//   const decrement = () => stepper(-1);
 
-  const htmlId = `draw-${id}`;
+//   const htmlId = `draw-${id}`;
 
-  return (
-    <NumInputContainer>
-      <NumInputLabel htmlFor={htmlId}>SIZE</NumInputLabel>
-      <StrokeSizeContainer>
-        <SmallButton type="button" onClick={decrement}>
-          -
-        </SmallButton>
-        <NumInput id={htmlId} type="number" value={size} readOnly></NumInput>
-        <SmallButton type="button" onClick={increment}>
-          +
-        </SmallButton>
-      </StrokeSizeContainer>
-    </NumInputContainer>
-  );
-};
+//   return (
+//     <NumInputContainer>
+//       <NumInputLabel htmlFor={htmlId}>SIZE</NumInputLabel>
+//       <StrokeSizeContainer>
+//         <SmallButton type="button" onClick={decrement}>
+//           -
+//         </SmallButton>
+//         <NumInput id={htmlId} type="number" value={size} readOnly></NumInput>
+//         <SmallButton type="button" onClick={increment}>
+//           +
+//         </SmallButton>
+//       </StrokeSizeContainer>
+//     </NumInputContainer>
+//   );
+// };
 
-export default DrawPalette;
+export default FormShapePalette;
