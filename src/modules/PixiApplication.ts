@@ -10,6 +10,8 @@ import { BrushPath } from "./items/Brush";
 
 import { BaseItem, ItemProps } from "./items/BaseItem";
 import { FormShapeTool } from "./tools/FormShapeTool";
+import { RectangleForm } from "./items/RectangleForm";
+import { EllipseForm } from "./items/EllipseForm";
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -139,6 +141,13 @@ export class PixiApplication {
       switch (item.type) {
         case "brush-path":
           obj = new BrushPath(item);
+          break;
+        case "rectangle":
+          console.log("sldkjf");
+          obj = new RectangleForm(item);
+          break;
+        case "ellipse":
+          obj = new EllipseForm(item);
           break;
 
         default:

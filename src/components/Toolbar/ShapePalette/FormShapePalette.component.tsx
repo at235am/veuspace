@@ -23,13 +23,21 @@ import { useToolbarStore } from "../../../store/ToolbarState";
 import Color from "color";
 import { useTheme } from "@emotion/react";
 import { useUserSettingStore } from "../../../store/UserSettingStore";
-import { RectangleStyleProps } from "../../../modules/items/Rectangle";
+import {
+  isRectangle,
+  RectangleProps,
+  RectangleStyle,
+} from "../../../modules/items/RectangleForm";
+import {
+  EllipseProps,
+  EllipseStyle,
+  isEllipse,
+} from "../../../modules/items/EllipseForm";
 
-export interface FormShapePresetOptions extends RectangleStyleProps {
-  id: string;
-}
+// TYPE GUARDS:
 
-export type FormShapePresetMap = { [id: string]: FormShapePresetOptions };
+export type FormShapePreset = RectangleProps | EllipseProps;
+export type FormShapePresetMap = { [id: string]: FormShapePreset };
 
 // ***NOTE:
 // We handle animations per Palette component rather than in the parent(Toolbar)
@@ -129,29 +137,28 @@ const FormShapePalette = ({}: Props) => {
 };
 
 //--------------------------------------------------------------------------------
-type BrushPreviewProps = {
+type FormPreview = {
   activeId: string;
-  preset: FormShapePresetOptions;
+  preset: FormShapePreset;
   onClick: any;
 };
 
-const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
+const BrushPreview = ({ activeId, preset, onClick }: FormPreview) => {
   const highlight = activeId === preset.id;
 
-  const { shape } = preset;
-
   const theme = useTheme();
-  const fillColor = Color(preset.fillColor);
+  // const fillColor = Color(preset.fillColor);
+  const fillColor = Color(preset.style.fill.color);
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(fillColor, bgColor);
 
   return (
     <BrushButton onClick={onClick}>
       {highlight && <Selector layoutId="brush-selected" />}
-      {shape === "circle" && (
+      {isEllipse(preset) && (
         <Circle presetOptions={preset} shadow={isSameColor}></Circle>
       )}
-      {shape === "rectangle" && (
+      {isRectangle(preset) && (
         <Rectangle presetOptions={preset} shadow={isSameColor}></Rectangle>
       )}
     </BrushButton>
@@ -161,13 +168,15 @@ const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
 //--------------------------------------------------------------------------------
 
 type StrokePreviewProps = {
-  preset: FormShapePresetOptions;
-  updatePreset: (value: FormShapePresetOptions) => void;
+  preset: FormShapePreset;
+  updatePreset: (value: FormShapePreset) => void;
 };
 
 const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
   const theme = useTheme();
-  const fillColor = Color(preset.fillColor);
+  // const fillColor = Color(preset.fillColor);
+  const fillColor = Color(preset.style.fill.color);
+
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(fillColor, bgColor);
 

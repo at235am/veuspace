@@ -6,7 +6,7 @@ import {
 } from "../components/Toolbar/DrawPalette/DrawPalette.component";
 import {
   FormShapePresetMap,
-  FormShapePresetOptions,
+  FormShapePreset,
 } from "../components/Toolbar/ShapePalette/FormShapePalette.component";
 import { Keybind } from "../hooks/useHotkeys";
 import { LocalStorage } from "./_LocalStorageKeys";
@@ -92,79 +92,120 @@ const default_draw_presets: DrawPresetMap = {
   8: { id: "8", size: 25, color: "#3dc973" },
 };
 
+const dups = {
+  position: { x: 0, y: 0 },
+  scale: { x: 1, y: 1 },
+  angle: 0,
+};
+
 const default_form_presets: FormShapePresetMap = {
   1: {
+    ...dups,
     id: "1",
-    shape: "rectangle",
-    radius: 0,
-    fillColor: "#2e8df9",
-    fillAlpha: 1,
-    strokeColor: 0,
-    strokeSize: 0,
+    type: "rectangle",
+
+    style: {
+      width: 0,
+      height: 0,
+      radius: 0,
+
+      fill: { color: "#2e8df9" },
+      stroke: { color: "#ffffff", size: 0 },
+    },
   },
   2: {
+    ...dups,
     id: "2",
-    shape: "rectangle",
-    radius: 3,
-    fillColor: "#c544b0",
-    fillAlpha: 1,
-    strokeColor: "#000000",
-    strokeSize: 2,
+    type: "rectangle",
+
+    style: {
+      width: 0,
+      height: 0,
+      radius: 3,
+
+      fill: { color: "#c544b0" },
+      stroke: { color: "#000000", size: 2 },
+    },
   },
   3: {
+    ...dups,
     id: "3",
-    shape: "rectangle",
-    radius: 8,
-    fillColor: "#ecdf2e",
-    fillAlpha: 1,
-    strokeColor: "#000000",
-    strokeSize: 0,
+    type: "rectangle",
+
+    style: {
+      width: 0,
+      height: 0,
+      radius: 8,
+
+      fill: { color: "#ecdf2e" },
+      stroke: { color: "#ffffff", size: 0 },
+    },
   },
   4: {
+    ...dups,
     id: "4",
-    shape: "rectangle",
-    radius: 10,
-    fillColor: "#7050cc",
-    fillAlpha: 1,
-    strokeColor: "#ffff00",
-    strokeSize: 10,
-  },
+    type: "ellipse",
 
+    style: {
+      width: 0,
+      height: 0,
+
+      fill: { color: "#2e8df9", alpha: 0.5 },
+      stroke: { color: "#ffffff", size: 2 },
+    },
+  },
   5: {
+    ...dups,
     id: "5",
-    shape: "rectangle",
-    radius: 6,
-    fillColor: "#7050cc",
-    fillAlpha: 0,
-    strokeColor: "#00fff0",
-    strokeSize: 3,
+    type: "ellipse",
+
+    style: {
+      width: 0,
+      height: 0,
+
+      fill: { color: "transparent" },
+      stroke: { color: "#00fff0", size: 5 },
+    },
   },
   6: {
+    ...dups,
     id: "6",
-    shape: "rectangle",
-    radius: 6,
-    fillColor: "#7050cc",
-    fillAlpha: 1,
-    strokeColor: "#00fff0",
-    strokeSize: 3,
+    type: "ellipse",
+
+    style: {
+      width: 0,
+      height: 0,
+      fill: { color: "transparent" },
+      stroke: { color: "#7050cc", size: 3 },
+    },
   },
   7: {
+    ...dups,
     id: "7",
-    shape: "rectangle",
-    radius: 6,
-    fillColor: "#cb5151",
-    fillAlpha: 1,
-    strokeColor: "#00fff0",
-    strokeSize: 3,
+    type: "rectangle",
+
+    style: {
+      width: 0,
+      height: 0,
+      radius: 6,
+
+      fill: { color: "transparent" },
+      stroke: { color: "#cb5151", size: 3 },
+    },
   },
   8: {
+    ...dups,
     id: "8",
-    shape: "rectangle",
-    radius: 6,
-    fillColor: "#3dc973",
-    fillAlpha: 0.5,
-    strokeColor: "#3dc973",
-    strokeSize: 15,
+    type: "rectangle",
+
+    style: {
+      width: 0,
+      height: 0,
+      radius: 6,
+
+      fill: { color: "transparent" },
+      stroke: { color: "#3dc973", size: 15 },
+    },
   },
 };
 
@@ -191,7 +232,7 @@ interface UserSettingState {
 
   // DRAW PALETTE:
   formShapePresets: FormShapePresetMap;
-  setFormShapePresets: (value: FormShapePresetOptions) => void;
+  setFormShapePresets: (value: FormShapePreset) => void;
 }
 
 export const useUserSettingStore = create<UserSettingState>()(
@@ -268,10 +309,10 @@ export const useUserSettingStore = create<UserSettingState>()(
         });
       },
 
-      // DRAW PALETTE -------------------------------------------------------------
+      // FORM SHAPE PALETTE -------------------------------------------------------------
       formShapePresets: default_form_presets,
 
-      setFormShapePresets: (value: FormShapePresetOptions) => {
+      setFormShapePresets: (value: FormShapePreset) => {
         set((state) => {
           const { formShapePresets } = state;
 

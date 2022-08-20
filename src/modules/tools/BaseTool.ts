@@ -10,11 +10,13 @@ export class BaseTool {
   protected interaction?: InteractionManager;
   protected touches: number;
   protected button: number | null;
+  protected cursor: string;
+  public isUsing: boolean;
+
+  // used for a long press action:
   protected longPressed: boolean;
   protected longPressCallback?: () => void;
   private timer?: NodeJS.Timeout;
-  protected cursor: string;
-  public isUsing: boolean;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     this.pixi = pixi;
@@ -43,10 +45,11 @@ export class BaseTool {
 
     // attach global listeners:
     this.interaction?.on("pointerdown", this.setTouchesAndButton);
-    this.interaction?.on("pointerdown", this.startLongPressCount);
     this.interaction?.on("pointerup", this.reset);
     this.interaction?.on("pointerupoutside", this.reset);
-    this.interaction?.on("pointermove", this.determineLongPressAction);
+
+    // this.interaction?.on("pointerdown", this.startLongPressCount);
+    // this.interaction?.on("pointermove", this.determineLongPressAction);
 
     this.pixi.activeTool = this;
   }
@@ -103,14 +106,12 @@ export class BaseTool {
   };
 
   private reset = (event: InteractionEvent) => {
-    // console.log("base:pointerup");
-
     if (this.touches === 1) this.isUsing = false;
 
     this.button = null;
     this.longPressed = false;
-    clearTimeout(this.timer);
     this.pixi.viewport.cursor = this.cursor;
+    // clearTimeout(this.timer);
 
     this.pixi.enablePanning();
   };

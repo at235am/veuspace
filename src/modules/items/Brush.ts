@@ -8,7 +8,7 @@ import {
 } from "../../utils/utils";
 import { MultiPolygon, Ring, union } from "polygon-clipping";
 import { Graphics, LINE_CAP, LINE_JOIN, Polygon } from "pixi.js-legacy";
-import { BaseItem, ItemProps } from "./BaseItem";
+import { BaseItem, ItemProps, ItemType } from "./BaseItem";
 import getStroke from "perfect-freehand";
 import { nanoid } from "nanoid";
 import { usePaperStore } from "../../store/PaperStore";
@@ -42,7 +42,7 @@ const default_brush_props: BrushPathProps = {
 
 export class BrushPath extends Graphics implements BaseItem<BrushPathProps> {
   public readonly uid: string;
-  public readonly type: string;
+  public readonly type: ItemType;
   public points: number[][];
   protected style: BrushStyle;
 

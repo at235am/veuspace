@@ -3,7 +3,10 @@ import styled from "@emotion/styled";
 import Color from "color";
 
 import { motion } from "framer-motion";
-import { FormShapePresetOptions } from "./FormShapePalette.component";
+import { EllipseProps } from "../../../modules/items/EllipseForm";
+import { RectangleProps } from "../../../modules/items/RectangleForm";
+import { openColor } from "../../../utils/utils";
+import { FormShapePreset } from "./FormShapePalette.component";
 
 export const Container = styled.div`
   display: flex;
@@ -54,7 +57,7 @@ export const StyleEditor = styled(motion.div)`
 `;
 
 export const StrokeWrapper = styled.div<{
-  preset: FormShapePresetOptions;
+  preset: FormShapePreset;
   shadow: boolean;
 }>`
   ${({ preset, shadow, theme }) => css`
@@ -102,35 +105,37 @@ export const Selector = styled(motion.span)`
   height: 100%;
 `;
 
-export const Circle = styled.div<{
-  presetOptions: FormShapePresetOptions;
-  shadow: boolean;
-}>`
-  ${({ presetOptions, shadow, theme }) => css`
-    border-radius: 50%;
-
-    filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
-  `}
-`;
-
-const getColor = (color: string | number, alpha: number) => {
-  const rgb = Color(color);
-
-  return `rgba(${rgb.red()}, ${rgb.green()}, ${rgb.blue()}, ${alpha})`;
-};
-
 export const Rectangle = styled.div<{
-  presetOptions: FormShapePresetOptions;
+  presetOptions: RectangleProps;
   shadow: boolean;
 }>`
   ${({ presetOptions: o, shadow, theme }) => css`
     filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
 
-    border-radius: ${Math.min(10, o.radius)}px;
-    background-color: ${getColor(o.fillColor, o.fillAlpha)};
-    border: 2px solid ${o.strokeColor};
-    width: 30px;
-    height: 30px;
+    border-radius: ${Math.min(8, o.style.radius)}px;
+    background-color: ${openColor(o.style.fill.color, o.style.fill.alpha)
+      .rgb()
+      .toString()};
+    border: ${o.style.stroke.size > 0 ? 2 : 0}px solid ${o.style.stroke.color};
+    width: 24px;
+    height: 24px;
+  `}
+`;
+
+export const Circle = styled.div<{
+  presetOptions: EllipseProps;
+  shadow: boolean;
+}>`
+  ${({ presetOptions: o, shadow, theme }) => css`
+    filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
+
+    border-radius: 50%;
+    background-color: ${openColor(o.style.fill.color, o.style.fill.alpha)
+      .rgb()
+      .toString()};
+    border: ${o.style.stroke.size > 0 ? 2 : 0}px solid ${o.style.stroke.color};
+    width: 24px;
+    height: 24px;
   `}
 `;
 
