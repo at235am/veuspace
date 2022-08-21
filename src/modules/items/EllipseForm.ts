@@ -36,6 +36,7 @@ const default_ellipse: EllipseProps = {
   position: { x: 0, y: 0 },
   scale: { x: 1, y: 1 },
   angle: 0,
+  zOrder: -1,
 
   style: {
     width: 0,
@@ -92,6 +93,7 @@ export class EllipseForm extends Graphics implements BaseItem<EllipseProps> {
     const props: EllipseProps = {
       id: this.uid,
       type: this.type,
+      zOrder: this.zOrder ?? -1,
       position: { x: px, y: py },
       scale: { x: sx, y: sy },
       angle: this.angle,

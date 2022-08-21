@@ -100,6 +100,10 @@ export class DrawTool extends BaseTool {
       new BrushPath({ fillColor: color, size })
     );
 
+    // this.path.parentGroup = this.pixi.itemGroup;
+
+    // console.log(this.path.parent);
+
     // get and add first points:
     const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
     this.path.position.set(round10(x), round10(y));

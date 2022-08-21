@@ -96,6 +96,7 @@ const dups = {
   position: { x: 0, y: 0 },
   scale: { x: 1, y: 1 },
   angle: 0,
+  zOrder: -1,
 };
 
 const default_form_presets: FormShapePresetMap = {

@@ -43,6 +43,8 @@ export class SelectTool extends BaseTool {
     if (this.button === 1) return;
     if (!this.item) return;
 
+    this.item.parentGroup = this.pixi.items.dragGroup;
+
     this.pixi.disablePanning();
     this.dragging = true;
     this.item.alpha = 0.8;
@@ -53,9 +55,12 @@ export class SelectTool extends BaseTool {
 
   moveEnd = (event: InteractionEvent) => {
     if (this.item) {
+      this.item.parentGroup = this.pixi.items.itemGroup;
+
       this.item.alpha = 1;
       this.item.syncWithStore();
     }
+
     this.dragging = false;
     this.mousedowndata = null;
     this.item = null;

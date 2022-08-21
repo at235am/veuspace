@@ -30,6 +30,7 @@ export class FormShapeTool extends BaseTool {
       position: { x: 0, y: 0 },
       scale: { x: 1, y: 1 },
       angle: 0,
+      zOrder: -1,
 
       style: {
         width: 0,
@@ -72,21 +73,25 @@ export class FormShapeTool extends BaseTool {
 
     // state of tool:
     this.dragging = true;
+    // const i = this.pixi.items.children.length;
 
-    // const { style } = this.props;
-
-    // let obj: BaseItem;
-    // if (type === "rectangle") obj = new RectangleForm(styles);
-    // else if (type === "ellipse") obj = new EllipseForm(styles);
-    // else obj = new RectangleForm(styles);
+    // console.log("generated index", i);
 
     if (isRectangle(this.props)) {
       const { style } = this.props;
-      this.item = this.pixi.items.addChild(new RectangleForm({ style }));
+      this.item = this.pixi.items.addChildz(
+        new RectangleForm({ style: { ...style } })
+      );
     } else if (isEllipse(this.props)) {
       const { style } = this.props;
       this.item = this.pixi.items.addChild(new EllipseForm({ style }));
     }
+
+    //  this.item.zIndex = i;
+    // this.item.parentGroup = this.pixi.itemGroup;
+
+    // this.pixi.items.setChildIndex(this.item, i - 1);
+    // this.item.zIndex =
 
     // object:
     // this.path = this.pixi.items.addChild(new RectangleForm(styles));
@@ -113,7 +118,6 @@ export class FormShapeTool extends BaseTool {
     // make the deltas the same if shift is held:
     if (shift) {
       const max = Math.max(Math.abs(dx), Math.abs(dy));
-
       dx = dx < 0 ? -max : max;
       dy = dy < 0 ? -max : max;
     }

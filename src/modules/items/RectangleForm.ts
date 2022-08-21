@@ -1,5 +1,5 @@
 import { deepCopy, openColor } from "../../utils/utils";
-import { Graphics } from "pixi.js-legacy";
+import { Graphics, Text } from "pixi.js-legacy";
 import {
   BaseItem,
   ItemProps,
@@ -17,6 +17,7 @@ export type RectangleStyle = {
   radius: number;
   width: number;
   height: number;
+  // zIndex: number;
 };
 
 export type RectangleProps = ItemProps & {
@@ -37,6 +38,7 @@ const default_rectangle: RectangleProps = {
   position: { x: 0, y: 0 },
   scale: { x: 1, y: 1 },
   angle: 0,
+  zOrder: -1,
 
   style: {
     width: 0,
@@ -46,6 +48,8 @@ const default_rectangle: RectangleProps = {
     stroke: { color: "#000000", size: 0 },
 
     radius: 0,
+
+    // zIndex: -1,
   },
 };
 
@@ -73,16 +77,19 @@ export class RectangleForm
       style: { ...defaultStyle, ...optsStyle }, // merging styles
     };
 
-    const { type, id, position, scale, angle, style } = mergedProps;
+    const { type, id, position, scale, angle, zOrder, style } = mergedProps;
 
     // set identifying props:
     this.type = type;
     this.uid = id || nanoid();
 
+    // console.log(style.zIndex);
+
     // set pixi props:
     this.position = position;
     this.scale = scale;
     this.angle = angle;
+    this.zOrder = zOrder;
 
     // set appearance props:
     this._styleProps = style;
@@ -101,6 +108,7 @@ export class RectangleForm
       position: { x: px, y: py },
       scale: { x: sx, y: sy },
       angle: this.angle,
+      zOrder: this.zOrder ?? -1,
       style: { ...this._styleProps },
     };
 
@@ -119,12 +127,14 @@ export class RectangleForm
       ...newProps,
       style: { ...currentStyle, ...newStyle }, // merging styles
     };
-    const { position, scale, angle, style } = mergedProps;
+    const { position, scale, angle, zOrder, style } = mergedProps;
 
     // set pixi props:
     this.position = position;
     this.scale = scale;
     this.angle = angle;
+
+    this.zOrder = zOrder;
 
     // set appearance props:
     this._styleProps = { ...style };
@@ -140,6 +150,9 @@ export class RectangleForm
     if (this.destroyed) return;
 
     const { width, height, fill, stroke, radius } = this._styleProps;
+
+    this.removeChildren();
+    this.addChild(new Text(`${this.zOrder}`));
 
     const f = openColor(fill.color, fill.alpha);
     const fc = f.rgbNumber();

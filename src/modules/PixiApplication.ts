@@ -1,5 +1,11 @@
-import { Application, autoDetectRenderer, Container } from "pixi.js-legacy";
+import {
+  Application,
+  autoDetectRenderer,
+  Container,
+  DisplayObject,
+} from "pixi.js-legacy";
 import { Viewport } from "pixi-viewport";
+import { Stage, Group, Layer } from "@pixi/layers";
 
 import { BaseTool } from "./tools/BaseTool";
 import { EraserTool } from "./tools/EraserTool";
@@ -28,6 +34,36 @@ export const TOOL = {
 export type ReverseMap<T> = T[keyof T];
 export type Tool = ReverseMap<typeof TOOL>;
 
+class Items extends Container {
+  public readonly dragGroup: Group;
+  public readonly itemGroup: Group;
+
+  constructor() {
+    super();
+
+    this.itemGroup = new Group(1, false);
+    this.dragGroup = new Group(2, false);
+
+    // this.itemGroup.
+  }
+
+  addChildz = (...children: BaseItem[]) => {
+    this.addChild(...children);
+
+    children.forEach((item) => {
+      item.parentGroup = this.itemGroup;
+
+      // Default zOrder of a BaseItem is -1.
+      // If zOrder is not set (to something other than -1) in the
+      // constructor of a BaseItem subclass or in setProps()
+      // then we assign a zOrder based on how many items currently exist
+      if (item.zOrder === -1) item.zOrder = this.children.length;
+    });
+
+    return children[0];
+  };
+}
+
 export class PixiApplication {
   private static instance: PixiApplication;
   private static initialized = false;
@@ -35,8 +71,11 @@ export class PixiApplication {
   // main states:
   public readonly app: Application;
   public readonly background: Background;
-  public readonly items: Container;
-  // public readonly items: Items;
+  // public readonly items: Container;
+  public readonly items: Items;
+  // public readonly dragGroup: Group;
+  // public readonly itemGroup: Group;
+
   public readonly viewport: Viewport;
 
   // tools:
@@ -53,8 +92,8 @@ export class PixiApplication {
     this._mode = "select";
 
     this.app = new Application();
-    this.items = new Container();
-    // this.items = new Items();
+    this.app.stage = new Stage();
+    this.items = new Items();
     this.background = new Background(this, 20000, {
       position: true,
       tint: true,
@@ -107,6 +146,8 @@ export class PixiApplication {
     this.viewport.addChild(this.background);
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
+    this.app.stage.addChild(new Layer(this.items.itemGroup));
+    this.app.stage.addChild(new Layer(this.items.dragGroup));
 
     this.selectTool.activate();
 
@@ -143,7 +184,6 @@ export class PixiApplication {
           obj = new BrushPath(item);
           break;
         case "rectangle":
-          console.log("sldkjf");
           obj = new RectangleForm(item);
           break;
         case "ellipse":
@@ -154,7 +194,9 @@ export class PixiApplication {
           break;
       }
 
-      if (obj) this.items.addChild(obj);
+      if (obj) {
+        this.items.addChildz(obj);
+      }
     });
   };
 

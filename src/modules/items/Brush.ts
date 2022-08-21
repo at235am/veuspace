@@ -31,6 +31,8 @@ const default_brush_props: BrushPathProps = {
   type: "brush-path",
   points: [],
 
+  zOrder: -1,
+
   position: { x: 0, y: 0 },
   scale: { x: 1, y: 1 },
   angle: 0,
@@ -90,6 +92,7 @@ export class BrushPath extends Graphics implements BaseItem<BrushPathProps> {
       position: { x: px, y: py },
       scale: { x: sx, y: sy },
       angle: this.angle,
+      zOrder: this.zOrder ?? -1,
       size: this.style.size,
       fillColor: this.style.color,
       strokeColor: 0,
