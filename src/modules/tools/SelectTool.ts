@@ -13,6 +13,8 @@ export class SelectTool extends BaseTool {
   private mousedowndata: InteractionData | null;
   private offset: { x: number; y: number };
   private item: BaseItem | null;
+  private items: BaseItem[];
+  // private transformer: Transformer;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
     super(pixi, longPressCallback);
@@ -21,6 +23,8 @@ export class SelectTool extends BaseTool {
     this.mousedowndata = null;
     this.offset = { x: 0, y: 0 };
     this.item = null;
+
+    this.items = [];
   }
 
   activate(options?: InteractionManagerOptions | undefined) {
@@ -43,6 +47,8 @@ export class SelectTool extends BaseTool {
     if (this.button === 1) return;
     if (!this.item) return;
 
+    // this.transformer.addChild();
+
     this.item.parentGroup = this.pixi.items.dragGroup;
 
     this.pixi.disablePanning();
@@ -57,6 +63,9 @@ export class SelectTool extends BaseTool {
     if (this.item) {
       this.item.parentGroup = this.pixi.items.itemGroup;
 
+      // this.transformer?.destroy();
+
+      console.log(this.item.angle);
       this.item.alpha = 1;
       this.item.syncWithStore();
     }
@@ -64,6 +73,7 @@ export class SelectTool extends BaseTool {
     this.dragging = false;
     this.mousedowndata = null;
     this.item = null;
+    // this.transformer = undefined;
   };
 
   moveMove = (event: InteractionEvent) => {

@@ -80,23 +80,78 @@ const default_keybinds: Keybind[] = [
     actionId: KEY_ACTION.THEME_TOGGLE,
   },
 ];
-
-const default_draw_presets: DrawPresetMap = {
-  1: { id: "1", size: 3, color: "#2e8df9" },
-  2: { id: "2", size: 6, color: "#c544b0" },
-  3: { id: "3", size: 9, color: "#ecdf2e" },
-  4: { id: "4", size: 12, color: "#ffffff" },
-  5: { id: "5", size: 17, color: "#7050cc" },
-  6: { id: "6", size: 18, color: "#414141" },
-  7: { id: "7", size: 22, color: "#cb5151" },
-  8: { id: "8", size: 25, color: "#3dc973" },
-};
-
 const dups = {
   position: { x: 0, y: 0 },
   scale: { x: 1, y: 1 },
   angle: 0,
   zOrder: -1,
+};
+
+const default_draw_presets: DrawPresetMap = {
+  1: {
+    ...dups,
+    id: "1",
+    type: "brush-path",
+    fill: { size: 3, color: "#2e8df9" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  2: {
+    ...dups,
+    id: "2",
+    type: "brush-path",
+    fill: { size: 6, color: "#c544b0" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  3: {
+    ...dups,
+    id: "3",
+    type: "brush-path",
+    fill: { size: 9, color: "#ecdf2e" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  4: {
+    ...dups,
+    id: "4",
+    type: "brush-path",
+    fill: { size: 12, color: "#ffffff" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  5: {
+    ...dups,
+    id: "5",
+    type: "brush-path",
+    fill: { size: 17, color: "#7050cc" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  6: {
+    ...dups,
+    id: "6",
+    type: "brush-path",
+    fill: { size: 18, color: "#414141" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  7: {
+    ...dups,
+    id: "7",
+    type: "brush-path",
+    fill: { size: 22, color: "#cb5151" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
+  8: {
+    ...dups,
+    id: "8",
+    type: "brush-path",
+    fill: { size: 25, color: "#3dc973" },
+    stroke: { color: "#000", size: 0 },
+    points: [],
+  },
 };
 
 const default_form_presets: FormShapePresetMap = {
@@ -105,108 +160,92 @@ const default_form_presets: FormShapePresetMap = {
     id: "1",
     type: "rectangle",
 
-    style: {
-      width: 0,
-      height: 0,
-      radius: 0,
+    width: 0,
+    height: 0,
+    radius: 0,
 
-      fill: { color: "#2e8df9" },
-      stroke: { color: "#ffffff", size: 0 },
-    },
+    fill: { color: "#2e8df9" },
+    stroke: { color: "#ffffff", size: 0 },
   },
   2: {
     ...dups,
     id: "2",
     type: "rectangle",
 
-    style: {
-      width: 0,
-      height: 0,
-      radius: 3,
+    width: 0,
+    height: 0,
+    radius: 3,
 
-      fill: { color: "#c544b0" },
-      stroke: { color: "#000000", size: 2 },
-    },
+    fill: { color: "#c544b0" },
+    stroke: { color: "#000000", size: 2 },
   },
   3: {
     ...dups,
     id: "3",
     type: "rectangle",
 
-    style: {
-      width: 0,
-      height: 0,
-      radius: 8,
+    width: 0,
+    height: 0,
+    radius: 8,
 
-      fill: { color: "#ecdf2e" },
-      stroke: { color: "#ffffff", size: 0 },
-    },
+    fill: { color: "#ecdf2e" },
+    stroke: { color: "#ffffff", size: 0 },
   },
   4: {
     ...dups,
     id: "4",
     type: "ellipse",
 
-    style: {
-      width: 0,
-      height: 0,
+    width: 0,
+    height: 0,
 
-      fill: { color: "#2e8df9", alpha: 0.5 },
-      stroke: { color: "#ffffff", size: 2 },
-    },
+    fill: { color: "#2e8df9", alpha: 0.5 },
+    stroke: { color: "#ffffff", size: 2 },
   },
   5: {
     ...dups,
     id: "5",
     type: "ellipse",
 
-    style: {
-      width: 0,
-      height: 0,
+    width: 0,
+    height: 0,
 
-      fill: { color: "transparent" },
-      stroke: { color: "#00fff0", size: 5 },
-    },
+    fill: { color: "transparent" },
+    stroke: { color: "#00fff0", size: 5 },
   },
   6: {
     ...dups,
     id: "6",
     type: "ellipse",
 
-    style: {
-      width: 0,
-      height: 0,
-      fill: { color: "transparent" },
-      stroke: { color: "#7050cc", size: 3 },
-    },
+    width: 0,
+    height: 0,
+    fill: { color: "transparent" },
+    stroke: { color: "#7050cc", size: 3 },
   },
   7: {
     ...dups,
     id: "7",
     type: "rectangle",
 
-    style: {
-      width: 0,
-      height: 0,
-      radius: 6,
+    width: 0,
+    height: 0,
+    radius: 6,
 
-      fill: { color: "transparent" },
-      stroke: { color: "#cb5151", size: 3 },
-    },
+    fill: { color: "transparent" },
+    stroke: { color: "#cb5151", size: 3 },
   },
   8: {
     ...dups,
     id: "8",
     type: "rectangle",
 
-    style: {
-      width: 0,
-      height: 0,
-      radius: 6,
+    width: 0,
+    height: 0,
+    radius: 6,
 
-      fill: { color: "transparent" },
-      stroke: { color: "#3dc973", size: 15 },
-    },
+    fill: { color: "transparent" },
+    stroke: { color: "#3dc973", size: 15 },
   },
 };
 

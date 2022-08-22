@@ -1,135 +1,71 @@
-import { deepCopy, openColor } from "../../utils/utils";
-import { Graphics } from "pixi.js-legacy";
+import { deepCopy, mergeProps, openColor } from "../../utils/utils";
+import { Graphics, Text } from "pixi.js-legacy";
 import {
+  Base,
+  BaseProps,
   BaseItem,
-  ItemProps,
   ItemType,
   PropColor,
   StrokeColor,
 } from "./BaseItem";
 
-import { nanoid } from "nanoid";
-import { usePaperStore } from "../../store/PaperStore";
-
 export type EllipseStyle = {
   fill: PropColor;
   stroke: StrokeColor;
+
   width: number;
   height: number;
 };
 
-export type EllipseProps = ItemProps & {
-  style: EllipseStyle;
-};
-
-export type PartialEllipseProps = Partial<Omit<EllipseProps, "style">> & {
-  style?: Partial<EllipseStyle>;
-};
+export type EllipseProps = BaseProps & EllipseStyle;
 
 export const isEllipse = (item: any): item is EllipseProps =>
   (item as EllipseProps).type === "ellipse";
 
-const default_ellipse: EllipseProps = {
-  id: "",
-  type: "ellipse",
-
-  position: { x: 0, y: 0 },
-  scale: { x: 1, y: 1 },
-  angle: 0,
-  zOrder: -1,
-
-  style: {
-    width: 0,
-    height: 0,
-
-    fill: { color: "#000000" },
-    stroke: { color: "#000000", size: 0 },
-  },
+const default_ellipse_style: EllipseStyle = {
+  width: 0,
+  height: 0,
+  fill: { color: "#000000" },
+  stroke: { color: "#000000", size: 0 },
 };
 
 export class EllipseForm extends Graphics implements BaseItem<EllipseProps> {
-  public readonly uid: string;
-  public readonly type: ItemType;
+  readonly base: Base;
   private _styleProps: EllipseStyle;
 
-  constructor(props?: PartialEllipseProps) {
+  constructor(props: Partial<EllipseProps> = {}) {
     super();
 
-    // MUST DEEP COPY the default options or risk changing default values:
-    const defaultOptions = deepCopy(default_ellipse);
-    const defaultStyle = deepCopy(defaultOptions.style);
+    // ensures that the type of this object is itself:
+    const p: Partial<EllipseProps> = { ...props, type: "ellipse" };
 
-    const opts = deepCopy(props || {});
-    const optsStyle = deepCopy(opts.style ?? defaultStyle);
+    // sets base props:
+    this.base = new Base(p, this);
 
-    const mergedProps = {
-      ...defaultOptions,
-      ...opts,
-      style: { ...defaultStyle, ...optsStyle }, // merging styles
-    };
-
-    const { type, id, position, scale, angle, style } = mergedProps;
-
-    // set identifying props:
-    this.type = type;
-    this.uid = id || nanoid();
-
-    // set pixi props:
-    this.position = position;
-    this.scale = scale;
-    this.angle = angle;
-
-    // set appearance props:
-    this._styleProps = { ...style };
+    const mergedProps = mergeProps(default_ellipse_style, p);
+    const { width, height, fill, stroke } = mergedProps;
+    this._styleProps = { width, height, fill, stroke };
 
     this.draw();
     this.interactive = true;
   }
 
-  public getProps = () => {
-    const { x: px, y: py } = this.position;
-    const { x: sx, y: sy } = this.scale;
+  public getProps() {
+    const baseProps = this.base.getBaseProps(this);
+    const styleProps = deepCopy(this._styleProps);
+    return { ...baseProps, ...styleProps };
+  }
 
-    const props: EllipseProps = {
-      id: this.uid,
-      type: this.type,
-      zOrder: this.zOrder ?? -1,
-      position: { x: px, y: py },
-      scale: { x: sx, y: sy },
-      angle: this.angle,
-      style: { ...this._styleProps },
-    };
+  public setProps(props: Partial<EllipseProps>) {
+    this.base.setBaseProps(this, props);
 
-    return props;
-  };
-
-  public setProps = (props: PartialEllipseProps) => {
-    const currentProps = deepCopy(this.getProps());
-    const currentStyle = deepCopy(currentProps.style);
-
-    const newProps = deepCopy(props);
-    const newStyle = deepCopy(newProps.style ?? currentStyle);
-
-    const mergedProps = {
-      ...currentProps,
-      ...newProps,
-      style: { ...currentStyle, ...newStyle }, // merging styles
-    };
-    const { position, scale, angle, style } = mergedProps;
-
-    // set pixi props:
-    this.position = position;
-    this.scale = scale;
-    this.angle = angle;
-
-    // set appearance props:
-    this._styleProps = { ...style };
-  };
+    const mergedProps = mergeProps(this.getProps(), props);
+    const { width, height, fill, stroke } = mergedProps;
+    this._styleProps = { width, height, fill, stroke };
+  }
 
   public syncWithStore() {
-    const { removeItem, setItem } = usePaperStore.getState();
-    if (this.destroyed) removeItem(this.getProps());
-    else setItem(this.getProps());
+    this.base.syncWithStore(this, this.getProps());
   }
 
   public draw = () => {

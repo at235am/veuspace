@@ -14,7 +14,7 @@ import { SelectTool } from "./tools/SelectTool";
 import { Background } from "./Background";
 import { BrushPath } from "./items/Brush";
 
-import { BaseItem, ItemProps } from "./items/BaseItem";
+import { BaseItem, BaseProps } from "./items/BaseItem";
 import { FormShapeTool } from "./tools/FormShapeTool";
 import { RectangleForm } from "./items/RectangleForm";
 import { EllipseForm } from "./items/EllipseForm";
@@ -176,26 +176,22 @@ export class PixiApplication {
     this.viewport.on("moved", () => this.background.throttledDrawBG());
   }
 
-  public loadObjects = (items: { [id: string]: ItemProps }) => {
+  public loadObjects = (items: { [id: string]: BaseProps }) => {
+    // console.log("load", items);
     Object.entries(items).forEach(([id, item]) => {
-      let obj: BaseItem | null = null;
       switch (item.type) {
         case "brush-path":
-          obj = new BrushPath(item);
+          this.items.addChildz(new BrushPath(item));
           break;
         case "rectangle":
-          obj = new RectangleForm(item);
+          this.items.addChildz(new RectangleForm(item));
           break;
         case "ellipse":
-          obj = new EllipseForm(item);
+          this.items.addChildz(new EllipseForm(item));
           break;
 
         default:
           break;
-      }
-
-      if (obj) {
-        this.items.addChildz(obj);
       }
     });
   };

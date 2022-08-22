@@ -148,7 +148,7 @@ const BrushPreview = ({ activeId, preset, onClick }: FormPreview) => {
 
   const theme = useTheme();
   // const fillColor = Color(preset.fillColor);
-  const fillColor = Color(preset.style.fill.color);
+  const fillColor = Color(preset.fill.color);
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(fillColor, bgColor);
 
@@ -175,7 +175,7 @@ type StrokePreviewProps = {
 const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
   const theme = useTheme();
   // const fillColor = Color(preset.fillColor);
-  const fillColor = Color(preset.style.fill.color);
+  const fillColor = Color(preset.fill.color);
 
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(fillColor, bgColor);

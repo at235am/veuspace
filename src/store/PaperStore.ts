@@ -1,6 +1,6 @@
 import create from "zustand";
 import { persist } from "zustand/middleware";
-import { ItemProps } from "../modules/items/BaseItem";
+import { BaseProps } from "../modules/items/BaseItem";
 import { LocalStorage } from "./_LocalStorageKeys";
 import { nanoid } from "nanoid";
 
@@ -11,7 +11,7 @@ type Paper = {
 };
 
 type PaperMap = { [id: string]: Paper };
-type ItemMap = { [id: string]: ItemProps };
+type ItemMap = { [id: string]: BaseProps };
 
 interface PaperState {
   papers: PaperMap;
@@ -21,8 +21,8 @@ interface PaperState {
   activatePaper: (paperId: string) => Paper | null;
 
   activePaper: Paper;
-  setItem: (...itemsToSet: ItemProps[]) => void; // use this to add or update an item
-  removeItem: (...itemsToDelete: ItemProps[]) => void; // use this to remove an item
+  setItem: (...itemsToSet: BaseProps[]) => void; // use this to add or update an item
+  removeItem: (...itemsToDelete: BaseProps[]) => void; // use this to remove an item
 }
 
 const default_paper: Paper = { id: nanoid(), name: "", items: {} };
@@ -87,7 +87,7 @@ export const usePaperStore = create<PaperState>()(
 
       activePaper: default_paper,
 
-      setItem: (...itemsToSet: ItemProps[]) => {
+      setItem: (...itemsToSet: BaseProps[]) => {
         set((state) => {
           if (!state.activePaper) return state;
 
@@ -102,7 +102,7 @@ export const usePaperStore = create<PaperState>()(
         });
       },
 
-      removeItem: (...itemsToDelete: ItemProps[]) => {
+      removeItem: (...itemsToDelete: BaseProps[]) => {
         set((state) => {
           if (!state.activePaper) return state;
 

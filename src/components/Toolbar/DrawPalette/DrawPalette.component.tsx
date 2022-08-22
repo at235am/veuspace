@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { usePaperState } from "../../../contexts/PaperContext";
-import { BrushStyle } from "../../../modules/items/Brush";
+import { BrushStyle, BrushPathProps } from "../../../modules/items/Brush";
 import { clamp, isColorCloseMatch } from "../../../utils/utils";
 import Stroke from "../../../../public/assets/stroke.svg";
 
@@ -24,9 +24,11 @@ import Color from "color";
 import { useTheme } from "@emotion/react";
 import { useUserSettingStore } from "../../../store/UserSettingStore";
 
-export interface DrawPresetOptions extends BrushStyle {
-  id: string;
-}
+// BrushPathProps
+export type DrawPresetOptions = BrushPathProps;
+// export interface DrawPresetOptions extends BrushStyle {
+//   id: string;
+// }
 
 export type DrawPresetMap = { [id: string]: DrawPresetOptions };
 
@@ -136,7 +138,7 @@ const BrushPreview = ({ activeId, preset, onClick }: BrushPreviewProps) => {
   const highlight = activeId === preset.id;
 
   const theme = useTheme();
-  const brushColor = Color(preset.color);
+  const brushColor = Color(preset.fill.color);
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(brushColor, bgColor);
 
@@ -157,7 +159,7 @@ type StrokePreviewProps = {
 
 const StrokePreview = ({ preset, updatePreset }: StrokePreviewProps) => {
   const theme = useTheme();
-  const brushColor = Color(preset.color);
+  const brushColor = Color(preset.fill.color);
   const bgColor = Color(theme.colors.surface.L10);
   const isSameColor = isColorCloseMatch(brushColor, bgColor);
 
@@ -185,10 +187,14 @@ const NumberInput = ({
   min = 1,
   max = 25,
 }: NumberInputProps) => {
-  const { id, size } = preset;
+  const { id, fill } = preset;
+  const { size, color } = fill;
 
   const stepper = (step = 1) => {
-    updatePreset({ ...preset, size: clamp(size + step, min, max) });
+    updatePreset({
+      ...preset,
+      fill: { color, size: clamp(size + step, min, max) },
+    });
   };
 
   const increment = () => stepper(1);

@@ -8,7 +8,7 @@ import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
 import { usePaperStore } from "../../store/PaperStore";
-import { BaseItem, ItemProps } from "../items/BaseItem";
+import { BaseItem, BaseProps } from "../items/BaseItem";
 
 export type EraserToolOptions = {
   color: number | string;
@@ -74,7 +74,7 @@ export class EraserTool extends BaseTool {
     // reset the states of the tool:
     this.dragging = false;
 
-    const statelist: ItemProps[] = [];
+    const statelist: BaseProps[] = [];
 
     this.deleteQueue.forEach((item) => {
       if (!item.destroyed) {

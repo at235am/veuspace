@@ -65,8 +65,8 @@ export const StrokeWrapper = styled.div<{
     svg {
       path {
         filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
-        stroke: ${preset.color};
-        stroke-width: ${preset.size}px;
+        stroke: ${preset.fill.color};
+        stroke-width: ${preset.fill.size}px;
       }
     }
   `}
@@ -112,9 +112,9 @@ export const Circle = styled.div<{
 
     filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
 
-    background-color: ${presetOptions.color};
-    width: ${presetOptions.size}px;
-    height: ${presetOptions.size}px;
+    background-color: ${presetOptions.fill.color};
+    width: ${presetOptions.fill.size}px;
+    height: ${presetOptions.fill.size}px;
   `}
 `;
 

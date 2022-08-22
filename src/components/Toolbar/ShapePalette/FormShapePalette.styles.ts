@@ -112,11 +112,9 @@ export const Rectangle = styled.div<{
   ${({ presetOptions: o, shadow, theme }) => css`
     filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
 
-    border-radius: ${Math.min(8, o.style.radius)}px;
-    background-color: ${openColor(o.style.fill.color, o.style.fill.alpha)
-      .rgb()
-      .toString()};
-    border: ${o.style.stroke.size > 0 ? 2 : 0}px solid ${o.style.stroke.color};
+    border-radius: ${Math.min(8, o.radius)}px;
+    background-color: ${openColor(o.fill.color, o.fill.alpha).rgb().toString()};
+    border: ${o.stroke.size > 0 ? 2 : 0}px solid ${o.stroke.color};
     width: 24px;
     height: 24px;
   `}
@@ -130,10 +128,8 @@ export const Circle = styled.div<{
     filter: ${shadow ? `drop-shadow(${theme.shadows._10})` : "none"};
 
     border-radius: 50%;
-    background-color: ${openColor(o.style.fill.color, o.style.fill.alpha)
-      .rgb()
-      .toString()};
-    border: ${o.style.stroke.size > 0 ? 2 : 0}px solid ${o.style.stroke.color};
+    background-color: ${openColor(o.fill.color, o.fill.alpha).rgb().toString()};
+    border: ${o.stroke.size > 0 ? 2 : 0}px solid ${o.stroke.color};
     width: 24px;
     height: 24px;
   `}

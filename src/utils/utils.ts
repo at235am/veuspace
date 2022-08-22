@@ -336,3 +336,9 @@ export const round10 = (num: number) => Math.round(num * 10) / 10;
 export const round100 = (num: number) => Math.round(num * 100) / 100;
 
 export const deepCopy = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
+export const mergeProps = <T>(oldValue: T, newValue: Partial<T>): T => {
+  const a = deepCopy(oldValue);
+  const b = deepCopy(newValue);
+  return { ...a, ...b };
+};

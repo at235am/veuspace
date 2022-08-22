@@ -1,15 +1,13 @@
-import { deepCopy, openColor } from "../../utils/utils";
+import { deepCopy, mergeProps, openColor } from "../../utils/utils";
 import { Graphics, Text } from "pixi.js-legacy";
 import {
+  Base,
+  BaseProps,
   BaseItem,
-  ItemProps,
   ItemType,
   PropColor,
   StrokeColor,
 } from "./BaseItem";
-
-import { nanoid } from "nanoid";
-import { usePaperStore } from "../../store/PaperStore";
 
 export type RectangleStyle = {
   fill: PropColor;
@@ -17,133 +15,64 @@ export type RectangleStyle = {
   radius: number;
   width: number;
   height: number;
-  // zIndex: number;
 };
 
-export type RectangleProps = ItemProps & {
-  style: RectangleStyle;
-};
-
-export type PartialRectangleProps = Partial<Omit<RectangleProps, "style">> & {
-  style?: Partial<RectangleStyle>;
-};
+export type RectangleProps = BaseProps & RectangleStyle;
 
 export const isRectangle = (item: any): item is RectangleProps =>
   (item as RectangleProps).type === "rectangle";
 
-const default_rectangle: RectangleProps = {
-  id: "",
-  type: "rectangle",
+const default_rect_style: RectangleStyle = {
+  width: 0,
+  height: 0,
 
-  position: { x: 0, y: 0 },
-  scale: { x: 1, y: 1 },
-  angle: 0,
-  zOrder: -1,
+  fill: { color: "#000000" },
+  stroke: { color: "#000000", size: 0 },
 
-  style: {
-    width: 0,
-    height: 0,
-
-    fill: { color: "#000000" },
-    stroke: { color: "#000000", size: 0 },
-
-    radius: 0,
-
-    // zIndex: -1,
-  },
+  radius: 0,
 };
 
 export class RectangleForm
   extends Graphics
   implements BaseItem<RectangleProps>
 {
-  public readonly uid: string;
-  public readonly type: ItemType;
+  readonly base: Base;
   private _styleProps: RectangleStyle;
 
-  constructor(props?: PartialRectangleProps) {
+  constructor(props: Partial<RectangleProps> = {}) {
     super();
 
-    // MUST DEEP COPY the default options or risk changing default values:
-    const defaultOptions = deepCopy(default_rectangle);
-    const defaultStyle = deepCopy(defaultOptions.style);
+    // ensures that the type of this object is itself:
+    const p: Partial<RectangleProps> = { ...props, type: "rectangle" };
 
-    const opts = deepCopy(props || {});
-    const optsStyle = deepCopy(opts.style ?? defaultStyle);
+    // sets base props:
+    this.base = new Base(p, this);
 
-    const mergedProps = {
-      ...defaultOptions,
-      ...opts,
-      style: { ...defaultStyle, ...optsStyle }, // merging styles
-    };
+    const mergedProps = mergeProps(default_rect_style, p);
+    const { width, height, fill, stroke, radius } = mergedProps;
+    this._styleProps = { width, height, fill, stroke, radius };
 
-    const { type, id, position, scale, angle, zOrder, style } = mergedProps;
-
-    // set identifying props:
-    this.type = type;
-    this.uid = id || nanoid();
-
-    // console.log(style.zIndex);
-
-    // set pixi props:
-    this.position = position;
-    this.scale = scale;
-    this.angle = angle;
-    this.zOrder = zOrder;
-
-    // set appearance props:
-    this._styleProps = style;
-
+    // console.log(this.getProps());
     this.draw();
     this.interactive = true;
   }
 
-  public getProps = () => {
-    const { x: px, y: py } = this.position;
-    const { x: sx, y: sy } = this.scale;
+  public getProps() {
+    const baseProps = this.base.getBaseProps(this);
+    const styleProps = deepCopy(this._styleProps);
+    return { ...baseProps, ...styleProps };
+  }
 
-    const props: RectangleProps = {
-      id: this.uid,
-      type: this.type,
-      position: { x: px, y: py },
-      scale: { x: sx, y: sy },
-      angle: this.angle,
-      zOrder: this.zOrder ?? -1,
-      style: { ...this._styleProps },
-    };
+  public setProps(props: Partial<RectangleProps>) {
+    this.base.setBaseProps(this, props);
 
-    return props;
-  };
-
-  public setProps = (props: PartialRectangleProps) => {
-    const currentProps = deepCopy(this.getProps());
-    const currentStyle = deepCopy(currentProps.style);
-
-    const newProps = deepCopy(props);
-    const newStyle = deepCopy(newProps.style ?? currentStyle);
-
-    const mergedProps = {
-      ...currentProps,
-      ...newProps,
-      style: { ...currentStyle, ...newStyle }, // merging styles
-    };
-    const { position, scale, angle, zOrder, style } = mergedProps;
-
-    // set pixi props:
-    this.position = position;
-    this.scale = scale;
-    this.angle = angle;
-
-    this.zOrder = zOrder;
-
-    // set appearance props:
-    this._styleProps = { ...style };
-  };
+    const mergedProps = mergeProps(this.getProps(), props);
+    const { width, height, fill, stroke, radius } = mergedProps;
+    this._styleProps = { width, height, fill, stroke, radius };
+  }
 
   public syncWithStore() {
-    const { removeItem, setItem } = usePaperStore.getState();
-    if (this.destroyed) removeItem(this.getProps());
-    else setItem(this.getProps());
+    this.base.syncWithStore(this, this.getProps());
   }
 
   public draw = () => {

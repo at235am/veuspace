@@ -10,12 +10,14 @@ import {
 } from "../items/RectangleForm";
 import throttle from "lodash.throttle";
 import { EllipseForm, EllipseProps, isEllipse } from "../items/EllipseForm";
-import { BaseItem } from "../items/BaseItem";
+import { BaseProps, BaseItem } from "../items/BaseItem";
+// import { BaseItem } from "../items/BaseItem";
 
 type FormShapeProps = RectangleProps | EllipseProps;
 
 export class FormShapeTool extends BaseTool {
   private dragging: boolean;
+  // private item: BaseItem;
   private item: BaseItem;
   private props: FormShapeProps; // use the style property in this object to determine appearance
   private mouseDownPosition?: { x: number; y: number };
@@ -32,14 +34,12 @@ export class FormShapeTool extends BaseTool {
       angle: 0,
       zOrder: -1,
 
-      style: {
-        width: 0,
-        height: 0,
+      width: 0,
+      height: 0,
 
-        fill: { color: "#000000" },
-        stroke: { color: "#000000", size: 0 },
-        radius: 3,
-      },
+      fill: { color: "#000000" },
+      stroke: { color: "#000000", size: 0 },
+      radius: 3,
     };
 
     this.item = new RectangleForm();
@@ -78,24 +78,16 @@ export class FormShapeTool extends BaseTool {
     // console.log("generated index", i);
 
     if (isRectangle(this.props)) {
-      const { style } = this.props;
-      this.item = this.pixi.items.addChildz(
-        new RectangleForm({ style: { ...style } })
-      );
+      const { id, type, position, scale, angle, zOrder, ...styles } =
+        this.props;
+      this.item = this.pixi.items.addChildz(new RectangleForm({ ...styles }));
     } else if (isEllipse(this.props)) {
-      const { style } = this.props;
-      this.item = this.pixi.items.addChild(new EllipseForm({ style }));
+      // const { style } = this.props;
+      const { id, type, position, scale, angle, zOrder, ...styles } =
+        this.props;
+
+      this.item = this.pixi.items.addChildz(new EllipseForm({ ...styles }));
     }
-
-    //  this.item.zIndex = i;
-    // this.item.parentGroup = this.pixi.itemGroup;
-
-    // this.pixi.items.setChildIndex(this.item, i - 1);
-    // this.item.zIndex =
-
-    // object:
-    // this.path = this.pixi.items.addChild(new RectangleForm(styles));
-    // this.item = this.pixi.items.addChild(obj);
 
     // get and add first points:
     const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
@@ -130,7 +122,7 @@ export class FormShapeTool extends BaseTool {
 
     if (this.item instanceof RectangleForm) {
       const style = { width, height };
-      this.item.setProps({ position: { x: px, y: py }, style });
+      this.item.setProps({ position: { x: px, y: py }, width, height });
       this.item.draw();
     } else if (this.item instanceof EllipseForm) {
       const w = width / 2;
@@ -139,7 +131,7 @@ export class FormShapeTool extends BaseTool {
       const style = { width: w, height: h };
 
       this.item.pivot.set(-w, -h);
-      this.item.setProps({ position: { x: px, y: py }, style });
+      this.item.setProps({ position: { x: px, y: py }, width: w, height: h });
       this.item.draw();
     }
   };
@@ -159,10 +151,6 @@ export class FormShapeTool extends BaseTool {
 
       // this.path.generateHitArea();
       this.item.interactive = true;
-
-      // debug stuff:
-      // this.path.drawPoints();
-      // this.path.drawHitArea();
     }
   };
 }

@@ -137,7 +137,7 @@ const PaperStateProvider = ({ children }: Props) => {
         action: () => {
           // toggleTheme();
           pixim.current.items.children.forEach((item) => {
-            console.log(item.uid, item.zOrder);
+            console.log(item.zOrder);
           });
         },
       },
