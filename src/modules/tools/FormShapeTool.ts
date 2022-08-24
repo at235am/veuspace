@@ -46,9 +46,8 @@ export class FormShapeTool extends BaseTool {
     this.item.destroy();
   }
 
-  activate(blank = false, options?: InteractionManagerOptions | undefined) {
-    super.start(false, options);
-    if (blank) return;
+  activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
+    super.activate(baseEvents, options);
     if (!this.interaction) return;
 
     // attach listeners:

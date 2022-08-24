@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { DisplayObject } from "pixi.js-legacy";
+import { Container, DisplayObject } from "pixi.js-legacy";
 import { usePaperStore } from "../../store/PaperStore";
 import { deepCopy, mergeProps } from "../../utils/utils";
 
@@ -115,8 +115,7 @@ export class Base {
 /**
  * BaseItem is to be used inside our pixi application
  */
-export interface BaseItem<T extends BaseProps = BaseProps>
-  extends DisplayObject {
+export interface BaseItem<T extends BaseProps = BaseProps> extends Container {
   readonly base: Base;
 
   getProps: () => T;

@@ -54,6 +54,7 @@ export class Background extends ParticleContainer {
     dotPattern.lineStyle({ width: 0 });
     dotPattern.drawCircle(0, 0, 1);
     dotPattern.endFill();
+    // dotPattern.gener
 
     const gridPattern = new Graphics();
     gridPattern.beginFill(0xffffff, 1);
@@ -86,7 +87,7 @@ export class Background extends ParticleContainer {
     return this._grid;
   }
 
-  public set grid(value: boolean) {
+  public setGrid(value: boolean) {
     this._grid = value;
     if (value) this.drawBackgroundPattern();
     else this.removeChildren();
@@ -96,7 +97,7 @@ export class Background extends ParticleContainer {
     return this._cellSize;
   }
 
-  public set cellSize(value: number) {
+  public setCellSize(value: number) {
     if (value === this._cellSize) return;
     this._cellSize = value;
     this.setupTextures(); //
@@ -107,7 +108,7 @@ export class Background extends ParticleContainer {
     return this._activePattern;
   }
 
-  public set activePattern(id: string) {
+  public setActivePattern(id: string) {
     this._activePattern = id;
     this.throttledDrawBG();
   }
@@ -121,10 +122,13 @@ export class Background extends ParticleContainer {
     this.throttledDrawBG();
   }
 
-  public drawBackgroundPattern(force = false) {
+  public drawBackgroundPattern = (force = false) => {
     if (!this._grid && !force) return;
 
     this.removeChildren();
+    // console.log(this._patterns[this._activePattern]);
+    // console.log(this._activePattern);
+    // console.log(this._patterns);
     const { color, texture } = this._patterns[this._activePattern];
 
     const cell = this._cellSize; // the gap between each cell of the grid
@@ -150,7 +154,7 @@ export class Background extends ParticleContainer {
       }
     }
     this.tint = ctn(color);
-  }
+  };
 
   public throttledDrawBG = throttle(this.drawBackgroundPattern, 100);
 }

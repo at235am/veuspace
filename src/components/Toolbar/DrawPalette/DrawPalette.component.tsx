@@ -94,7 +94,7 @@ const DrawPalette = ({}: Props) => {
 
   useEffect(() => {
     const opt = presets[activePid];
-    if (opt) pixim.current.drawTool.setOptions(opt);
+    if (opt) pixim.current?.drawTool.setOptions(opt);
   }, [activePid, presets]);
 
   return (

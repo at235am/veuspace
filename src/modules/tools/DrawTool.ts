@@ -38,9 +38,8 @@ export class DrawTool extends BaseTool {
     this.path.destroy();
   }
 
-  activate(blank = false, options?: InteractionManagerOptions | undefined) {
-    super.start(false, options);
-    if (blank) return;
+  activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
+    super.activate(baseEvents, options);
     if (!this.interaction) return;
 
     // handle viewport listeners:

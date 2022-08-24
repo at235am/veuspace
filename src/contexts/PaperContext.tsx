@@ -42,8 +42,8 @@ export type RectangleOptions = CircleOptions & {
 
 type State = {
   // main states:
-  pixim: MutableRefObject<PixiApplication>;
-  setup: (canvas: HTMLCanvasElement, container: HTMLElement) => void;
+  // pixim: MutableRefObject<PixiApplication>;
+  pixim: MutableRefObject<PixiApplication | null>;
 
   // gui states:
   mode: Tool;
@@ -71,7 +71,11 @@ const PaperStateProvider = ({ children }: Props) => {
   const { toggleBetweenLightAndDarkMode: toggleTheme, selectedTheme } =
     useThemeController();
   const theme = useTheme();
-  const pixim = useRef<PixiApplication>(PixiApplication.getInstance());
+
+  const pixim = useRef<PixiApplication | null>(null);
+  // const pixim = useRef<PixiApplication>(
+  //   useMemo(() => new PixiApplication(), [])
+  // );
 
   // gui states:
   const [mode, setMode] = useState<Tool>(TOOL.SELECT);
@@ -123,7 +127,8 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.TOGGLE_GRID,
         action: () => {
-          pixim.current.background.grid = !pixim.current.background.grid;
+          // pixim.current?.background.grid = !pixim.current.background.grid;
+          pixim.current?.background.setGrid(!pixim.current?.background.grid);
         },
       },
       {
@@ -136,9 +141,14 @@ const PaperStateProvider = ({ children }: Props) => {
         actionId: KEY_ACTION.THEME_TOGGLE,
         action: () => {
           // toggleTheme();
-          pixim.current.items.children.forEach((item) => {
-            console.log(item.zOrder);
+          console.log(pixim.current?.viewport.zIndex);
+          console.log(pixim.current?.items.zIndex);
+          // console.log(pixim.current?.transformer.zIndex);
+          pixim.current?.items.children.forEach((item) => {
+            // console.log(item.zOrder);
           });
+
+          console.log(pixim.current?.app.stage);
         },
       },
     ],
@@ -150,17 +160,13 @@ const PaperStateProvider = ({ children }: Props) => {
     keyActions
   );
 
-  const setup = (canvas: HTMLCanvasElement, container: HTMLElement) => {
-    pixim.current.setup(canvas, container);
-  };
-
   const loadFromStorage = () => {
-    pixim.current.items.removeChildren();
-    pixim.current.loadObjects(activePaper.items);
+    pixim.current?.items.removeChildren();
+    pixim.current?.loadObjects(activePaper.items);
   };
 
   const setModeProtected = (mode: Tool) => {
-    if (pixim.current.activeTool.isUsing) return;
+    if (pixim.current?.activeTool.isUsing) return;
     setMode(mode);
   };
 
@@ -168,8 +174,8 @@ const PaperStateProvider = ({ children }: Props) => {
     const paper = activatePaper(id);
 
     if (!paper) return;
-    pixim.current.items.removeChildren();
-    pixim.current.loadObjects(paper.items);
+    pixim.current?.items.removeChildren();
+    pixim.current?.loadObjects(paper.items);
   };
 
   const drawCircle = (options: CircleOptions) => {
@@ -193,19 +199,21 @@ const PaperStateProvider = ({ children }: Props) => {
     gfx.buttonMode = true;
     gfx.interactive = true;
 
-    pixim.current.items.addChild(gfx);
+    pixim.current?.items.addChild(gfx);
   };
 
   useEffect(() => {
-    pixim.current.background.cellSize = cellSize;
+    // pixim.current?.background.cellSize = cellSize;
+    pixim.current?.background.setCellSize(cellSize);
   }, [cellSize]);
 
   useEffect(() => {
-    pixim.current.mode = mode;
+    // pixim.current.mode = mode;
+    pixim.current?.setMode(mode);
   }, [mode]);
 
   useEffect(() => {
-    pixim.current.background.setPatternsColors([
+    pixim.current?.background.setPatternsColors([
       { type: "dot", color: theme.colors.onSurface.D10 },
       { type: "grid", color: theme.colors.onSurface.D20 },
     ]);
@@ -215,7 +223,6 @@ const PaperStateProvider = ({ children }: Props) => {
     <PaperStateContext.Provider
       value={{
         pixim,
-        setup,
         mode,
         setMode,
         cellSize,

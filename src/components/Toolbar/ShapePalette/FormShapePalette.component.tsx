@@ -103,7 +103,7 @@ const FormShapePalette = ({}: Props) => {
 
   useEffect(() => {
     const opt = presets[activePid];
-    if (opt) pixim.current.formShapeTool.setStyles(opt);
+    if (opt) pixim.current?.formShapeTool.setStyles(opt);
   }, [activePid, presets]);
 
   return (

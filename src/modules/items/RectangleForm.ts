@@ -55,9 +55,13 @@ export class RectangleForm
     // console.log(this.getProps());
     this.draw();
     this.interactive = true;
+
+    this.on("pointerdown", () => {
+      console.log("rectangle", this.base.id);
+    });
   }
 
-  public getProps() {
+  public getProps(): RectangleProps {
     const baseProps = this.base.getBaseProps(this);
     const styleProps = deepCopy(this._styleProps);
     return { ...baseProps, ...styleProps };
@@ -81,7 +85,7 @@ export class RectangleForm
     const { width, height, fill, stroke, radius } = this._styleProps;
 
     this.removeChildren();
-    this.addChild(new Text(`${this.zOrder}`));
+    // this.addChild(new Text(`${this.zOrder}`));
 
     const f = openColor(fill.color, fill.alpha);
     const fc = f.rgbNumber();

@@ -5,7 +5,7 @@ import {
 } from "pixi.js-legacy";
 import { PixiApplication, TOOL } from "../PixiApplication";
 
-export class BaseTool {
+export abstract class BaseTool {
   protected pixi: PixiApplication;
   protected interaction?: InteractionManager;
   protected touches: number;
@@ -34,15 +34,20 @@ export class BaseTool {
     // 2 = secondary button (usually the right click)
   }
 
-  start(blank = false, options?: InteractionManagerOptions | undefined) {
+  activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
     const renderer = this.pixi.app.renderer;
-    renderer.plugins.interaction.destroy();
-    renderer.plugins.interaction = new InteractionManager(renderer, options);
-    this.interaction = renderer.plugins.interaction;
+    // renderer.plugins.interaction.destroy();
+
+    const intMan = new InteractionManager(renderer, options);
+    renderer.plugins.interaction = intMan;
+    this.interaction = intMan;
 
     // appearance:
     this.pixi.viewport.cursor = this.cursor;
 
+    this.pixi.activeTool = this;
+
+    if (!baseEvents) return;
     // attach global listeners:
     this.interaction?.on("pointerdown", this.setTouchesAndButton);
     this.interaction?.on("pointerup", this.reset);
@@ -50,8 +55,14 @@ export class BaseTool {
 
     // this.interaction?.on("pointerdown", this.startLongPressCount);
     // this.interaction?.on("pointermove", this.determineLongPressAction);
+  }
 
-    this.pixi.activeTool = this;
+  deactivate() {
+    // const inter = this.pixi.app.renderer.plugins.interaction;
+    if (this.interaction) {
+      this.interaction.removeAllListeners();
+      this.interaction.destroy();
+    }
   }
 
   private setTouchesAndButton = (event: InteractionEvent) => {
