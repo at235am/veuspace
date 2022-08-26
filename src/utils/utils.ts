@@ -342,3 +342,25 @@ export const mergeProps = <T>(oldValue: T, newValue: Partial<T>): T => {
   const b = deepCopy(newValue);
   return { ...a, ...b };
 };
+
+/**
+ * @param pivot the point to rotate about
+ * @param position the point that will be rotated
+ * @param angle the magnitude of the rotation in degrees
+ * @returns
+ */
+export const rotate = (
+  pivot: { x: number; y: number },
+  position: { x: number; y: number },
+  angle: number
+) => {
+  const { x: px, y: py } = pivot;
+  const { x, y } = position;
+
+  const radians = -(Math.PI / 180) * angle;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const nx = cos * (x - px) + sin * (y - py) + px;
+  const ny = cos * (y - py) - sin * (x - px) + py;
+  return { x: nx, y: ny };
+};

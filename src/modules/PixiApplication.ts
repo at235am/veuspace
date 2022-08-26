@@ -3,6 +3,7 @@ import {
   autoDetectRenderer,
   Container,
   DisplayObject,
+  Graphics,
   utils,
 } from "pixi.js-legacy";
 
@@ -23,7 +24,15 @@ import { EllipseForm } from "./items/EllipseForm";
 import { nanoid } from "nanoid";
 import { Transformer } from "./Transformer";
 
+import * as PIXI from "pixi.js";
+
+const registerPixiInspector = () => {
+  (window as any).__PIXI_INSPECTOR_GLOBAL_HOOK__ &&
+    (window as any).__PIXI_INSPECTOR_GLOBAL_HOOK__.register({ PIXI: PIXI });
+};
+
 utils.skipHello(); // skips the pixi application console.log()
+// registerPixiInspector();
 
 export const TOOL = {
   //                         DESKTOP                     | MOBILE
@@ -60,6 +69,12 @@ export class Items extends Container {
   };
 }
 
+export class Testtest extends Container {
+  constructor() {
+    super();
+  }
+}
+
 export class PixiApplication {
   public readonly uid: string;
   public app: Application;
@@ -82,12 +97,10 @@ export class PixiApplication {
   public longPressFn?: () => void;
 
   constructor(canvas?: HTMLCanvasElement, container?: HTMLElement) {
-    this._mode = "select";
-    this.uid = nanoid(6);
-
     const box = container?.getBoundingClientRect() || { width: 0, height: 0 };
 
-    console.log("constructor()", this.uid);
+    this._mode = "select";
+    this.uid = nanoid(6);
 
     this.app = new Application({
       width: box.width,
@@ -98,7 +111,6 @@ export class PixiApplication {
       view: canvas,
       backgroundAlpha: 0,
     });
-    // this.app.renderer = autoDetectRenderer();
 
     // create instances of containers:
     this.items = new Items();
@@ -112,10 +124,6 @@ export class PixiApplication {
     });
 
     this.transformer = new Transformer();
-
-    this.transformer.on("pointerdown", () => {
-      console.log("from the outside");
-    });
 
     // create instances of tools:
     this.selectTool = new SelectTool(this);
@@ -134,9 +142,8 @@ export class PixiApplication {
     // add the containers to the stage (order is important):
     this.viewport.addChild(this.background);
     this.viewport.addChild(this.items);
-    this.viewport.addChild(this.transformer);
     this.app.stage.addChild(this.viewport);
-
+    this.app.stage.addChild(this.transformer);
     // // set up graphic textures for background (this must be run after we created our new renderer):
     this.background.setupTextures();
 
@@ -145,13 +152,7 @@ export class PixiApplication {
     // when theres a "zoomed" pixi-viewport event, there will always be a "moved" event
     // so we can redraw the bg for both zooming and moving the viewport in this one event
     this.viewport
-      .on("pointerdow", () => {
-        console.log("VIEWPORT DOWN");
-      })
-      .on("moved", () => {
-        console.log("moved");
-        // this.transformer.recalcBounds();
-      })
+      .on("moved", () => this.transformer.recalcBounds())
       .on("moved", () => this.background.throttledDrawBG())
       .drag({
         mouseButtons: "middle", // can specify combos of "left" | "right" | "middle" clicks
@@ -169,12 +170,6 @@ export class PixiApplication {
   }
 
   public destroy() {
-    console.log("--------------------");
-    console.log("destroy()", this.uid);
-    // if (!this.app.stage) return;
-    // // this.transformer.destroy();
-
-    console.log("transformer d1", this.transformer.destroyed);
     this.selectTool.deactivate();
     this.drawTool.deactivate();
     this.eraserTool.deactivate();
@@ -185,9 +180,6 @@ export class PixiApplication {
       baseTexture: true,
       texture: true,
     });
-
-    console.log("transformer d1", this.transformer.destroyed);
-    console.log("--------------------");
   }
 
   public loadObjects = (items: { [id: string]: BaseProps }) => {

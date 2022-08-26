@@ -15,8 +15,10 @@ import { Items } from "./PixiApplication";
 import { isRectangle, RectangleForm } from "./items/RectangleForm";
 import { EllipseForm } from "./items/EllipseForm";
 import { nanoid } from "nanoid";
+import { rotate } from "../utils/utils";
+import Color from "color";
 
-type BaseItemMap = { [id: string]: BaseItem };
+type BaseItemMap = { [id: string]: ItemWrapper };
 
 class ShadowContainer extends Container {
   constructor() {
@@ -54,200 +56,299 @@ class ShadowContainer extends Container {
   }
 }
 
+class Handle extends Graphics {
+  private _isHit: boolean;
+  private _mainColor: number;
+  private _hoverColor: number;
+
+  constructor(name: string, mainColor: number, hoverColor: number) {
+    super();
+    this.name = name;
+    this._mainColor = mainColor;
+    this._hoverColor = hoverColor;
+    this._isHit = false;
+    this.interactive = true;
+
+    this.on("pointerover", () => {
+      this.tint = this._hoverColor;
+    })
+      .on("pointerout", () => {
+        this.tint = this._mainColor;
+      })
+      .on("pointerdown", () => {
+        this._isHit = true;
+      })
+      .on("pointerup", () => {
+        this._isHit = false;
+      })
+      .on("pointerupoutside", () => {
+        this._isHit = false;
+      });
+  }
+
+  get isHit() {
+    return this._isHit;
+  }
+
+  set mainColor(color: number) {
+    this._mainColor = color;
+  }
+
+  set hoverColor(color: number) {
+    this._mainColor = color;
+  }
+}
+
 class Wireframe extends Container {
+  private mainColor: number;
+  private hoverColor: number;
+
   private boundzBox: Graphics;
-  private rotateHandle: Graphics;
-  private border: Graphics;
-  private pivotPoint: Graphics;
+  private centerPoint: Graphics;
+
+  // HANDLES:
+  private rotateHandle: Handle;
+
+  // border pieces:
+  private borderLeft: Handle;
+  private borderRight: Handle;
+  private borderTop: Handle;
+  private borderBottom: Handle;
+
+  // corner pieces:
+  private cornerTopLeft: Handle;
+  private cornerTopRight: Handle;
+  private cornerBottomRight: Handle;
+  private cornerBottomLeft: Handle;
 
   constructor() {
-    console.log("constructor() Wireframe");
-
     super();
 
-    this.border = this.addChild(new Graphics());
+    this.mainColor = 0xffffff;
+    this.hoverColor = 0xff00ff;
+
     this.boundzBox = this.addChild(new Graphics());
-    this.rotateHandle = this.addChild(new Graphics());
-    this.pivotPoint = this.addChild(new Graphics());
+
+    this.centerPoint = this.addChild(new Graphics());
+
+    this.rotateHandle = this.createHandle("rotate");
+    this.borderRight = this.createHandle("borderRight");
+    this.borderLeft = this.createHandle("borderLeft");
+    this.borderTop = this.createHandle("borderTop");
+    this.borderBottom = this.createHandle("borderBottom");
+    this.cornerTopLeft = this.createHandle("cornerTopLeft");
+    this.cornerTopRight = this.createHandle("cornerTopRight");
+    this.cornerBottomRight = this.createHandle("cornerBottomRight");
+    this.cornerBottomLeft = this.createHandle("cornerBottomLeft");
 
     this.interactive = true;
     this.boundzBox.interactive = false;
     this.rotateHandle.interactive = true;
-
-    // this.doListeners();
   }
 
-  private help(event: InteractionEvent) {
-    // event.stopPropagation();
-    // console.log(event);
-    console.log("pointerdown rorate");
-  }
+  public createHandle = (name: string) => {
+    return this.addChild(new Handle(name, this.mainColor, this.hoverColor));
+  };
 
-  private doListeners() {
-    this.rotateHandle.on("pointerdown", this.help);
-    this.rotateHandle.on("pointerup", () => {
-      console.log("up");
-    });
-  }
-
-  public draw(bounds: Rectangle, padding = 5) {
-    console.log("drawing");
+  public draw(bounds: Rectangle, padding = 4) {
     // clear at the beginning:
-    this.border.clear();
-    this.pivotPoint.clear();
+    this.centerPoint.clear();
     this.rotateHandle.clear();
+    this.borderLeft.clear();
+    this.borderRight.clear();
+    this.borderTop.clear();
+    this.borderBottom.clear();
+    this.cornerTopLeft.clear();
+    this.cornerTopRight.clear();
+    this.cornerBottomRight.clear();
+    this.cornerBottomLeft.clear();
 
-    // this.box.clear();
+    // this.pivotPoint.beginFill(0xff00ff, 1).drawRect(0, 0, 5, 5).endFill();
 
-    const boundz = bounds.clone();
+    const boundz = bounds.clone().pad(padding);
     if (boundz.width === 0 || boundz.height === 0) return;
 
-    const { x, y, width, height } = boundz.pad(padding);
-    this.position.set(x, y);
+    const x = Math.round(boundz.x);
+    const y = Math.round(boundz.y);
+    const width = Math.round(boundz.width);
+    const height = Math.round(boundz.height);
 
-    this.pivotPoint
-      .beginFill(0xff00ff, 1)
+    this.pivot.set(width / 2, height / 2);
+    this.position.set(x + width / 2, y + height / 2);
+
+    this.centerPoint
+      .beginFill(0xffffff, 1)
       .drawCircle(width / 2, height / 2, 5)
       .endFill();
 
-    this.border.beginFill(0xff0000, 0);
-    this.border.lineStyle({ color: 0xffffff, width: 2 });
-    this.border.drawRect(0, 0, width, height);
-    this.border.endFill();
-
-    this.border.beginFill(0xff00ff, 0);
-    this.border.lineStyle({ color: 0xff00ff, width: 2 });
-    // Object.values(this.items).forEach((i) => {
-    //   // console.log(i.tog)
-
-    //   // const d = i.getBounds(true);
-    //   const d = i._bounds.getRectangle();
-    //   this.g.drawRect(d.x - x, d.y - y, d.width, d.height);
-    // });
-    this.border.endFill();
-
-    // this.box.beginFill(0xffffff, 1);
-    // this.box.drawRect(0, 0, width, height);
-    // this.box.endFill();
-    // this.box.alpha = 0.5;
-
-    this.rotateHandle.beginFill(0xffffff, 1).drawCircle(0, 0, 10);
+    this.rotateHandle.beginFill(0xffffff, 1).drawCircle(0, 0, 5);
     this.rotateHandle.endFill();
     this.rotateHandle.position.set(width / 2, -25);
+
+    this.borderTop
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, width, 1)
+      .endFill();
+
+    this.borderBottom
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, width, 1)
+      .endFill()
+      .position.set(0, height - 1);
+
+    this.borderLeft
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, 1, height)
+      .endFill()
+      .position.set(0, 0);
+
+    this.borderRight
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, 1, height)
+      .endFill()
+      .position.set(width - 1, 0);
+
+    const hitPad = 8;
+    const rb = this.borderRight.getBounds().pad(hitPad, 0);
+    this.borderRight.hitArea = new Rectangle(-hitPad, 0, rb.width, rb.height);
+    const lb = this.borderLeft.getBounds().pad(hitPad, 0);
+    this.borderLeft.hitArea = new Rectangle(-hitPad, 0, lb.width, lb.height);
+    const tb = this.borderTop.getBounds().pad(0, hitPad);
+    this.borderTop.hitArea = new Rectangle(0, -hitPad, tb.width, tb.height);
+    const bb = this.borderBottom.getBounds().pad(0, hitPad);
+    this.borderBottom.hitArea = new Rectangle(0, -hitPad, bb.width, bb.height);
+    // const rbb = this.rightBorder.getBounds().pad(8, -8);
+    // this.rightBorder.hitArea = new Rectangle(-8, 8, rbb.width, rbb.height);
+
+    const cornerSize = 8;
+    this.cornerTopLeft
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, cornerSize, cornerSize)
+      .endFill();
+    this.cornerTopLeft.position.set(1, 1);
+    this.cornerTopLeft.pivot.set(cornerSize / 2, cornerSize / 2);
+
+    this.cornerTopRight
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, cornerSize, cornerSize)
+      .endFill();
+    this.cornerTopRight.position.set(width - 1, 1);
+    this.cornerTopRight.pivot.set(cornerSize / 2, cornerSize / 2);
+
+    this.cornerBottomRight
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, cornerSize, cornerSize)
+      .endFill();
+    this.cornerBottomRight.position.set(width - 1, height - 1);
+    this.cornerBottomRight.pivot.set(cornerSize / 2, cornerSize / 2);
+
+    this.cornerBottomLeft
+      .beginFill(0xffffff)
+      .lineStyle({ width: 0 })
+      .drawRect(0, 0, cornerSize, cornerSize)
+      .endFill();
+    this.cornerBottomLeft.position.set(1, height - 1);
+    this.cornerBottomLeft.pivot.set(cornerSize / 2, cornerSize / 2);
   }
 
-  // destroy() {
-  //   console.log("destroy() Wireframe");
-  //   console.log(this.rotateHandle.listeners("pointerdown"));
+  public hitTest() {
+    return {
+      [this.rotateHandle.name]: this.rotateHandle.isHit,
+      [this.borderLeft.name]: this.borderLeft.isHit,
+      [this.borderRight.name]: this.borderRight.isHit,
+      [this.borderTop.name]: this.borderTop.isHit,
+      [this.borderBottom.name]: this.borderBottom.isHit,
+      [this.cornerTopLeft.name]: this.cornerTopLeft.isHit,
+      [this.cornerTopRight.name]: this.cornerTopRight.isHit,
+      [this.cornerBottomRight.name]: this.cornerBottomRight.isHit,
+      [this.cornerBottomLeft.name]: this.cornerBottomLeft.isHit,
+    };
+  }
+}
 
-  //   this.rotateHandle.removeAllListeners();
+export class ItemWrapper {
+  public refItem: BaseItem;
+  public originalPoint: { x: number; y: number };
+  constructor(item: BaseItem) {
+    this.refItem = item;
+    this.originalPoint = { x: item.x, y: item.y };
+  }
 
-  //   console.log(this.rotateHandle.listeners("pointerdown"));
-
-  //   super.destroy(true);
-  // }
-
-  // rotateItems() {}
+  public updateOriginalPoint = () => {
+    this.originalPoint = { x: this.refItem.x, y: this.refItem.y };
+  };
 }
 
 export class Transformer extends Container {
-  private uid: string;
+  // private items: BaseItemMap;
   private items: BaseItemMap;
-
   private boundz: Rectangle;
 
-  // private shadows: ShadowContainer;
-  // private wireframe: Wireframe;
-
-  private g: Graphics;
+  private shadows: ShadowContainer;
+  private wireframe: Wireframe;
 
   constructor() {
     super();
-
-    this.uid = nanoid(5);
-    console.log("constructor() Transformer", this.uid);
-
-    this.g = new Graphics();
-    this.addChild(this.g);
-    this.g.interactive = true;
-    this.g.on("pointerdown", () => {
-      console.log("graphics", this.uid);
-    });
 
     this.items = {};
     this.boundz = Rectangle.EMPTY;
     this.interactive = true;
 
-    // this.wireframe = new Wireframe();
-    // // this.shadows = new ShadowContainer();
+    this.wireframe = new Wireframe();
+    this.shadows = new ShadowContainer();
 
-    // this.addChild(this.wireframe);
-    // // this.addChild(this.shadows);
+    this.addChild(this.wireframe);
+    this.addChild(this.shadows);
 
     this.on("pointerdown", () => {
-      console.log("pointerdown Transformer", this.uid);
+      console.log("pointerdown Transformer");
     });
-
-    this.draw();
-  }
-
-  private moveToTransformLayer(item: BaseItem) {
-    // item.parentLayer = this.transformLayer;
-  }
-
-  private moveToItemlayer(item: BaseItem) {
-    // item.parentLayer = this.itemLayer;
   }
 
   public addShadowItem(item: BaseItem) {
     const { position, id, angle, scale } = item.getProps();
-
-    // const shadow = this.addChild(new Graphics());
-    // shadow.position.set();
   }
 
   public removeShadowItem(item: BaseItem) {}
 
   public addToGroup(...items: BaseItem[]) {
-    console.log("addToGroup()");
+    // console.log("addToGroup()");
 
     items.forEach((item) => {
       const id = item.base.id;
 
-      // this.shadows.addShadowItem(item);
-      this.items[id] = item;
+      // this.items[id] = item;
+      this.items[id] = new ItemWrapper(item);
     });
     this.recalcBounds();
   }
 
   public addOne(item: BaseItem) {
-    console.log("addOne()");
-
-    // this.shadows.addShadowItem(item);
-
     this.items = {};
-    this.items[item.base.id] = item;
+    // this.items[item.base.id] = item;
+    this.items[item.base.id] = new ItemWrapper(item);
     this.recalcBounds();
   }
 
   public remove(item: BaseItem) {
-    console.log("remove()");
+    // console.log("remove()");
 
     const id = item.base.id;
     const toDelete = this.items[id];
     if (toDelete) {
-      // this.itemsContainer.addChildz(toDelete);
       delete this.items[id];
     }
     this.recalcBounds();
   }
 
   public empty() {
-    console.log("empty()");
-    Object.values(this.items).forEach((item) => {
-      this.moveToItemlayer(item);
-      // this.itemsContainer.addChildz(item);
-    });
     this.items = {};
     this.recalcBounds();
   }
@@ -256,34 +357,32 @@ export class Transformer extends Container {
     const items = Object.values(this.items);
     if (items.length === 0) return Rectangle.EMPTY;
 
-    let rect = items[0].getBounds(true);
+    let rect = items[0].refItem.getBounds(true);
 
     items.forEach((item) => {
-      this.moveToTransformLayer(item);
-      rect.union(item.getBounds(), rect);
+      rect.union(item.refItem.getBounds(), rect);
     });
 
     return rect;
   }
 
-  public recalcBounds() {
+  public recalcBounds = () => {
     // this.itemContainer.draw();
     // console.log("hello");
 
     this.boundz = this.generateBounds();
     this.draw();
-  }
+  };
 
   public draw() {
-    // this.wireframe.draw(this.boundz);
+    this.wireframe.draw(this.boundz);
 
-    this.g.clear().beginFill(0xff00ff).drawRect(0, 0, 50, 50).endFill();
+    // this.g.clear().beginFill(0xff00ff).drawRect(0, 0, 50, 50).endFill();
   }
 
   public isInBounds(event: InteractionEvent) {
     const bounds = this.generateBounds();
     const { x, y } = event.data.global;
-
     return bounds.contains(x, y);
   }
 
@@ -291,20 +390,50 @@ export class Transformer extends Container {
     return !!this.items[item.base.id];
   }
 
-  public translate(dx: number, dy: number) {
-    // Object.values(this.items).forEach((item) => {
-    //   item.position.x += dx;
-    //   item.position.y += dy;
-    // });
+  public translate(
+    pointerDownPosition: { x: number; y: number },
+    currentPointerPosition: { x: number; y: number }
+  ) {
+    const { x: px, y: py } = pointerDownPosition;
+    const { x: cx, y: cy } = currentPointerPosition;
+
+    Object.values(this.items).forEach((item) => {
+      const { x: ox, y: oy } = item.originalPoint;
+      const offset = { x: ox - px, y: oy - py };
+
+      item.refItem.x = cx + offset.x;
+      item.refItem.y = cy + offset.y;
+    });
   }
 
-  public rotateItems() {
-    console.log("rotateitems");
+  public rotateItems = () => {
+    const items = Object.values(this.items);
+    if (items.length === 0) return;
+
+    const { x, y, width, height } = this.boundz;
+    const pivot = { x: x + width / 2, y: y + height / 2 };
+
+    const localPivot = items[0].refItem.parent.toLocal(pivot);
+    console.log(localPivot);
+
+    items.forEach((item) => {
+      const { x, y } = rotate(localPivot, item.refItem.position, 30);
+      item.refItem.position.set(x, y);
+      item.refItem.angle = (item.refItem.angle + 30) % 360;
+    });
+  };
+
+  public syncItems = () => {
+    Object.values(this.items).forEach((item) => item.refItem.syncWithStore());
+  };
+
+  public hitTest() {
+    return this.wireframe.hitTest();
   }
 
-  // public destroy() {
-  //   console.log("destroy() Transformer");
-
-  //   super.destroy({ children: true });
-  // }
+  public updateOriginalPositions = () => {
+    Object.values(this.items).forEach((obj) => {
+      obj.updateOriginalPoint();
+    });
+  };
 }

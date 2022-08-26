@@ -36,7 +36,14 @@ export abstract class BaseTool {
 
   activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
     const renderer = this.pixi.app.renderer;
-    // renderer.plugins.interaction.destroy();
+
+    /**
+     * DON'T DELETE THIS LINE
+     * Although theres a deactivate() that handles this for most casses
+     * there is one case where it does not handle it which causes pointer events to
+     * fire TWICE. It has to do with how things are initialized.
+     */
+    if (!!renderer.plugins.interaction) renderer.plugins.interaction.destroy();
 
     const intMan = new InteractionManager(renderer, options);
     renderer.plugins.interaction = intMan;
@@ -44,21 +51,20 @@ export abstract class BaseTool {
 
     // appearance:
     this.pixi.viewport.cursor = this.cursor;
-
     this.pixi.activeTool = this;
 
     if (!baseEvents) return;
+
     // attach global listeners:
-    this.interaction?.on("pointerdown", this.setTouchesAndButton);
-    this.interaction?.on("pointerup", this.reset);
-    this.interaction?.on("pointerupoutside", this.reset);
+    this.interaction.on("pointerdown", this.setTouchesAndButton);
+    this.interaction.on("pointerup", this.reset);
+    this.interaction.on("pointerupoutside", this.reset);
 
     // this.interaction?.on("pointerdown", this.startLongPressCount);
     // this.interaction?.on("pointermove", this.determineLongPressAction);
   }
 
   deactivate() {
-    // const inter = this.pixi.app.renderer.plugins.interaction;
     if (this.interaction) {
       this.interaction.removeAllListeners();
       this.interaction.destroy();
@@ -66,8 +72,6 @@ export abstract class BaseTool {
   }
 
   private setTouchesAndButton = (event: InteractionEvent) => {
-    // console.log("base:pointerdown");
-
     this.isUsing = true;
     this.touches = 1;
     this.button = event.data.button;

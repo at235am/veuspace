@@ -10,42 +10,26 @@ import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
 export class SelectTool extends BaseTool {
   private dragging: boolean;
+  // private pointerDownData: InteractionData | null;
+  private pointerDownPosition: { x: number; y: number };
 
-  private offset: { x: number; y: number };
-  private item: BaseItem | null;
-
-  private mousedowndata: InteractionData | null;
-
-  private dragPoint: { x: number; y: number } = { x: 0, y: 0 };
-
-  // private transformer: Transformer;
+  private shouldTranslate: boolean;
+  private shouldRotate: boolean;
 
   constructor(pixi: PixiApplication, longPressCallback?: () => void) {
-    console.log("contructor() SelectTool");
     super(pixi, longPressCallback);
 
+    this.shouldTranslate = false;
+    this.shouldRotate = false;
     this.dragging = false;
-    this.mousedowndata = null;
-    this.offset = { x: 0, y: 0 };
-    this.item = null;
-
-    // this.transformer.interactive = true;
-    // this.pixi.app.stage.addChild(this.transformer);
+    // this.pointerDownData = null;
+    this.pointerDownPosition = { x: 0, y: 0 };
+    // this.item = null;
   }
-
-  // drawTransformer = () => {
-  //   if (this.pixi.transformer) this.pixi.transformer.draw();
-  // };
 
   activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
     super.activate(baseEvents, options);
     if (!this.interaction) return;
-
-    // this.pixi.app.ticker.add(this.drawTransformer);
-
-    // this.transformer = new Transformer();
-    // this.transformer.interactive = true;
-    // this.pixi.app.stage.addChild(this.transformer);
 
     // handle viewport listeners:
     this.pixi.enablePanning();
@@ -56,14 +40,13 @@ export class SelectTool extends BaseTool {
     this.interaction.on("pointerup", this.selectEnd);
     this.interaction.on("pointerupoutside", this.selectEnd);
 
-    const throttleMove = throttle(this.selectionMove, 20);
+    // const throttleMove = throttle(this.selectionMove, 20);
     // this.interaction.on("pointermove", throttleMove);
+    this.interaction.on("pointermove", this.selectionMove);
   }
 
   deactivate() {
     this.pixi.transformer.empty();
-    // this.pixi.app.ticker.remove(this.drawTransformer);
-
     super.deactivate();
   }
 
@@ -73,106 +56,71 @@ export class SelectTool extends BaseTool {
     }
   };
 
+  anyHandlesHit = (bools: { [handle: string]: boolean }) =>
+    Object.values(bools).some((v) => v);
+
   selectItem = (event: InteractionEvent) => {
+    console.log("selectItem");
     if (this.button === 1) return;
 
-    // console.log("---------------------------------");
-    console.log("selectItem");
-
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
-    this.item = im.hitTest(event.data.global, this.pixi.items) as BaseItem;
 
-    const hitHandles = im.hitTest(event.data.global, this.pixi.transformer);
+    const itemHit = im.hitTest(event.data.global, this.pixi.items) as BaseItem;
     const inBounds = this.pixi.transformer.isInBounds(event);
+    const handleHits = this.pixi.transformer.hitTest();
+    const handleHit = this.anyHandlesHit(handleHits); // atleast one handle was hit
 
-    const dontDeSelect = hitHandles || inBounds;
+    this.shouldTranslate = !handleHit && (!!itemHit || inBounds);
+    this.shouldRotate = !!handleHits["rotate"];
+    const shouldScale = !!handleHits["cornerTopLeft"];
 
-    if (!this.item && !dontDeSelect) {
+    if (this.shouldRotate) this.pixi.transformer.rotateItems();
+
+    const dontDeSelect = handleHit || inBounds;
+
+    if (!itemHit && !dontDeSelect) {
       this.pixi.transformer.empty();
-      // this.transformer.empty();
       return;
     }
 
-    // if (!this.item) {
-    //   if (!inBounds) this.transformer.empty();
-    // }
-    if (this.item) {
-      console.log("hit an item");
-      const alreadySelected = this.pixi.transformer.isAlreadySelected(
-        this.item
-      );
+    if (itemHit) {
+      const alreadySelected = this.pixi.transformer.isAlreadySelected(itemHit);
       if (!alreadySelected) {
         const shift = event.data.originalEvent.shiftKey;
 
         if (shift) {
-          this.pixi.transformer.addToGroup(this.item);
-          // this.transformer.addToGroup(this.item);
+          this.pixi.transformer.addToGroup(itemHit);
         } else {
-          this.pixi.transformer.addOne(this.item);
-          // this.transformer.addOne(this.item);
+          this.pixi.transformer.addOne(itemHit);
         }
       }
-      // console.log("here");
-
-      // this.pixi.transformer.draw();
-
-      // this.item.parentLayer = this.pixi.transformLayer;
-
-      // this.item.alpha = 0.8;
-      const lp = event.data.getLocalPosition(this.pixi.transformer);
-      // const lp = event.data.getLocalPosition(this.transformer);
-      this.offset = { x: this.item.x - lp.x, y: this.item.y - lp.y };
-      // const lp = event.data.getLocalPosition(this.item.parent);
-      // this.offset = { x: this.item.x - lp.x, y: this.item.y - lp.y };
     }
-
     this.pixi.disablePanning();
-    this.mousedowndata = event.data;
-    this.dragPoint = { x: event.data.global.x, y: event.data.global.y };
+    this.pointerDownPosition = event.data.getLocalPosition(this.pixi.items);
+    this.pixi.transformer.updateOriginalPositions();
     this.dragging = true;
-  };
-
-  selectEnd = (event: InteractionEvent) => {
-    // console.log("end");
-    if (this.item) {
-      // this.item.parentLayer = this.pixi.itemLayer;
-
-      // this.item.alpha = 1;
-      this.item.syncWithStore();
-    }
-
-    this.dragging = false;
-    this.mousedowndata = null;
-    this.item = null;
-    // this.pixi.transformer = undefined;
+    // this.pointerDownData = event.data;
   };
 
   selectionMove = (event: InteractionEvent) => {
-    if (!(this.dragging && this.mousedowndata)) return;
-    // console.log("move");
+    // if (!(this.dragging && this.pointerDownData)) return;
+    if (!this.dragging) return;
 
-    console.log("moveee");
-
-    // const new_pos = this.mousedowndata.getLocalPosition(this.pixi.transformer);
-
-    // const prev = this.dragPoint;
-    // const curr = { x: event.data.global.x, y: event.data.global.y };
-    // const dx = curr.x - prev.x;
-    // const dy = curr.y - prev.y;
-    // this.dragPoint = curr;
-    // this.pixi.transformer.translate(dx, dy);
-
-    if (this.item) {
-      // const new_pos = this.mousedowndata.getLocalPosition(this.item.parent);
-      // this.item.position.set(
-      //   new_pos.x + this.offset.x,
-      //   new_pos.y + this.offset.y
-      // );
-      // console.log(this.pixi.transformLayer.children);
-      // this.pixi.transformLayer.position.set(
-      //   new_pos.x + this.offset.x,
-      //   new_pos.y + this.offset.y
-      // );
+    if (this.shouldTranslate) {
+      const cp = event.data.getLocalPosition(this.pixi.items);
+      this.pixi.transformer.translate(this.pointerDownPosition, cp);
+      this.pixi.transformer.recalcBounds();
     }
+  };
+
+  selectEnd = (event: InteractionEvent) => {
+    this.pixi.transformer.syncItems();
+
+    this.dragging = false;
+    this.shouldTranslate = false;
+    this.shouldRotate = false;
+    // this.pointerDownData = null;
+
+    // this.item = null;
   };
 }

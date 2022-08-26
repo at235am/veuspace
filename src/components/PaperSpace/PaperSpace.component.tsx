@@ -18,34 +18,18 @@ const PaperSpace = () => {
   });
 
   useEffect(() => {
-    console.log("=======================================================");
-
-    console.log("UE mounted");
     if (!canvasRef.current || !containerRef.current) return;
-    console.log("UE setup");
-
-    console.log("prevID", pixim.current?.uid);
-
     pixim.current = new PixiApplication(
       canvasRef.current,
       containerRef.current
     );
-
-    console.log(pixim.current.uid);
-
-    // pixim.current.setup(canvasRef.current, containerRef.current);
-
     loadFromStorage();
-
     return () => {
-      console.log("UE destroy");
       pixim.current?.destroy();
-      console.log("=======================================================");
     };
   }, []);
 
   useEffect(() => {
-    console.log("UE setscreensize");
     if (width === 0 || height === 0) return;
     pixim.current?.setScreenSize(width, height);
   }, [width, height]);
