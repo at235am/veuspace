@@ -52,7 +52,6 @@ export class RectangleForm
     const { width, height, fill, stroke, radius } = mergedProps;
     this._styleProps = { width, height, fill, stroke, radius };
 
-    // console.log(this.getProps());
     this.draw();
     this.interactive = true;
   }

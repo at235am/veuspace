@@ -1,60 +1,15 @@
-// import { Layer } from "@pixi/layers";
 import {
-  Bounds,
   Container,
-  DisplayObject,
   Graphics,
   InteractionEvent,
-  LineStyle,
   Rectangle,
 } from "pixi.js-legacy";
 
 import "@pixi/math-extras";
 import { BaseItem } from "./items/BaseItem";
-import { Items } from "./PixiApplication";
-import { isRectangle, RectangleForm } from "./items/RectangleForm";
-import { EllipseForm } from "./items/EllipseForm";
-import { nanoid } from "nanoid";
-import { rotate } from "../utils/utils";
-import Color from "color";
+import { rotate, round10 } from "../utils/utils";
 
 type BaseItemMap = { [id: string]: ItemWrapper };
-
-class ShadowContainer extends Container {
-  constructor() {
-    super();
-
-    this.interactive = false;
-  }
-
-  draw() {
-    // const { x, y, width, height } = this.getBounds(true);
-    // this.border.clear();
-    // this.border
-    //   .beginFill(0xffff00, 0)
-    //   .lineStyle({ color: 0xffff00, width: 1 })
-    //   .drawRect(x, y, width, height)
-    //   .endFill();
-    // this.position.set(x, y);
-  }
-
-  addShadowItem(item: BaseItem) {
-    // const { x, y, width, height } = this.getBounds();
-    // const { x, y } = item.position;
-    // const { width, height, angle } = item;
-    // const g = new Graphics();
-    // g.position.set(x, y);
-    // g.beginFill(0, 0)
-    //   .lineStyle({ color: 0xff00ff, width: 1 })
-    //   .drawRect(0, 0, width, height)
-    //   .endFill();
-    // this.addChild(g);
-  }
-
-  updateShadowItems(...items: BaseItem[]) {
-    // this
-  }
-}
 
 class Handle extends Graphics {
   private _isHit: boolean;
@@ -128,7 +83,6 @@ class Wireframe extends Container {
     this.hoverColor = 0xff00ff;
 
     this.boundzBox = this.addChild(new Graphics());
-
     this.centerPoint = this.addChild(new Graphics());
 
     this.rotateHandle = this.createHandle("rotate");
@@ -143,7 +97,6 @@ class Wireframe extends Container {
 
     this.interactive = true;
     this.boundzBox.interactive = false;
-    this.rotateHandle.interactive = true;
   }
 
   public createHandle = (name: string) => {
@@ -163,10 +116,8 @@ class Wireframe extends Container {
     this.cornerBottomRight.clear();
     this.cornerBottomLeft.clear();
 
-    // this.pivotPoint.beginFill(0xff00ff, 1).drawRect(0, 0, 5, 5).endFill();
-
+    if (bounds.width === 0 || bounds.height === 0) return;
     const boundz = bounds.clone().pad(padding);
-    if (boundz.width === 0 || boundz.height === 0) return;
 
     const x = Math.round(boundz.x);
     const y = Math.round(boundz.y);
@@ -181,8 +132,7 @@ class Wireframe extends Container {
       .drawCircle(width / 2, height / 2, 5)
       .endFill();
 
-    this.rotateHandle.beginFill(0xffffff, 1).drawCircle(0, 0, 5);
-    this.rotateHandle.endFill();
+    this.rotateHandle.beginFill(0xffffff, 1).drawCircle(0, 0, 6).endFill();
     this.rotateHandle.position.set(width / 2, -25);
 
     this.borderTop
@@ -221,8 +171,6 @@ class Wireframe extends Container {
     this.borderTop.hitArea = new Rectangle(0, -hitPad, tb.width, tb.height);
     const bb = this.borderBottom.getBounds().pad(0, hitPad);
     this.borderBottom.hitArea = new Rectangle(0, -hitPad, bb.width, bb.height);
-    // const rbb = this.rightBorder.getBounds().pad(8, -8);
-    // this.rightBorder.hitArea = new Rectangle(-8, 8, rbb.width, rbb.height);
 
     const cornerSize = 8;
     this.cornerTopLeft
@@ -273,73 +221,66 @@ class Wireframe extends Container {
   }
 }
 
-export class ItemWrapper {
+class ItemWrapper {
   public refItem: BaseItem;
   public originalPoint: { x: number; y: number };
+  public originalAngle: number;
+
   constructor(item: BaseItem) {
     this.refItem = item;
     this.originalPoint = { x: item.x, y: item.y };
+    this.originalAngle = item.angle;
   }
 
   public updateOriginalPoint = () => {
     this.originalPoint = { x: this.refItem.x, y: this.refItem.y };
   };
+
+  public updateOriginalAngle = () => {
+    this.originalAngle = this.refItem.angle;
+  };
 }
 
 export class Transformer extends Container {
-  // private items: BaseItemMap;
   private items: BaseItemMap;
-  private boundz: Rectangle;
-
-  private shadows: ShadowContainer;
   private wireframe: Wireframe;
+  private _boundingBox: Rectangle;
+  private _center: { x: number; y: number };
 
   constructor() {
     super();
 
     this.items = {};
-    this.boundz = Rectangle.EMPTY;
+    this._boundingBox = Rectangle.EMPTY;
+    this._center = { x: 0, y: 0 };
     this.interactive = true;
 
     this.wireframe = new Wireframe();
-    this.shadows = new ShadowContainer();
 
     this.addChild(this.wireframe);
-    this.addChild(this.shadows);
-
-    this.on("pointerdown", () => {
-      console.log("pointerdown Transformer");
-    });
   }
 
-  public addShadowItem(item: BaseItem) {
-    const { position, id, angle, scale } = item.getProps();
+  get boundingBox() {
+    return this._boundingBox;
   }
 
-  public removeShadowItem(item: BaseItem) {}
+  get center() {
+    return this._center;
+  }
 
   public addToGroup(...items: BaseItem[]) {
-    // console.log("addToGroup()");
-
     items.forEach((item) => {
-      const id = item.base.id;
-
-      // this.items[id] = item;
-      this.items[id] = new ItemWrapper(item);
+      this.items[item.base.id] = new ItemWrapper(item);
     });
     this.recalcBounds();
   }
 
   public addOne(item: BaseItem) {
     this.items = {};
-    // this.items[item.base.id] = item;
-    this.items[item.base.id] = new ItemWrapper(item);
-    this.recalcBounds();
+    this.addToGroup(item);
   }
 
   public remove(item: BaseItem) {
-    // console.log("remove()");
-
     const id = item.base.id;
     const toDelete = this.items[id];
     if (toDelete) {
@@ -357,7 +298,7 @@ export class Transformer extends Container {
     const items = Object.values(this.items);
     if (items.length === 0) return Rectangle.EMPTY;
 
-    let rect = items[0].refItem.getBounds(true);
+    let rect = items[0].refItem.getBounds();
 
     items.forEach((item) => {
       rect.union(item.refItem.getBounds(), rect);
@@ -367,17 +308,14 @@ export class Transformer extends Container {
   }
 
   public recalcBounds = () => {
-    // this.itemContainer.draw();
-    // console.log("hello");
-
-    this.boundz = this.generateBounds();
+    this._boundingBox = this.generateBounds();
+    const { x, y, width, height } = this._boundingBox;
+    this._center = { x: x + width / 2, y: y + height / 2 };
     this.draw();
   };
 
   public draw() {
-    this.wireframe.draw(this.boundz);
-
-    // this.g.clear().beginFill(0xff00ff).drawRect(0, 0, 50, 50).endFill();
+    this.wireframe.draw(this._boundingBox);
   }
 
   public isInBounds(event: InteractionEvent) {
@@ -390,7 +328,7 @@ export class Transformer extends Container {
     return !!this.items[item.base.id];
   }
 
-  public translate(
+  public translateItems(
     pointerDownPosition: { x: number; y: number },
     currentPointerPosition: { x: number; y: number }
   ) {
@@ -401,25 +339,26 @@ export class Transformer extends Container {
       const { x: ox, y: oy } = item.originalPoint;
       const offset = { x: ox - px, y: oy - py };
 
-      item.refItem.x = cx + offset.x;
-      item.refItem.y = cy + offset.y;
+      item.refItem.x = round10(cx + offset.x);
+      item.refItem.y = round10(cy + offset.y);
     });
   }
 
-  public rotateItems = () => {
+  public rotateItems = (
+    angle: number,
+    pivotPoint: { x: number; y: number }
+  ) => {
     const items = Object.values(this.items);
     if (items.length === 0) return;
 
-    const { x, y, width, height } = this.boundz;
-    const pivot = { x: x + width / 2, y: y + height / 2 };
-
-    const localPivot = items[0].refItem.parent.toLocal(pivot);
-    console.log(localPivot);
-
     items.forEach((item) => {
-      const { x, y } = rotate(localPivot, item.refItem.position, 30);
-      item.refItem.position.set(x, y);
-      item.refItem.angle = (item.refItem.angle + 30) % 360;
+      // the translation due to rotating about the center:
+      const { x, y } = rotate(pivotPoint, item.originalPoint, angle);
+      item.refItem.position.x = round10(x);
+      item.refItem.position.y = round10(y);
+
+      // the tilting of the item:
+      item.refItem.angle = round10((item.originalAngle + angle) % 360);
     });
   };
 
@@ -435,5 +374,16 @@ export class Transformer extends Container {
     Object.values(this.items).forEach((obj) => {
       obj.updateOriginalPoint();
     });
+  };
+
+  public updateOriginalAngles = () => {
+    Object.values(this.items).forEach((obj) => {
+      obj.updateOriginalAngle();
+    });
+  };
+
+  public toggleVisibility = (value?: boolean) => {
+    const alpha = this.wireframe.alpha;
+    this.wireframe.alpha = value === undefined ? alpha ^ 1 : +value;
   };
 }

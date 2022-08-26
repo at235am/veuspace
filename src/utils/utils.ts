@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import Color from "color";
+import { Point } from "pixi.js-legacy";
 
 export interface HasId {
   id: string;
@@ -363,4 +364,18 @@ export const rotate = (
   const nx = cos * (x - px) + sin * (y - py) + px;
   const ny = cos * (y - py) - sin * (x - px) + py;
   return { x: nx, y: ny };
+};
+
+export const angleBetweenTwoPoints = (
+  fixedPoint: Point,
+  movingPoint: Point
+) => {
+  const { x: fx, y: fy } = fixedPoint;
+  const { x: mx, y: my } = movingPoint;
+  const dy = my - fy;
+  const dx = mx - fx;
+  let theta = Math.atan2(dy, dx); // range (-PI, PI]
+  theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
+  if (theta < 0) theta = 360 + theta; // range [0, 360)
+  return theta;
 };

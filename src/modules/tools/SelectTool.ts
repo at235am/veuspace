@@ -8,11 +8,10 @@ import { BaseItem } from "../items/BaseItem";
 import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
+import { angleBetweenTwoPoints } from "../../utils/utils";
 export class SelectTool extends BaseTool {
-  private dragging: boolean;
-  // private pointerDownData: InteractionData | null;
   private pointerDownPosition: { x: number; y: number };
-
+  private dragging: boolean;
   private shouldTranslate: boolean;
   private shouldRotate: boolean;
 
@@ -22,9 +21,7 @@ export class SelectTool extends BaseTool {
     this.shouldTranslate = false;
     this.shouldRotate = false;
     this.dragging = false;
-    // this.pointerDownData = null;
     this.pointerDownPosition = { x: 0, y: 0 };
-    // this.item = null;
   }
 
   activate(baseEvents = true, options?: InteractionManagerOptions | undefined) {
@@ -35,14 +32,12 @@ export class SelectTool extends BaseTool {
     this.pixi.enablePanning();
 
     // attach global listeners:
-    // this.interaction.on("pointerdown", this.debug);
     this.interaction.on("pointerdown", this.selectItem);
     this.interaction.on("pointerup", this.selectEnd);
     this.interaction.on("pointerupoutside", this.selectEnd);
-
+    this.interaction.on("pointermove", this.selectionMove);
     // const throttleMove = throttle(this.selectionMove, 20);
     // this.interaction.on("pointermove", throttleMove);
-    this.interaction.on("pointermove", this.selectionMove);
   }
 
   deactivate() {
@@ -50,17 +45,10 @@ export class SelectTool extends BaseTool {
     super.deactivate();
   }
 
-  debug = () => {
-    if (this.button === 2) {
-      console.log(this.pixi.items.children);
-    }
-  };
-
   anyHandlesHit = (bools: { [handle: string]: boolean }) =>
     Object.values(bools).some((v) => v);
 
   selectItem = (event: InteractionEvent) => {
-    console.log("selectItem");
     if (this.button === 1) return;
 
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
@@ -73,8 +61,6 @@ export class SelectTool extends BaseTool {
     this.shouldTranslate = !handleHit && (!!itemHit || inBounds);
     this.shouldRotate = !!handleHits["rotate"];
     const shouldScale = !!handleHits["cornerTopLeft"];
-
-    if (this.shouldRotate) this.pixi.transformer.rotateItems();
 
     const dontDeSelect = handleHit || inBounds;
 
@@ -98,8 +84,8 @@ export class SelectTool extends BaseTool {
     this.pixi.disablePanning();
     this.pointerDownPosition = event.data.getLocalPosition(this.pixi.items);
     this.pixi.transformer.updateOriginalPositions();
+    this.pixi.transformer.updateOriginalAngles();
     this.dragging = true;
-    // this.pointerDownData = event.data;
   };
 
   selectionMove = (event: InteractionEvent) => {
@@ -108,19 +94,25 @@ export class SelectTool extends BaseTool {
 
     if (this.shouldTranslate) {
       const cp = event.data.getLocalPosition(this.pixi.items);
-      this.pixi.transformer.translate(this.pointerDownPosition, cp);
+      this.pixi.transformer.translateItems(this.pointerDownPosition, cp);
       this.pixi.transformer.recalcBounds();
+    }
+    if (this.shouldRotate) {
+      this.pixi.transformer.toggleVisibility(false);
+      const fp = this.pixi.items.toLocal(this.pixi.transformer.center);
+      const cp = event.data.getLocalPosition(this.pixi.items);
+      const angle = (angleBetweenTwoPoints(fp, cp) + 90) % 360;
+      this.pixi.transformer.rotateItems(angle, fp);
     }
   };
 
-  selectEnd = (event: InteractionEvent) => {
+  selectEnd = () => {
     this.pixi.transformer.syncItems();
+    this.pixi.transformer.recalcBounds();
+    this.pixi.transformer.toggleVisibility(true);
 
     this.dragging = false;
     this.shouldTranslate = false;
     this.shouldRotate = false;
-    // this.pointerDownData = null;
-
-    // this.item = null;
   };
 }
