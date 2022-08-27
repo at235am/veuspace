@@ -72,7 +72,7 @@ export class Base {
     obj.position = position;
     obj.scale = scale;
     obj.angle = angle;
-    obj.zOrder = zOrder;
+    // obj.zOrder = zOrder;
   }
 
   public getBaseProps(obj: DisplayObject) {
@@ -85,7 +85,8 @@ export class Base {
       position: { x: px, y: py },
       scale: { x: sx, y: sy },
       angle: obj.angle,
-      zOrder: obj.zOrder ?? -1,
+      // zOrder: obj.zOrder ?? -1,
+      zOrder: 0,
     };
 
     return props;
@@ -102,7 +103,7 @@ export class Base {
     obj.position = position;
     obj.scale = scale;
     obj.angle = angle;
-    obj.zOrder = zOrder;
+    // obj.zOrder = zOrder;
   }
 
   public syncWithStore(obj: DisplayObject, itemProps: BaseProps) {

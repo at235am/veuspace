@@ -69,12 +69,6 @@ export class Items extends Container {
   };
 }
 
-export class Testtest extends Container {
-  constructor() {
-    super();
-  }
-}
-
 export class PixiApplication {
   public readonly uid: string;
   public app: Application;
@@ -113,6 +107,7 @@ export class PixiApplication {
     });
 
     // create instances of containers:
+    this.transformer = new Transformer();
     this.items = new Items();
     this.background = new Background(this, 20000, {
       position: true,
@@ -122,17 +117,6 @@ export class PixiApplication {
       passiveWheel: false,
       disableOnContextMenu: true,
     });
-
-    this.transformer = new Transformer();
-
-    // create instances of tools:
-    this.selectTool = new SelectTool(this);
-    this.drawTool = new DrawTool(this);
-    this.eraserTool = new EraserTool(this);
-    this.formShapeTool = new FormShapeTool(this);
-
-    this.activeTool = this.selectTool;
-    this.selectTool.activate();
 
     // name the major containers:
     this.viewport.name = "viewport";
@@ -144,7 +128,17 @@ export class PixiApplication {
     this.viewport.addChild(this.items);
     this.app.stage.addChild(this.viewport);
     this.app.stage.addChild(this.transformer);
-    // // set up graphic textures for background (this must be run after we created our new renderer):
+
+    // create instances of tools:
+    this.selectTool = new SelectTool(this);
+    this.drawTool = new DrawTool(this);
+    this.eraserTool = new EraserTool(this);
+    this.formShapeTool = new FormShapeTool(this);
+
+    this.activeTool = this.selectTool;
+    this.selectTool.activate();
+
+    // set up graphic textures for background (this must be run after we created our new renderer):
     this.background.setupTextures();
 
     // handle viewport listeners (DO NOT MOVE THIS TO ANY OF THE TOOLS):
@@ -175,7 +169,7 @@ export class PixiApplication {
     this.eraserTool.deactivate();
     this.formShapeTool.deactivate();
 
-    this.app.destroy(false, {
+    this.app.destroy(true, {
       children: true,
       baseTexture: true,
       texture: true,

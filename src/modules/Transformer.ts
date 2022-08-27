@@ -383,7 +383,8 @@ export class Transformer extends Container {
   };
 
   public toggleVisibility = (value?: boolean) => {
-    const alpha = this.wireframe.alpha;
-    this.wireframe.alpha = value === undefined ? alpha ^ 1 : +value;
+    const toggleValue = this.wireframe.alpha ^ 1;
+    const numValue = value ? 1 : 0;
+    this.wireframe.alpha = value === undefined ? toggleValue : numValue;
   };
 }

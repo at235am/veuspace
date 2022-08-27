@@ -38,7 +38,6 @@ const TabContent: Record<Tool, ReactNode> = {
   [TOOL.SELECT]: <> select </>,
   [TOOL.DRAW]: <DrawPalette />,
   [TOOL.ERASE]: <></>,
-  // [TOOL.FORM]: <> SHAPE </>,
   [TOOL.FORM]: <FormShapePalette />,
   [TOOL.ARROW]: <> arrow </>,
   [TOOL.TEXT_ADD]: <> TEXT_ADD </>,
@@ -78,6 +77,7 @@ const Toolbar = () => {
   };
 
   const drawRandomCircle = () => {
+    if (!pixim.current) return;
     const pixi = pixim.current;
     const { width, height } = pixi.app.screen;
 
