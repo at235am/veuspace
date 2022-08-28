@@ -67,6 +67,14 @@ export class Items extends Container {
 
     return children[0];
   };
+
+  toggleItemWireframes = (value: boolean) => {
+    this.children.forEach((item) => {
+      if (item instanceof RectangleForm) {
+        item.toggleWireframe(value);
+      }
+    });
+  };
 }
 
 export class PixiApplication {
@@ -101,6 +109,7 @@ export class PixiApplication {
       height: box.height,
       resolution: window.devicePixelRatio,
       antialias: true,
+
       autoDensity: true,
       view: canvas,
       backgroundAlpha: 0,
@@ -148,6 +157,14 @@ export class PixiApplication {
     this.viewport
       .on("moved", () => this.transformer.recalcBounds())
       .on("moved", () => this.background.throttledDrawBG())
+      .on("zoomed-end", () => {
+        console.log("hello");
+        this.items.children.forEach((item) => {
+          if (item instanceof RectangleForm) {
+            item.refreshWireframe();
+          }
+        });
+      })
       .drag({
         mouseButtons: "middle", // can specify combos of "left" | "right" | "middle" clicks
       })

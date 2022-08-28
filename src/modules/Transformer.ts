@@ -7,7 +7,8 @@ import {
 
 import "@pixi/math-extras";
 import { BaseItem } from "./items/BaseItem";
-import { rotate, round10 } from "../utils/utils";
+import { angleBetweenTwoPoints, CPoint, rotate, round10 } from "../utils/utils";
+import { RectangleForm } from "./items/RectangleForm";
 
 type BaseItemMap = { [id: string]: ItemWrapper };
 
@@ -271,6 +272,10 @@ export class Transformer extends Container {
   public addToGroup(...items: BaseItem[]) {
     items.forEach((item) => {
       this.items[item.base.id] = new ItemWrapper(item);
+      if (item instanceof RectangleForm) {
+        console.log("hey");
+        item.toggleSelected(true);
+      }
     });
     this.recalcBounds();
   }
@@ -280,21 +285,24 @@ export class Transformer extends Container {
     this.addToGroup(item);
   }
 
-  public remove(item: BaseItem) {
-    const id = item.base.id;
-    const toDelete = this.items[id];
-    if (toDelete) {
-      delete this.items[id];
-    }
-    this.recalcBounds();
-  }
+  // public remove(item: BaseItem) {
+  //   const id = item.base.id;
+  //   const toDelete = this.items[id];
+  //   if (toDelete) delete this.items[id];
+  //   this.recalcBounds();
+  // }
 
   public empty() {
+    Object.values(this.items).forEach((item) => {
+      if (item.refItem instanceof RectangleForm) {
+        item.refItem.toggleSelected(false);
+      }
+    });
     this.items = {};
     this.recalcBounds();
   }
 
-  public generateBounds() {
+  public generateBounds = () => {
     const items = Object.values(this.items);
     if (items.length === 0) return Rectangle.EMPTY;
 
@@ -305,12 +313,16 @@ export class Transformer extends Container {
     });
 
     return rect;
-  }
+  };
+
+  public generateCenter = () => {
+    const { x, y, width, height } = this._boundingBox;
+    return { x: x + width / 2, y: y + height / 2 };
+  };
 
   public recalcBounds = () => {
     this._boundingBox = this.generateBounds();
-    const { x, y, width, height } = this._boundingBox;
-    this._center = { x: x + width / 2, y: y + height / 2 };
+    this._center = this.generateCenter();
     this.draw();
   };
 
@@ -329,11 +341,11 @@ export class Transformer extends Container {
   }
 
   public translateItems(
-    pointerDownPosition: { x: number; y: number },
-    currentPointerPosition: { x: number; y: number }
+    cursorPosition: { x: number; y: number },
+    pointerDownPosition: { x: number; y: number }
   ) {
     const { x: px, y: py } = pointerDownPosition;
-    const { x: cx, y: cy } = currentPointerPosition;
+    const { x: cx, y: cy } = cursorPosition;
 
     Object.values(this.items).forEach((item) => {
       const { x: ox, y: oy } = item.originalPoint;
@@ -344,16 +356,19 @@ export class Transformer extends Container {
     });
   }
 
-  public rotateItems = (
-    angle: number,
-    pivotPoint: { x: number; y: number }
-  ) => {
+  public rotateItems = (cursorPosition: CPoint, pivotPoint?: CPoint) => {
     const items = Object.values(this.items);
     if (items.length === 0) return;
 
+    // this line of code is assuming that each item in "items" are all in the same container
+    // which is true since we designed the application in such a way
+    const localCenter = items[0].refItem.parent.toLocal(this._center);
+    const pivot = pivotPoint ?? localCenter;
+    const angle = (angleBetweenTwoPoints(pivot, cursorPosition) + 90) % 360;
+
     items.forEach((item) => {
-      // the translation due to rotating about the center:
-      const { x, y } = rotate(pivotPoint, item.originalPoint, angle);
+      // the translation due to rotating about the pivot (the center by default):
+      const { x, y } = rotate(pivot, item.originalPoint, angle);
       item.refItem.position.x = round10(x);
       item.refItem.position.y = round10(y);
 

@@ -6,6 +6,11 @@ export interface HasId {
   id: string;
 }
 
+export type CPoint = {
+  x: number;
+  y: number;
+};
+
 export const getRandomIntInclusive = (min: number, max: number) => {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -367,8 +372,8 @@ export const rotate = (
 };
 
 export const angleBetweenTwoPoints = (
-  fixedPoint: Point,
-  movingPoint: Point
+  fixedPoint: CPoint,
+  movingPoint: CPoint
 ) => {
   const { x: fx, y: fy } = fixedPoint;
   const { x: mx, y: my } = movingPoint;

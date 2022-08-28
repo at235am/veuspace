@@ -1,4 +1,4 @@
-import { deepCopy, mergeProps, openColor } from "../../utils/utils";
+import { deepCopy, mergeProps, openColor, round10 } from "../../utils/utils";
 import { Graphics, Text } from "pixi.js-legacy";
 import {
   Base,
@@ -38,6 +38,11 @@ export class RectangleForm
 {
   readonly base: Base;
   private _styleProps: RectangleStyle;
+  private wireframe: Graphics;
+
+  private _wireframeVisible: boolean;
+  private _selected: boolean;
+  private _hovering: boolean;
 
   constructor(props: Partial<RectangleProps> = {}) {
     super();
@@ -47,6 +52,12 @@ export class RectangleForm
 
     // sets base props:
     this.base = new Base(p, this);
+    this.wireframe = this.addChild(new Graphics());
+
+    this._wireframeVisible = true; // controls whether or not hover actions
+    this._selected = false;
+    this._hovering = false;
+    this.toggleWireframe(this._wireframeVisible);
 
     const mergedProps = mergeProps(default_rect_style, p);
     const { width, height, fill, stroke, radius } = mergedProps;
@@ -79,7 +90,7 @@ export class RectangleForm
 
     const { width, height, fill, stroke, radius } = this._styleProps;
 
-    this.removeChildren();
+    // this.removeChildren();
     // this.addChild(new Text(`${this.zOrder}`));
 
     const f = openColor(fill.color, fill.alpha);
@@ -93,11 +104,83 @@ export class RectangleForm
     this.clear();
     this.beginFill(fc, fa);
     this.lineStyle({ color: sc, alpha: sa, width: stroke.size });
+    // this.lineStyle({ color: sc, alpha: 0.1, width: 2 });
     this.drawRoundedRect(0, 0, width, height, radius);
     this.endFill();
+
+    // if (this._showWireframe) this.drawWireframe();
+  };
+
+  public drawWireframe = () => {
+    const { width, height, fill, stroke, radius } = this._styleProps;
+
+    const onePixel = 2 / this.parent.worldTransform.a;
+
+    this.wireframe
+      .clear()
+      .beginFill(0xff0000)
+      .drawRoundedRect(0, 0, width, height, radius)
+      .beginHole()
+      .drawRoundedRect(
+        onePixel,
+        onePixel,
+        width - onePixel * 2,
+        height - onePixel * 2,
+        radius
+      )
+      .endHole()
+      .endFill();
+  };
+
+  public refreshWireframe = () => {
+    const shouldDraw =
+      this._wireframeVisible && (this._selected || this._hovering);
+
+    if (shouldDraw) this.drawWireframe();
+    else this.wireframe.clear();
+  };
+
+  pointerOver = () => {
+    this.toggleHover(true);
+  };
+
+  pointerOut = () => {
+    this.toggleHover(false);
   };
 
   get styleProps() {
     return this._styleProps;
   }
+
+  get wireframeVisible() {
+    return this._wireframeVisible;
+  }
+
+  toggleWireframe(value?: boolean) {
+    this._wireframeVisible =
+      value === undefined ? !this._wireframeVisible : value;
+
+    if (this._wireframeVisible) {
+      this.on("pointerover", this.pointerOver);
+      this.on("pointerout", this.pointerOut);
+    } else {
+      this.removeListener("pointerover", this.pointerOver);
+      this.removeListener("pointerout", this.pointerOut);
+    }
+    this.refreshWireframe();
+  }
+
+  get selected() {
+    return this._selected;
+  }
+
+  toggleSelected = (value?: boolean) => {
+    this._selected = value === undefined ? !this._selected : value;
+    this.refreshWireframe();
+  };
+
+  private toggleHover = (value?: boolean) => {
+    this._hovering = value === undefined ? !this._hovering : value;
+    this.refreshWireframe();
+  };
 }

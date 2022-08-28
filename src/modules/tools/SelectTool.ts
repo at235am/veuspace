@@ -1,4 +1,5 @@
 import {
+  Container,
   Graphics,
   InteractionData,
   InteractionEvent,
@@ -10,6 +11,7 @@ import { PixiApplication } from "../PixiApplication";
 import { BaseTool } from "./BaseTool";
 import throttle from "lodash.throttle";
 import { angleBetweenTwoPoints } from "../../utils/utils";
+import { RectangleForm } from "../items/RectangleForm";
 
 export class SelectTool extends BaseTool {
   private boxSelect: BoxSelect;
@@ -36,7 +38,7 @@ export class SelectTool extends BaseTool {
     super.activate(baseEvents, options);
     if (!this.interaction) return;
     this.boxSelect = this.pixi.viewport.addChild(new BoxSelect());
-
+    this.pixi.items.toggleItemWireframes(true);
     // handle viewport listeners:
     this.pixi.enablePanning();
 
@@ -50,6 +52,7 @@ export class SelectTool extends BaseTool {
   }
 
   deactivate() {
+    this.pixi.items.toggleItemWireframes(false);
     this.pixi.transformer.empty();
     super.deactivate();
   }
@@ -58,6 +61,10 @@ export class SelectTool extends BaseTool {
     Object.values(bools).some((v) => v);
 
   selectItem = (event: InteractionEvent) => {
+    if (this.touches > 1) {
+      this.boxSelect.clear();
+      return;
+    }
     if (this.button === 1) return;
 
     const im = this.pixi.app.renderer.plugins.interaction as InteractionManager;
@@ -73,6 +80,8 @@ export class SelectTool extends BaseTool {
 
     const shouldDeSelect = !itemHit && !handleHit && !inBounds;
     this.shouldBoxSelect = shouldDeSelect;
+
+    if (this.shouldRotate) this.pixi.transformer.toggleVisibility(false);
 
     if (shouldDeSelect) this.pixi.transformer.empty();
 
@@ -94,18 +103,19 @@ export class SelectTool extends BaseTool {
 
   selectionMove = (event: InteractionEvent) => {
     // if (!(this.dragging && this.pointerDownData)) return;
+    if (this.touches > 1) return;
     if (!this.dragging) return;
 
     if (this.shouldTranslate) {
-      const cp = event.data.getLocalPosition(this.pixi.items);
-      this.pixi.transformer.translateItems(this.pointerDownPosition, cp);
+      const cursor = event.data.getLocalPosition(this.pixi.items);
+      // this.pixi.transformer.translateItems(this.pointerDownPosition, cursor);
+      this.pixi.transformer.translateItems(cursor, this.pointerDownPosition);
       this.pixi.transformer.recalcBounds();
+      /////////////////////////////////////////////////////////////////////////
     } else if (this.shouldRotate) {
-      this.pixi.transformer.toggleVisibility(false);
-      const fp = this.pixi.items.toLocal(this.pixi.transformer.center);
-      const cp = event.data.getLocalPosition(this.pixi.items);
-      const angle = (angleBetweenTwoPoints(fp, cp) + 90) % 360;
-      this.pixi.transformer.rotateItems(angle, fp);
+      const cursor = event.data.getLocalPosition(this.pixi.items);
+      this.pixi.transformer.rotateItems(cursor);
+      /////////////////////////////////////////////////////////////////////////
     } else if (this.shouldBoxSelect) {
       const { x: mx, y: my } = this.pointerDownPosition;
       const { x, y } = event.data.getLocalPosition(this.pixi.viewport);
@@ -133,8 +143,15 @@ export class SelectTool extends BaseTool {
       const items: BaseItem[] = [];
 
       this.pixi.items.children.forEach((item) => {
-        const t = this.pixi.items.toGlobal(item.position);
-        const hit = this.boxSelect.containsPoint(t);
+        // getBounds() returns the global bounds
+        const { x, y, width, height } = item.getBounds();
+        const midpoint = {
+          x: x + width / 2,
+          y: y + height / 2,
+        };
+
+        // containsPoint() compares with the global, so make sure we pass in a global position:
+        const hit = this.boxSelect.containsPoint(midpoint);
         if (hit) items.push(item as BaseItem);
       });
 

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 // hooks:
 import { usePaperState } from "../../contexts/PaperContext";
