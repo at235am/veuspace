@@ -16,6 +16,7 @@
     "@tabler/icons": "^1.78.1",
     "@types/lodash.debounce": "^4.0.7",
     "@types/lodash.throttle": "^4.1.7",
+    "@use-gesture/react": "^10.2.18",
     "@use-gesture/vanilla": "^10.2.17",
     "color": "^4.2.3",
     "framer-motion": "^6.5.1",

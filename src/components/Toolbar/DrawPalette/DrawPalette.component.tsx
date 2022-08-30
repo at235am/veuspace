@@ -40,7 +40,7 @@ export type DrawPresetMap = { [id: string]: DrawPresetOptions };
 // Otherwise we would have to move all the customization state into Toolbar per Palette component.
 type Props = {};
 const DrawPalette = ({}: Props) => {
-  const { pixim } = usePaperState();
+  // const { pixim } = usePaperState();
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
@@ -94,7 +94,7 @@ const DrawPalette = ({}: Props) => {
 
   useEffect(() => {
     const opt = presets[activePid];
-    if (opt) pixim.current?.drawTool.setOptions(opt);
+    // if (opt) pixim.current?.drawTool.setOptions(opt);
   }, [activePid, presets]);
 
   return (

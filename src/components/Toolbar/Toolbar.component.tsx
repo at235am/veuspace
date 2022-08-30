@@ -49,12 +49,7 @@ const iconSize = 22;
 const iconStroke = 2;
 
 const Toolbar = () => {
-  const {
-    pixim,
-    mode: activeTool,
-    setMode: setActiveTool,
-    drawCircle,
-  } = usePaperState();
+  const { mode: activeTool, setMode: setActiveTool } = usePaperState();
 
   const { toggleBetweenLightAndDarkMode: toggleTheme } = useThemeController();
 
@@ -74,21 +69,6 @@ const Toolbar = () => {
     [TOOL.TEXT_ADD]: keybindMap["text"]?.keys[0] ?? "_",
     [TOOL.TEXT_EDIT]: "",
     [TOOL.IMAGE]: "",
-  };
-
-  const drawRandomCircle = () => {
-    if (!pixim.current) return;
-    const pixi = pixim.current;
-    const { width, height } = pixi.app.screen;
-
-    const p = pixi.viewport.toWorld(randomInt(0, width), randomInt(0, height));
-
-    drawCircle({
-      x: p.x,
-      y: p.y,
-      radius: randomInt(10, 50),
-      color: randomInt(0, 0xffffff),
-    });
   };
 
   return (

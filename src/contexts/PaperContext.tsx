@@ -43,7 +43,7 @@ export type RectangleOptions = CircleOptions & {
 type State = {
   // main states:
   // pixim: MutableRefObject<PixiApplication>;
-  pixim: MutableRefObject<PixiApplication | null>;
+  // pixim: MutableRefObject<PixiApplication | null>;
 
   // gui states:
   mode: Tool;
@@ -56,9 +56,6 @@ type State = {
 
   loadFromStorage: () => void;
   switchToPaper: (id: string) => void;
-
-  // drawing functions:
-  drawCircle: (options: CircleOptions) => void;
 };
 
 type Props = {
@@ -72,7 +69,7 @@ const PaperStateProvider = ({ children }: Props) => {
     useThemeController();
   const theme = useTheme();
 
-  const pixim = useRef<PixiApplication | null>(null);
+  // const pixim = useRef<PixiApplication | null>(null);
   // const pixim = useRef<PixiApplication>(
   //   useMemo(() => new PixiApplication(), [])
   // );
@@ -128,7 +125,7 @@ const PaperStateProvider = ({ children }: Props) => {
         actionId: KEY_ACTION.TOGGLE_GRID,
         action: () => {
           // pixim.current?.background.grid = !pixim.current.background.grid;
-          pixim.current?.background.setGrid(!pixim.current?.background.grid);
+          // pixim.current?.background.setGrid(!pixim.current?.background.grid);
         },
       },
       {
@@ -140,15 +137,7 @@ const PaperStateProvider = ({ children }: Props) => {
       {
         actionId: KEY_ACTION.THEME_TOGGLE,
         action: () => {
-          // toggleTheme();
-          console.log(pixim.current?.viewport.zIndex);
-          console.log(pixim.current?.items.zIndex);
-          // console.log(pixim.current?.transformer.zIndex);
-          pixim.current?.items.children.forEach((item) => {
-            // console.log(item.zOrder);
-          });
-
-          console.log(pixim.current?.app.stage);
+          toggleTheme();
         },
       },
     ],
@@ -161,73 +150,47 @@ const PaperStateProvider = ({ children }: Props) => {
   );
 
   const loadFromStorage = () => {
-    pixim.current?.items.removeChildren();
-    pixim.current?.loadObjects(activePaper.items);
+    // pixim.current?.items.removeChildren();
+    // pixim.current?.loadObjects(activePaper.items);
   };
 
   const setModeProtected = (mode: Tool) => {
-    if (pixim.current?.activeTool.isUsing) return;
+    // if (pixim.current?.activeTool.isUsing) return;
     setMode(mode);
   };
 
   const switchToPaper = (id: string) => {
-    const paper = activatePaper(id);
-
-    if (!paper) return;
-    pixim.current?.items.removeChildren();
-    pixim.current?.loadObjects(paper.items);
-  };
-
-  const drawCircle = (options: CircleOptions) => {
-    const {
-      x = 0,
-      y = 0,
-      radius = 5,
-      color = 0xaabbcc,
-      name,
-      strokeColor = 0xaabbcc,
-      strokeWidth = 0,
-    } = options;
-
-    const gfx = new Graphics();
-
-    gfx.lineStyle({ color: ctn(strokeColor), width: strokeWidth });
-    gfx.beginFill(ctn(color), 1);
-    gfx.drawCircle(0, 0, radius);
-    gfx.endFill();
-    gfx.position.set(x, y);
-    gfx.buttonMode = true;
-    gfx.interactive = true;
-
-    pixim.current?.items.addChild(gfx);
+    // const paper = activatePaper(id);
+    // if (!paper) return;
+    // pixim.current?.items.removeChildren();
+    // pixim.current?.loadObjects(paper.items);
   };
 
   useEffect(() => {
     // pixim.current?.background.cellSize = cellSize;
-    pixim.current?.background.setCellSize(cellSize);
+    // pixim.current?.background.setCellSize(cellSize);
   }, [cellSize]);
 
   useEffect(() => {
     // pixim.current.mode = mode;
-    pixim.current?.setMode(mode);
+    // pixim.current?.setMode(mode);
   }, [mode]);
 
   useEffect(() => {
-    pixim.current?.background.setPatternsColors([
-      { type: "dot", color: theme.colors.onSurface.D10 },
-      { type: "grid", color: theme.colors.onSurface.D20 },
-    ]);
+    // pixim.current?.background.setPatternsColors([
+    //   { type: "dot", color: theme.colors.onSurface.D10 },
+    //   { type: "grid", color: theme.colors.onSurface.D20 },
+    // ]);
   }, [theme]);
 
   return (
     <PaperStateContext.Provider
       value={{
-        pixim,
+        // pixim,
         mode,
         setMode,
         cellSize,
         setCellSize,
-        drawCircle,
         setHotkeyPaused,
         toggleHotkeyPaused,
         loadFromStorage,

@@ -47,7 +47,7 @@ export type FormShapePresetMap = { [id: string]: FormShapePreset };
 // Otherwise we would have to move all the customization state into Toolbar per Palette component.
 type Props = {};
 const FormShapePalette = ({}: Props) => {
-  const { pixim } = usePaperState();
+  // const { pixim } = usePaperState();
 
   const showPalette = useToolbarStore((state) => state.showPalette);
 
@@ -102,8 +102,8 @@ const FormShapePalette = ({}: Props) => {
   };
 
   useEffect(() => {
-    const opt = presets[activePid];
-    if (opt) pixim.current?.formShapeTool.setStyles(opt);
+    // const opt = presets[activePid];
+    // if (opt) pixim.current?.formShapeTool.setStyles(opt);
   }, [activePid, presets]);
 
   return (
