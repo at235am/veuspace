@@ -79,8 +79,7 @@ export const openColor = (color: string | number, alpha?: number) => {
 export const colorToNumber = (color: string | number) =>
   new Color(color).rgbNumber();
 
-export const getRandomColor = () =>
-  colorToNumber(getRandomIntInclusive(0, 0xffffff));
+export const getRandomColor = () => Color(getRandomIntInclusive(0, 0xffffff));
 
 export function* generateColors(num_of_colors: number) {
   const step = num_of_colors < 360 ? 360 / num_of_colors : 1;
@@ -116,6 +115,22 @@ export const roundIntToNearestMultiple = (num: number, multiple: number) =>
   Math.round(num / multiple) * multiple;
 
 export const getSvgPathFromStroke = (stroke: number[][]) => {
+  if (!stroke.length) return "";
+
+  const d = stroke.reduce(
+    (acc, [x0, y0], i, arr) => {
+      const [x1, y1] = arr[(i + 1) % arr.length];
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+      return acc;
+    },
+    ["M", ...stroke[0], "Q"]
+  );
+
+  d.push("Z");
+  return d.join(" ");
+};
+
+export const getSvgPathFromStroke2 = (stroke: number[][]) => {
   if (!stroke.length) return "";
 
   const d = stroke.reduce(
@@ -383,4 +398,35 @@ export const angleBetweenTwoPoints = (
   theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
   if (theta < 0) theta = 360 + theta; // range [0, 360)
   return theta;
+};
+
+export const toWorldGlobal = (point: CPoint, offset: CPoint, scale: number) => {
+  return {
+    x: (point.x - offset.x) / scale,
+    y: (point.y - offset.y) / scale,
+  };
+};
+
+export const toScreenGlobal = () => {};
+
+/**
+ * @param pivot the point to rotate about
+ * @param position the point that will be rotated
+ * @param angle the magnitude of the rotation in radians
+ * @returns
+ */
+export const rotate2 = (
+  pivot: CPoint,
+  position: CPoint,
+  angle: number
+): CPoint => {
+  const { x: px, y: py } = pivot;
+  const { x, y } = position;
+
+  const radians = -angle;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const nx = cos * (x - px) + sin * (y - py) + px;
+  const ny = cos * (y - py) - sin * (x - px) + py;
+  return { x: nx, y: ny };
 };

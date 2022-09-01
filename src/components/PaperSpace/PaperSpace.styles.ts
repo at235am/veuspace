@@ -39,3 +39,11 @@ export const Popup = styled.pre`
 export const G = styled(motion.g)`
   /* border: 1px dashed gold; */
 `;
+
+export const Float = styled.pre`
+  user-select: none;
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+`;

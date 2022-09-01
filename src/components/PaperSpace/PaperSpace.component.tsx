@@ -5,148 +5,382 @@ import { usePaperState } from "../../contexts/PaperContext";
 import { useResizeDetector } from "react-resize-detector";
 
 // styles:
-import { Canvas, Container, G, Stage } from "./PaperSpace.styles";
-import {
-  CPoint,
-  generateColors,
-  getRandomColor,
-  getRandomIntInclusive,
-} from "../../utils/utils";
+import { Canvas, Container, Float, G, Stage } from "./PaperSpace.styles";
+import { arrayToObject, CPoint, toWorldGlobal } from "../../utils/utils";
 import { nanoid } from "nanoid";
 import { useDrag, useGesture } from "@use-gesture/react";
 import Color from "color";
+import {
+  RectangleProps,
+  getRandomRects,
+  getRects,
+  isRectangle,
+  test_rectangles,
+} from "../../modules/itemz/RectangleForm";
+import {
+  EllipseProps,
+  getRandomEllipses,
+  isEllipse,
+  test_ellipses,
+} from "../../modules/itemz/EllipseForm";
+import {
+  BrushProps,
+  createBrush,
+  getRandomBrushes,
+  isBrush,
+  test_brushes,
+} from "../../modules/itemz/Brush";
+import throttle from "lodash.throttle";
 
-type EllipseProps = {
-  id: string;
-  x: number;
-  y: number;
-  rx: number;
-  ry: number;
+import { zoom } from "d3-zoom";
+
+type ItemProps = RectangleProps | EllipseProps | BrushProps;
+
+type ItemMap = {
+  [id: string]: ItemProps;
 };
-
-const Ellipse = ({ id, x, y, rx, ry }: EllipseProps) => {
-  return (
-    <ellipse
-      onClick={() => console.log("hey", id)}
-      cx={x}
-      cy={y}
-      rx={rx}
-      ry={ry}
-    />
-  );
-};
-
-const getEllipses = (width: number, height: number) =>
-  [...Array(1000).keys()].map(() => ({
-    id: nanoid(10),
-    x: getRandomIntInclusive(0, width),
-    y: getRandomIntInclusive(0, height),
-    rx: getRandomIntInclusive(5, 20),
-    ry: getRandomIntInclusive(5, 20),
-  }));
 
 const PaperSpace = () => {
-  //  const { loadFromStorage } = usePaperState();
+  const { loadFromStorage, drawBackground } = usePaperState();
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cvRef = useRef<HTMLCanvasElement>(null);
+  const acvRef = useRef<HTMLCanvasElement>(null);
+  const bgcvRef = useRef<HTMLCanvasElement>(null);
   const { width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({
     targetRef: containerRef,
   });
 
-  const [offset, setOffset] = useState<CPoint>({ x: 0, y: 0 });
-  const bind = useGesture({
-    onDrag: ({ down, offset: [x, y] }) => {
-      setOffset({ x, y });
-    },
+  const cvCtx = useRef<CanvasRenderingContext2D | null>(null);
+  const acvCtx = useRef<CanvasRenderingContext2D | null>(null);
+  const bgcvCtx = useRef<CanvasRenderingContext2D | null>(null);
 
-    onWheel: ({ active, direction: [dx, dy], ...rest }) => {
-      if (active) {
-        // console.log(rest);
+  const [dpr, setDpr] = useState(window ? window.devicePixelRatio || 1 : 1);
+  const [stageTransforms, setStageTransforms] = useState({
+    x: 0,
+    y: 0,
+    scale: 1,
+  });
+  const [items, setItems] = useState<ItemMap>({});
+  const [activeItems, setActiveItems] = useState<ItemMap>({});
+  const [debugValue, setDebugValue] = useState<any>({});
+
+  const toWorld = useCallback(
+    (point: CPoint) => {
+      const { x, y, scale } = stageTransforms;
+      return toWorldGlobal(point, { x, y }, scale);
+    },
+    [stageTransforms]
+  );
+
+  const toScreen = useCallback(
+    (point: CPoint) => {
+      const { x: ox, y: oy, scale } = stageTransforms;
+      const nx = point.x * scale + ox;
+      const ny = point.y * scale + oy;
+      return { x: nx, y: ny };
+    },
+    [stageTransforms]
+  );
+
+  const zoomTo = useCallback(
+    (point: CPoint, newScale: number) => {
+      const { x, y, scale } = stageTransforms;
+
+      const pw = toWorldGlobal(point, { x, y }, scale);
+      const nx = point.x - pw.x * newScale;
+      const ny = point.y - pw.y * newScale;
+      return { x: nx, y: ny, scale: newScale };
+    },
+    [stageTransforms]
+  );
+
+  const updateBrush = useCallback(
+    (brush: BrushProps) => {
+      const updatedBrush = createBrush(brush);
+
+      setActiveItems((map) => {
+        const copy = { ...map };
+        copy[updatedBrush.id] = updatedBrush;
+        return copy;
+      });
+    },
+    [setActiveItems]
+  );
+
+  const throttleUpdateBrush = useCallback(throttle(updateBrush, 20), [
+    updateBrush,
+  ]);
+
+  const drawBrush = useCallback(
+    (
+      brush: BrushProps,
+      currentPoint: CPoint,
+      stageTransforms: { x: number; y: number; scale: number }
+    ) => {
+      const { x, y } = toWorldGlobal(
+        currentPoint,
+        { x: stageTransforms.x, y: stageTransforms.y },
+        stageTransforms.scale
+      );
+      brush.points.push([x, y]);
+      throttleUpdateBrush(brush);
+    },
+    [throttleUpdateBrush]
+  );
+
+  useGesture(
+    {
+      onDrag: ({
+        xy: [x, y],
+        movement: [mx, my],
+        buttons,
+        active,
+        memo,
+        first,
+        last,
+        event,
+        cancel,
+        touches,
+        ...rest
+      }) => {
+        if (first) memo = { offset: stageTransforms, brush: createBrush() };
+        const e = event as PointerEvent;
+        const touch = e.pointerType === "touch";
+
+        if (touches > 1) cancel();
+
+        // pan:
+        if (active && buttons === 4 && !touch) {
+          const ox = memo.offset.x;
+          const oy = memo.offset.y;
+          setStageTransforms((v) => {
+            return { ...v, x: ox + mx, y: oy + my };
+          });
+        }
+        // tools:
+        else if (active && buttons === 1 && !last) {
+          const { brush } = memo;
+          drawBrush(brush, { x, y }, stageTransforms);
+        }
+
+        return memo;
+      },
+
+      onDragEnd: ({ canceled }) => {
+        throttleUpdateBrush.flush();
+        if (canceled) setActiveItems({});
+        else
+          setActiveItems((activeItems) => {
+            setItems((v) => {
+              const copy = { ...v };
+              for (let id in activeItems) copy[id] = activeItems[id];
+              return copy;
+            });
+            return {};
+          });
+      },
+      onWheel: ({ initial, active, direction: [, dy], event, ...rest }) => {
+        if (active) {
+          const [x, y] = [event.clientX, event.clientY];
+          const step = dy < 0 ? 1.1 : 1 / 1.1;
+
+          setStageTransforms((value) => {
+            const newScale = value.scale * step;
+            const t = zoomTo({ x, y }, newScale);
+            return { x: t.x, y: t.y, scale: newScale };
+          });
+        }
+      },
+      onPinch: ({
+        origin: [ox, oy],
+        offset: [scale],
+        active,
+        touches,
+        first,
+        memo,
+        da: [d, a],
+      }) => {
+        if (first)
+          memo = { canvasTransforms: stageTransforms, ox, oy, distance: d };
+
+        if (active && touches === 2) {
+          setStageTransforms((v) => {
+            const newScale = scale;
+            const t = zoomTo({ x: ox, y: oy }, newScale);
+
+            return {
+              ...v,
+              x: t.x,
+              y: t.y,
+              scale: newScale,
+            };
+          });
+        } else if (active && touches === 3) {
+          setStageTransforms((v) => {
+            const OX = memo.canvasTransforms.x;
+            const OY = memo.canvasTransforms.y;
+            const MX = ox - memo.ox;
+            const MY = oy - memo.oy;
+            const fx = OX + MX;
+            const fy = OY + MY;
+
+            return {
+              ...v,
+              x: fx,
+              y: fy,
+            };
+          });
+        }
+
+        return memo;
+      },
+    },
+    {
+      target: containerRef,
+      drag: {
+        pointer: { buttons: [1, 4] }, // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+      },
+      pinch: { from: () => [stageTransforms.scale, 1] },
+    }
+  );
+
+  const setupCanvas = (
+    canvas: HTMLCanvasElement,
+    width: number,
+    height: number,
+    dpr: number
+  ) => {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    const ctx = canvas.getContext("2d");
+    return ctx;
+  };
+
+  const draw = useCallback(
+    (
+      ctx: CanvasRenderingContext2D | null,
+      canvasTransforms: { x: number; y: number; scale: number },
+      items: ItemMap,
+      dpr: number,
+      id = "noone"
+    ) => {
+      if (!ctx) return;
+
+      const { width, height } = ctx.canvas.getBoundingClientRect();
+      const { scale, x: ox, y: oy } = canvasTransforms;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, width * dpr, height * dpr);
+      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, ox * dpr, oy * dpr);
+
+      for (let id in items) {
+        const item = items[id];
+
+        if (isRectangle(item)) {
+          const { position, width, height, fill, angle } = item;
+          const { x, y } = position;
+          const center = { x: x + width / 2, y: y + height / 2 };
+
+          ctx.save();
+          ctx.fillStyle = fill.color;
+
+          ctx.translate(center.x, center.y);
+          ctx.rotate(angle);
+          ctx.translate(-center.x, -center.y);
+
+          ctx.beginPath();
+          ctx.rect(x, y, width, height);
+          ctx.fill();
+          ctx.closePath();
+          ctx.restore();
+        } else if (isEllipse(item)) {
+          const { position, rx, ry, fill, angle } = item;
+          const { x, y } = position;
+          ctx.save();
+          ctx.fillStyle = fill.color;
+          ctx.beginPath();
+          ctx.ellipse(x, y, rx, ry, angle, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.closePath();
+          ctx.restore();
+        } else if (isBrush(item)) {
+          ctx.save();
+          ctx.fillStyle = item.fill.color;
+          ctx.translate(item.position.x, item.position.y);
+          ctx.fill(item.pfPath);
+          ctx.restore();
+        }
       }
     },
-  });
+    []
+  );
 
-  const [ellipses, setEllipses] = useState<EllipseProps[]>([]);
-
-  const drawStuff = useCallback(() => {
-    if (!canvasRef.current) return;
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
-
-    const { width, height } = canvasRef.current.getBoundingClientRect();
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-    ctx.translate(offset.x, offset.y);
-
-    const colorGen = generateColors(ellipses.length);
-
-    ellipses.forEach(({ id, x, y, rx, ry }) => {
-      const color = colorGen.next();
-      const c = color.value ?? 0;
-      ctx.fillStyle = Color(c).hex().toString();
-      ctx.beginPath();
-      // console.log(ctx.fillStyle);
-      // ctx.fillStyle = "red";
-
-      // ctx.ellipse(x, y, rx, ry, 0, 0, 0);
-
-      ctx.rect(x, y, rx, ry);
-
-      ctx.fill();
-    });
-  }, [ellipses, offset]);
+  const throttleDraw = useCallback(throttle(draw, 20), [draw]);
 
   useEffect(() => {
-    if (!containerRef.current || !canvasRef.current) return;
+    if (!containerRef.current) return;
 
     const { width, height } = containerRef.current.getBoundingClientRect();
 
-    setEllipses(getEllipses(width, height));
+    const grids = getRects(width, height);
+    const rects = getRandomRects(100, width, height);
+    const ellipses = getRandomEllipses(100, width, height);
+    const paths = getRandomBrushes(0, width, height);
 
-    return () => {
-      // pixim.current?.destroy();
-    };
+    setItems(
+      arrayToObject([
+        // ...grids,
+        ...rects,
+        ...ellipses,
+        ...paths,
+        ...test_brushes,
+        // ...test_ellipses,
+        // ...test_rectangles,
+      ])
+    );
+
+    setDpr(window.devicePixelRatio || 1);
   }, []);
 
   useEffect(() => {
-    console.log("hey");
-    // if (width === 0 || height === 0) return;
-    // pixim.current?.setScreenSize(width, height);
-    drawStuff();
-  }, [width, height]);
+    if (!acvRef.current || !cvRef.current || !bgcvRef.current) return;
+    cvCtx.current = setupCanvas(cvRef.current, width, height, dpr);
+    acvCtx.current = setupCanvas(acvRef.current, width, height, dpr);
+    bgcvCtx.current = setupCanvas(bgcvRef.current, width, height, dpr);
+  }, [width, height, dpr]);
 
   useEffect(() => {
-    drawStuff();
-  }, [ellipses]);
+    if (!bgcvCtx.current) return;
+    drawBackground(bgcvCtx.current, stageTransforms, dpr);
+  }, [width, height, stageTransforms, dpr]);
 
   useEffect(() => {
-    // console.log(offset);
-    // if (!canvasRef.current) return;
-    // const ctx = canvasRef.current.getContext("2d");
-    // if (!ctx) return;
+    draw(cvCtx.current, stageTransforms, items, dpr, "items");
+  }, [width, height, stageTransforms, dpr, items]);
 
-    // ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // // ctx.clearRect(0,0, )
-    // ctx.translate(offset.x, offset.y);
+  useEffect(() => {
+    draw(acvCtx.current, stageTransforms, activeItems, dpr, "activeItems");
+  }, [width, height, stageTransforms, dpr, activeItems]);
 
-    drawStuff();
-  }, [offset]);
-
-  // return <svg viewBox={`0, 0, ${width} ${height}={`0, 0, ${width} ${height}`}></svg>;
   return (
-    <Container ref={containerRef} {...bind()}>
-      {/* <Stage viewBox={`0 0 ${width} ${height}`}>
-        <G transform={`translate(${offset.x}, ${offset.y})`}>
-          {ellipses.map((item) => (
-            <Ellipse key={item.id} {...item} />
-          ))}
-          <text x="20" y="35">
-            My
-          </text>
-        </G>
-      </Stage> */}
-      <Canvas ref={canvasRef} width={width} height={height} />
+    <Container ref={containerRef}>
+      <Canvas ref={bgcvRef} />
+      <Canvas ref={cvRef} />
+      <Canvas ref={acvRef} />
+      <Float>
+        {JSON.stringify(
+          {
+            offset: stageTransforms,
+            items: Object.keys(items).length,
+            activeItems: Object.keys(activeItems).length,
+            debugValue,
+          },
+          null,
+          2
+        )}
+      </Float>
     </Container>
   );
 };

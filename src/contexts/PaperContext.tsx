@@ -51,6 +51,16 @@ type State = {
   setMode: Dispatch<SetStateAction<Tool>>;
   setCellSize: Dispatch<SetStateAction<number>>;
 
+  drawBackground: (
+    ctx: CanvasRenderingContext2D,
+    stageTransform: {
+      x: number;
+      y: number;
+      scale: number;
+    },
+    dpr: number
+  ) => void;
+
   setHotkeyPaused: (value: boolean) => void;
   toggleHotkeyPaused: () => void;
 
@@ -149,6 +159,8 @@ const PaperStateProvider = ({ children }: Props) => {
     keyActions
   );
 
+  const patternCanvas = useRef<HTMLCanvasElement | null>(null);
+
   const loadFromStorage = () => {
     // pixim.current?.items.removeChildren();
     // pixim.current?.loadObjects(activePaper.items);
@@ -166,7 +178,69 @@ const PaperStateProvider = ({ children }: Props) => {
     // pixim.current?.loadObjects(paper.items);
   };
 
+  const drawPattern = (cellSize: number, scale: number) => {
+    if (!patternCanvas.current) return;
+    const ctx = patternCanvas.current.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    ctx.canvas.width = cellSize;
+    ctx.canvas.height = cellSize;
+
+    ctx.fillStyle = "#ffffff";
+
+    // ctx.beginPath();
+    // ctx.arc(0, 0, 1, 0, 2 * Math.PI);
+
+    // const size = Math.max(1, Math.round(1 / scale));
+    const size = scale > 1 ? 1 : Math.ceil(1 / scale);
+    // const size = 1;
+
+    ctx.rect(0, 0, size, size);
+    // ctx.closePath();
+    ctx.fill();
+  };
+
+  const drawBackground = (
+    ctx: CanvasRenderingContext2D,
+    stageTransform: { x: number; y: number; scale: number },
+    dpr: number
+  ) => {
+    if (!patternCanvas.current) return;
+    // patternCanvas.
+
+    const { width, height } = ctx.canvas.getBoundingClientRect();
+    const { scale, x: ox, y: oy } = stageTransform;
+
+    drawPattern(cellSize, scale);
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, width * dpr, height * dpr);
+    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, ox * dpr, oy * dpr);
+
+    const pattern = ctx.createPattern(patternCanvas.current, "repeat");
+
+    ctx.imageSmoothingEnabled = scale < 1;
+    // ctx.imageSmoothingEnabled = false;
+
+    if (!pattern) return;
+    ctx.fillStyle = pattern;
+
+    ctx.fillRect(
+      Math.round(-ox / scale),
+      Math.round(-oy / scale),
+      Math.round(ctx.canvas.width / scale),
+      Math.round(ctx.canvas.height / scale)
+    );
+  };
+
   useEffect(() => {
+    patternCanvas.current = document.createElement("canvas");
+  }, []);
+
+  useEffect(() => {
+    drawPattern(cellSize, 1);
     // pixim.current?.background.cellSize = cellSize;
     // pixim.current?.background.setCellSize(cellSize);
   }, [cellSize]);
@@ -191,6 +265,8 @@ const PaperStateProvider = ({ children }: Props) => {
         setMode,
         cellSize,
         setCellSize,
+
+        drawBackground,
         setHotkeyPaused,
         toggleHotkeyPaused,
         loadFromStorage,
