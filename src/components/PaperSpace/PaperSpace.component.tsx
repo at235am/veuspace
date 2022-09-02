@@ -32,7 +32,8 @@ import {
 } from "../../modules/itemz/Brush";
 import throttle from "lodash.throttle";
 
-import { zoom } from "d3-zoom";
+import { zoom, zoomIdentity } from "d3-zoom";
+import { select } from "d3-selection";
 
 type ItemProps = RectangleProps | EllipseProps | BrushProps;
 
@@ -143,20 +144,21 @@ const PaperSpace = () => {
         touches,
         ...rest
       }) => {
+        // console.log("dragging");
         if (first) memo = { offset: stageTransforms, brush: createBrush() };
+        // console.log(stageTransforms);
         const e = event as PointerEvent;
         const touch = e.pointerType === "touch";
 
         if (touches > 1) cancel();
-
         // pan:
-        if (active && buttons === 4 && !touch) {
-          const ox = memo.offset.x;
-          const oy = memo.offset.y;
-          setStageTransforms((v) => {
-            return { ...v, x: ox + mx, y: oy + my };
-          });
-        }
+        // if (active && buttons === 4 && !touch) {
+        //   const ox = memo.offset.x;
+        //   const oy = memo.offset.y;
+        //   setStageTransforms((v) => {
+        //     return { ...v, x: ox + mx, y: oy + my };
+        //   });
+        // }
         // tools:
         else if (active && buttons === 1 && !last) {
           const { brush } = memo;
@@ -179,61 +181,61 @@ const PaperSpace = () => {
             return {};
           });
       },
-      onWheel: ({ initial, active, direction: [, dy], event, ...rest }) => {
-        if (active) {
-          const [x, y] = [event.clientX, event.clientY];
-          const step = dy < 0 ? 1.1 : 1 / 1.1;
+      // onWheel: ({ initial, active, direction: [, dy], event, ...rest }) => {
+      //   if (active) {
+      //     const [x, y] = [event.clientX, event.clientY];
+      //     const step = dy < 0 ? 1.1 : 1 / 1.1;
 
-          setStageTransforms((value) => {
-            const newScale = value.scale * step;
-            const t = zoomTo({ x, y }, newScale);
-            return { x: t.x, y: t.y, scale: newScale };
-          });
-        }
-      },
-      onPinch: ({
-        origin: [ox, oy],
-        offset: [scale],
-        active,
-        touches,
-        first,
-        memo,
-        da: [d, a],
-      }) => {
-        if (first)
-          memo = { canvasTransforms: stageTransforms, ox, oy, distance: d };
+      //     setStageTransforms((value) => {
+      //       const newScale = value.scale * step;
+      //       const t = zoomTo({ x, y }, newScale);
+      //       return { x: t.x, y: t.y, scale: newScale };
+      //     });
+      //   }
+      // },
+      // onPinch: ({
+      //   origin: [ox, oy],
+      //   offset: [scale],
+      //   active,
+      //   touches,
+      //   first,
+      //   memo,
+      //   da: [d, a],
+      // }) => {
+      //   if (first)
+      //     memo = { canvasTransforms: stageTransforms, ox, oy, distance: d };
 
-        if (active && touches === 2) {
-          setStageTransforms((v) => {
-            const newScale = scale;
-            const t = zoomTo({ x: ox, y: oy }, newScale);
+      //   if (active && touches === 2) {
+      //     setStageTransforms((v) => {
+      //       const newScale = scale;
+      //       const t = zoomTo({ x: ox, y: oy }, newScale);
 
-            return {
-              ...v,
-              x: t.x,
-              y: t.y,
-              scale: newScale,
-            };
-          });
-        } else if (active && touches === 3) {
-          setStageTransforms((v) => {
-            const OX = memo.canvasTransforms.x;
-            const OY = memo.canvasTransforms.y;
-            const MX = ox - memo.ox;
-            const MY = oy - memo.oy;
-            const fx = OX + MX;
-            const fy = OY + MY;
+      //       return {
+      //         ...v,
+      //         x: t.x,
+      //         y: t.y,
+      //         scale: newScale,
+      //       };
+      //     });
+      //   } else if (active && touches === 3) {
+      //     setStageTransforms((v) => {
+      //       const OX = memo.canvasTransforms.x;
+      //       const OY = memo.canvasTransforms.y;
+      //       const MX = ox - memo.ox;
+      //       const MY = oy - memo.oy;
+      //       const fx = OX + MX;
+      //       const fy = OY + MY;
 
-            return {
-              ...v,
-              x: fx,
-              y: fy,
-            };
-          });
-        }
+      //       return {
+      //         ...v,
+      //         x: fx,
+      //         y: fy,
+      //       };
+      //     });
+      //   }
 
-        return memo;
-      },
+      //   return memo;
+      // },
     },
     {
       target: containerRef,
@@ -322,12 +324,99 @@ const PaperSpace = () => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const { width, height } = containerRef.current.getBoundingClientRect();
+    let skipped = false;
+    let lastValidTransform = zoomIdentity;
+    const selection = select<HTMLDivElement, {}>(containerRef.current);
+    const zoomer = zoom<HTMLDivElement, {}>()
+      .scaleExtent([0.1, 10])
+      .filter((e) => {
+        const { type, touches, buttons } = e;
+        const touch = type.toLowerCase().includes("touch");
+        const middleClick = buttons === 4;
+        const touchPan = touch && touches > 1;
+        const mouseWheel = type === "wheel";
+        const leftClick = !touch ? buttons === 1 : true;
+        const allow = leftClick || middleClick || touchPan || mouseWheel;
 
+        return allow;
+      })
+      .on("zoom", (e) => {
+        // console.log("--------------------------");
+        // console.log("zoom");
+        const { sourceEvent, transform } = e;
+        // setDebugValue((v: any) => ({ ...v, transform }));
+
+        if (skipped) {
+          // console.log("skipped");
+          skipped = false;
+          const { x, y, k } = transform;
+          lastValidTransform = transform;
+          setStageTransforms((t) => {
+            if (t.x === x && t.y === y && t.scale === k) return t;
+            return { x, y, scale: k };
+          });
+
+          return;
+        }
+
+        // if (!sourceEvent) console.warn("SOURCE EVENT", sourceEvent);
+
+        const touch = sourceEvent.type.toLowerCase().includes("touch");
+        const touches = touch ? sourceEvent.touches.length : 1;
+
+        const middleClick = sourceEvent.buttons === 4;
+        const touchPan = touch && touches > 1;
+        const mouseWheel = sourceEvent.type === "wheel";
+
+        const allow = touchPan || mouseWheel || middleClick;
+
+        // console.log(allow);
+
+        if (!allow) {
+          skipped = true;
+          // reverting the transform:
+          selection.call(e.target.transform, lastValidTransform);
+        } else {
+          const { x, y, k } = transform;
+          lastValidTransform = transform;
+          setStageTransforms({ x, y, scale: k });
+        }
+      });
+
+    selection
+      .call(zoomer)
+
+      .on("wheel", (event) => {
+        event.preventDefault();
+        console.log("--------");
+        console.log(event.ctrlKey);
+        console.log(event.wheelDeltaX, event.wheelDeltaY);
+        console.log(event.deltaX, event.deltaY);
+        // console.log(event);
+        skipped = true;
+
+        if (!event.ctrlKey) {
+          zoomer.translateBy(selection, event.wheelDeltaX, event.wheelDeltaY);
+        } else {
+          const cursorPosition: [number, number] = [
+            event.clientX,
+            event.clientY,
+          ];
+
+          const delta = event.wheelDeltaY > 0 ? 1.1 : 1 / 1.1;
+          zoomer.scaleBy(selection, delta, cursorPosition);
+        }
+      })
+      .on("wheel.zoom", (event) => {
+        event.preventDefault();
+        console.log("wheel.zoom");
+      });
+
+    const { width, height } = containerRef.current.getBoundingClientRect();
     const grids = getRects(width, height);
-    const rects = getRandomRects(100, width, height);
-    const ellipses = getRandomEllipses(100, width, height);
-    const paths = getRandomBrushes(0, width, height);
+    const rects = getRandomRects(10, width, height);
+    const ellipses = getRandomEllipses(10, width, height);
+    const paths = getRandomBrushes(10, width, height);
 
     setItems(
       arrayToObject([
