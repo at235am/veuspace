@@ -8,6 +8,7 @@ export const Container = styled.div`
   overflow: hidden;
   position: relative;
   touch-action: none;
+  overscroll-behavior-x: contain;
 
   background-color: ${({ theme }) => theme.colors.surface.B00};
 
