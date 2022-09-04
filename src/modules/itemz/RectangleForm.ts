@@ -67,7 +67,7 @@ export const getRects = (width: number, height: number): RectangleProps[] => {
         angle: 0,
         width: r,
         height: r,
-        fill: { color: (i + j) % 2 === 0 ? "#4db2ff" : "#3b9d59" },
+        fill: { color: (i + j) % 2 === 0 ? "#222222" : "#999999" },
         // fill: { color: getRandomColor().hex() },
         radius: getRandomIntInclusive(0, 10),
 

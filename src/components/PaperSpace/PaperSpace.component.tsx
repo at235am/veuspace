@@ -8,7 +8,7 @@ import { useResizeDetector } from "react-resize-detector";
 import { Canvas, Container, Float, G, Stage } from "./PaperSpace.styles";
 import { arrayToObject, CPoint, toWorldGlobal } from "../../utils/utils";
 import { nanoid } from "nanoid";
-import { useDrag, useGesture } from "@use-gesture/react";
+import { useGesture } from "@use-gesture/react";
 import Color from "color";
 import {
   RectangleProps,
@@ -32,14 +32,7 @@ import {
 } from "../../modules/itemz/Brush";
 import throttle from "lodash.throttle";
 
-import { zoom, zoomIdentity } from "d3-zoom";
-import { select } from "d3-selection";
-
-import { mat2, mat2d } from "gl-matrix";
-import { useZoomPan } from "../../hooks/useZoomPan";
-import { T } from "../Logo/Logo.styles";
-
-const sdkfj = mat2d.create();
+import { Transform, useZoomPan } from "../../hooks/useZoomPan";
 
 type ItemProps = RectangleProps | EllipseProps | BrushProps;
 
@@ -48,13 +41,6 @@ type ItemMap = {
 };
 
 const PaperSpace = () => {
-  const {
-    zoomBy,
-
-    // transform: stageTransforms,
-    panTo,
-    pan,
-  } = useZoomPan();
   const { loadFromStorage, drawBackground } = usePaperState();
   const containerRef = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLCanvasElement>(null);
@@ -69,10 +55,10 @@ const PaperSpace = () => {
   const bgcvCtx = useRef<CanvasRenderingContext2D | null>(null);
 
   const [dpr, setDpr] = useState(window ? window.devicePixelRatio || 1 : 1);
-  const [stageTransforms, setStageTransforms] = useState({
+  const [transform, setStageTransforms] = useState<Transform>({
     x: 0,
     y: 0,
-    scale: 1,
+    k: 1,
   });
   const [items, setItems] = useState<ItemMap>({});
   const [activeItems, setActiveItems] = useState<ItemMap>({});
@@ -80,32 +66,32 @@ const PaperSpace = () => {
 
   const toWorld = useCallback(
     (point: CPoint) => {
-      const { x, y, scale } = stageTransforms;
-      return toWorldGlobal(point, { x, y }, scale);
+      const { x, y, k } = transform;
+      return toWorldGlobal(point, { x, y }, k);
     },
-    [stageTransforms]
+    [transform]
   );
 
   const toScreen = useCallback(
     (point: CPoint) => {
-      const { x: ox, y: oy, scale } = stageTransforms;
+      const { x: ox, y: oy, k: scale } = transform;
       const nx = point.x * scale + ox;
       const ny = point.y * scale + oy;
       return { x: nx, y: ny };
     },
-    [stageTransforms]
+    [transform]
   );
 
   const zoomTo = useCallback(
     (point: CPoint, newScale: number) => {
-      const { x, y, scale } = stageTransforms;
+      const { x, y, k: scale } = transform;
 
       const pw = toWorldGlobal(point, { x, y }, scale);
       const nx = point.x - pw.x * newScale;
       const ny = point.y - pw.y * newScale;
       return { x: nx, y: ny, scale: newScale };
     },
-    [stageTransforms]
+    [transform]
   );
 
   const updateBrush = useCallback(
@@ -126,15 +112,11 @@ const PaperSpace = () => {
   ]);
 
   const drawBrush = useCallback(
-    (
-      brush: BrushProps,
-      currentPoint: CPoint,
-      stageTransforms: { x: number; y: number; scale: number }
-    ) => {
+    (brush: BrushProps, currentPoint: CPoint, transform: Transform) => {
       const { x, y } = toWorldGlobal(
         currentPoint,
-        { x: stageTransforms.x, y: stageTransforms.y },
-        stageTransforms.scale
+        { x: transform.x, y: transform.y },
+        transform.k
       );
       brush.points.push([x, y]);
       throttleUpdateBrush(brush);
@@ -157,31 +139,17 @@ const PaperSpace = () => {
         touches,
         ...rest
       }) => {
-        // console.log("dragging");
-        if (first) memo = { offset: stageTransforms, brush: createBrush() };
-        // console.log(stageTransforms);
+        if (first) memo = { transform, brush: createBrush() };
+
         const e = event as PointerEvent;
         const touch = e.pointerType === "touch";
 
         if (touches > 1) cancel();
         // pan:
         if (active && buttons === 4 && !touch) {
-          const ox = memo.offset.x;
-          const oy = memo.offset.y;
+          const ox = memo.transform.x;
+          const oy = memo.transform.y;
 
-          // console.log("hey", x, y);
-
-          setDebugValue((v: any) => ({
-            ...v,
-            ox,
-            oy,
-            x: ox + mx,
-            y: oy + my,
-            mx,
-            my,
-          }));
-
-          // pan([ox + mx, oy + my]);
           setStageTransforms((v) => {
             return { ...v, x: ox + mx, y: oy + my };
           });
@@ -189,7 +157,7 @@ const PaperSpace = () => {
         // tools:
         else if (active && buttons === 1 && !last) {
           const { brush } = memo;
-          drawBrush(brush, { x, y }, stageTransforms);
+          drawBrush(brush, { x, y }, transform);
         }
 
         return memo;
@@ -208,15 +176,7 @@ const PaperSpace = () => {
             return {};
           });
       },
-      onWheel: ({
-        initial,
-        active,
-        direction: [,],
-        delta: [dx, dy],
-        event,
-        ctrlKey,
-        ...rest
-      }) => {
+      onWheel: ({ active, delta: [dx, dy], event, ctrlKey }) => {
         // event.preventDefault();
         // event.stopPropagation();
         if (active) {
@@ -225,9 +185,9 @@ const PaperSpace = () => {
 
           if (ctrlKey) {
             setStageTransforms((value) => {
-              const newScale = value.scale * step;
+              const newScale = value.k * step;
               const t = zoomTo({ x, y }, newScale);
-              return { x: t.x, y: t.y, scale: newScale };
+              return { x: t.x, y: t.y, k: newScale };
             });
           } else {
             setStageTransforms((v) => {
@@ -237,146 +197,27 @@ const PaperSpace = () => {
         }
       },
       onPinch: ({
-        initial: [ix, iy],
         origin: [cpx, cpy],
         offset: [newScale],
-        movement: [mx, my],
-        delta: [ddx, ddy],
-        offset: [ofx, ofy],
         active,
-        touches,
         first,
         memo,
-        da: [d, a],
-        ...rest
       }) => {
-        console.log("onPinch", rest);
+        if (first) memo = { transform, cpx, cpy };
 
-        if (first)
-          memo = {
-            stageTransforms,
-            cpx,
-            cpy,
-            distance: d,
-            tx: 0,
-            ty: 0,
-            // dx: 0,
-            // dy: 0,
-          };
+        if (active) {
+          const initialX = memo.transform.x;
+          const initialY = memo.transform.y;
+          const initialScale = memo.transform.k;
 
-        if (active && touches === 2) {
-          const T = stageTransforms;
+          const initialCursorX = memo.cpx;
+          const initialCursorY = memo.cpy;
 
-          const m_tx = memo.stageTransforms.x;
-          const m_ty = memo.stageTransforms.y;
-          const m_cpx = memo.cpx;
-          const m_cpy = memo.cpx;
+          const ds = newScale / initialScale;
+          const x = cpx + (initialX - initialCursorX) * ds;
+          const y = cpy + (initialY - initialCursorY) * ds;
 
-          const MX = cpx - memo.cpx;
-          const MY = cpy - memo.cpy;
-          const fx = m_tx + MX;
-          const fy = m_ty + MY;
-
-          // const t = zoomTo({ x: cpx, y: cpy }, newScale);
-          // const tx = t.x;
-          // const ty = t.y;
-
-          // const point = {x: }
-
-          const point = { x: cpx, y: cpy };
-
-          // const pw = toWorldGlobal(point, { x: T.x, y: T.y }, T.scale);
-
-          const wp = {
-            x: (point.x - T.x) / T.scale,
-            y: (point.y - T.y) / T.scale,
-          };
-
-          const tx = point.x - wp.x * newScale;
-          const ty = point.y - wp.y * newScale;
-
-          const dtx = tx - m_tx;
-          const dty = ty - m_ty;
-
-          const dx = cpx - (memo.dx ?? cpx);
-          const dy = cpy - (memo.dy ?? cpy);
-
-          const ntx = tx + dx;
-          const nty = ty + dy;
-          // const ntx = fx;
-          // const nty = fy;
-
-          const step = mx > 1 ? 1.1 : 1 / 1.1;
-
-          // const str = zoomBy([cpx, cpy], step);
-          // pan([fx, /fy]);
-          setDebugValue((v: any) => ({
-            ...v,
-
-            m_tx,
-            m_ty,
-            m_cpx,
-            m_cpy,
-
-            cpx,
-            cpy,
-
-            fx,
-            fy,
-
-            dtx,
-            dty,
-
-            dx,
-            dy,
-
-            ix,
-            iy,
-
-            ofx,
-            ofy,
-            ddx,
-            ddy,
-
-            tx,
-            ty,
-            MX,
-            MY,
-
-            ntx,
-            nty,
-
-            mx,
-            d,
-          }));
-
-          setStageTransforms((v) => {
-            return {
-              ...v,
-              x: ntx,
-              y: nty,
-              scale: newScale,
-            };
-          });
-
-          // memo.dx = tx;
-          // memo.dy = ty;
-          memo.dx = cpx;
-          memo.dy = cpy;
-        } else if (active && touches === 3) {
-          // setStageTransforms((v) => {
-          //   const OX = memo.canvasTransforms.x;
-          //   const OY = memo.canvasTransforms.y;
-          //   const MX = ox - memo.ox;
-          //   const MY = oy - memo.oy;
-          //   const fx = OX + MX;
-          //   const fy = OY + MY;
-          //   return {
-          //     ...v,
-          //     x: fx,
-          //     y: fy,
-          //   };
-          // });
+          setStageTransforms({ x, y, k: newScale });
         }
 
         return memo;
@@ -387,7 +228,6 @@ const PaperSpace = () => {
       drag: {
         pointer: { buttons: [1, 4] }, // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
       },
-      pinch: { from: () => [stageTransforms.scale, 1] },
     }
   );
 
@@ -408,7 +248,7 @@ const PaperSpace = () => {
   const draw = useCallback(
     (
       ctx: CanvasRenderingContext2D | null,
-      canvasTransforms: { x: number; y: number; scale: number },
+      transform: Transform,
       items: ItemMap,
       dpr: number,
       id = "noone"
@@ -416,7 +256,7 @@ const PaperSpace = () => {
       if (!ctx) return;
 
       const { width, height } = ctx.canvas.getBoundingClientRect();
-      const { scale, x: ox, y: oy } = canvasTransforms;
+      const { k: scale, x: ox, y: oy } = transform;
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, width * dpr, height * dpr);
@@ -469,114 +309,23 @@ const PaperSpace = () => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // let skipped = false;
-    // let lastValidTransform = zoomIdentity;
-    // const selection = select<HTMLDivElement, {}>(containerRef.current);
-    // const zoomer = zoom<HTMLDivElement, {}>()
-    //   .scaleExtent([0.1, 10])
-    //   .filter((e) => {
-    //     const { type, touches, buttons } = e;
-    //     const touch = type.toLowerCase().includes("touch");
-    //     const middleClick = buttons === 4;
-    //     const touchPan = touch && touches > 1;
-    //     const mouseWheel = type === "wheel";
-    //     const leftClick = !touch ? buttons === 1 : true;
-    //     const allow = leftClick || middleClick || touchPan || mouseWheel;
-
-    //     return allow;
-    //   })
-    //   .on("zoom", (e) => {
-    //     // console.log("--------------------------");
-    //     // console.log("zoom");
-    //     const { sourceEvent, transform } = e;
-    //     // setDebugValue((v: any) => ({ ...v, transform }));
-
-    //     if (skipped) {
-    //       // console.log("skipped");
-    //       skipped = false;
-    //       const { x, y, k } = transform;
-    //       lastValidTransform = transform;
-    //       setStageTransforms((t) => {
-    //         if (t.x === x && t.y === y && t.scale === k) return t;
-    //         return { x, y, scale: k };
-    //       });
-
-    //       return;
-    //     }
-
-    //     // if (!sourceEvent) console.warn("SOURCE EVENT", sourceEvent);
-
-    //     const touch = sourceEvent.type.toLowerCase().includes("touch");
-    //     const touches = touch ? sourceEvent.touches.length : 1;
-
-    //     const middleClick = sourceEvent.buttons === 4;
-    //     const touchPan = touch && touches > 1;
-    //     const mouseWheel = sourceEvent.type === "wheel";
-
-    //     const allow = touchPan || mouseWheel || middleClick;
-
-    //     // console.log(allow);
-
-    //     if (!allow) {
-    //       skipped = true;
-    //       // reverting the transform:
-    //       selection.call(e.target.transform, lastValidTransform);
-    //     } else {
-    //       const { x, y, k } = transform;
-    //       lastValidTransform = transform;
-    //       setStageTransforms({ x, y, scale: k });
-    //     }
-    //   });
-
-    // selection
-    //   .call(zoomer)
-
-    //   .on("wheel", (event) => {
-    //     event.preventDefault();
-    //     console.log("--------");
-    //     console.log(event.ctrlKey);
-    //     console.log(event.wheelDeltaX, event.wheelDeltaY);
-    //     console.log(event.deltaX, event.deltaY);
-    //     // console.log(event);
-    //     skipped = true;
-
-    //     if (!event.ctrlKey) {
-    //       zoomer.translateBy(selection, event.wheelDeltaX, event.wheelDeltaY);
-    //     } else {
-    //       const cursorPosition: [number, number] = [
-    //         event.clientX,
-    //         event.clientY,
-    //       ];
-
-    //       // zoomer.transform()
-
-    //       const delta = event.wheelDeltaY > 0 ? 1.1 : 1 / 1.1;
-    //       zoomer.scaleBy(selection, delta, cursorPosition);
-    //     }
-    //   })
-    //   .on("wheel.zoom", (event) => {
-    //     event.preventDefault();
-    //     console.log("wheel.zoom");
-    //   });
-
     const { width, height } = containerRef.current.getBoundingClientRect();
     const grids = getRects(width, height);
-    const rects = getRandomRects(10, width, height);
-    const ellipses = getRandomEllipses(10, width, height);
-    const paths = getRandomBrushes(10, width, height);
+    const rects = getRandomRects(50, width, height);
+    const ellipses = getRandomEllipses(50, width, height);
+    const paths = getRandomBrushes(50, width, height);
 
     setItems(
       arrayToObject([
-        // ...grids,
+        ...grids,
         ...rects,
         ...ellipses,
         ...paths,
-        ...test_brushes,
+        // ...test_brushes,
         // ...test_ellipses,
-        ...test_rectangles,
+        // ...test_rectangles,
       ])
     );
-
     setDpr(window.devicePixelRatio || 1);
   }, []);
 
@@ -589,25 +338,30 @@ const PaperSpace = () => {
 
   useEffect(() => {
     if (!bgcvCtx.current) return;
-    drawBackground(bgcvCtx.current, stageTransforms, dpr);
-  }, [width, height, stageTransforms, dpr]);
+    drawBackground(bgcvCtx.current, transform, dpr);
+  }, [width, height, transform, dpr]);
 
   useEffect(() => {
-    draw(cvCtx.current, stageTransforms, items, dpr, "items");
-  }, [width, height, stageTransforms, dpr, items]);
+    draw(cvCtx.current, transform, items, dpr, "items");
+  }, [width, height, transform, dpr, items]);
 
   useEffect(() => {
-    draw(acvCtx.current, stageTransforms, activeItems, dpr, "activeItems");
-  }, [width, height, stageTransforms, dpr, activeItems]);
+    draw(acvCtx.current, transform, activeItems, dpr, "activeItems");
+  }, [width, height, transform, dpr, activeItems]);
 
   return (
     <Container
       ref={containerRef}
       onContextMenu={(e) => {
+        const [x, y] = [e.clientX, e.clientY];
+
+        setDebugValue((v: any) => ({ ...v, px: x, py: y }));
         e.preventDefault();
-        console.log("hello");
+
         // pan([500, 500]);
-        panTo([500, 500]);
+        // panTo([500, 500]);
+
+        // console.log(worldCoords([x, y]));
       }}
     >
       <Canvas ref={bgcvRef} />
@@ -616,7 +370,7 @@ const PaperSpace = () => {
       <Float>
         {JSON.stringify(
           {
-            offset: stageTransforms,
+            offset: transform,
             items: Object.keys(items).length,
             activeItems: Object.keys(activeItems).length,
             debugValue,

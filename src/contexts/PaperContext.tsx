@@ -56,7 +56,7 @@ type State = {
     stageTransform: {
       x: number;
       y: number;
-      scale: number;
+      k: number;
     },
     dpr: number
   ) => void;
@@ -204,14 +204,14 @@ const PaperStateProvider = ({ children }: Props) => {
 
   const drawBackground = (
     ctx: CanvasRenderingContext2D,
-    stageTransform: { x: number; y: number; scale: number },
+    stageTransform: { x: number; y: number; k: number },
     dpr: number
   ) => {
     if (!patternCanvas.current) return;
     // patternCanvas.
 
     const { width, height } = ctx.canvas.getBoundingClientRect();
-    const { scale, x: ox, y: oy } = stageTransform;
+    const { k: scale, x: ox, y: oy } = stageTransform;
 
     drawPattern(cellSize, scale);
 
